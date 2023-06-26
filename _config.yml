@@ -1,27 +1,44 @@
-baseurl: /tufte-jekyll
-title: Tufte-Jekyll
-subtitle: Content-centric blogging
-author: clay harmon
-simple_search: http://google.com/search
-description: A Jekyll theme for content-rich sites
-name: tufte
+# site settings
+title: The Greatest Shortcoming
+subtitle: 
+email: brian.keegan@colorado.edu
+description: Reappraising Al Bartlett's Malthusianism in an age of eco-fascism
+baseurl: "/" # the subpath of your site, e.g. /blog
+url: # the base hostname & protocol for your site
+author: Brian C. Keegan
+street_address: 
+city: Boulder
+state: CO
+zip_code: 80309
+country: United States of America
+phone: 
+
+# homepage tiles
+tiles-source: pages # accepts "posts" or "pages"
+tiles-count: 6
+
+# social settings (key must match name of font awesome icon)
+# see https://fontawesome.com/icons?d=gallery&p=2&s=brands
+# Icons are not shown if value is empty
+# You need to restart jekyll for changes to have an effect
+socials:
+  GitHub: https://github.com/brianckeegan
+  GitLab:
+  Google-Plus: 
+  Instagram:
+  LinkedIn: 
+  Twitter: 
+  Facebook:
+  Slack:
+
+# build settings
 markdown: kramdown
-markdown_ext: "markdown,mkdown,mkdn,mkd,md"
-permalink: /articles/:short_year/:title
-timezone: America/New_York
-excerpt_separator: <!--more-->  # you can specify your own separator, of course.
-exclude: ['Gemfile', 'Gemfile.lock', 'Rakefile', 'UploadToGithub.Rakefile', 'README.md']
-post:
-  template: _post.txt
-  extension: md
-page:
-  template: _page.txt
-  extension: md
-editor: gvim
-git:
-  branch: master
-transfer:
-  command: rsync
-  settings: -av
-  source: _site/
-  destination: ~/Git/clayh53.github.com/
+
+sass:
+  style: compressed
+
+exclude:
+- "*.gemspec"
+- LICENSE.md
+- CONTRIBUTING.md
+- README.md 
