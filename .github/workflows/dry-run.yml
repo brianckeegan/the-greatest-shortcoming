@@ -6,10 +6,17 @@ on:
       - master
 
 jobs:
-  github-pages:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: helaili/jekyll-action@2.0.5
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          build_only: true
+          ruby-version: '3.1'
+          bundler-cache: true
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
