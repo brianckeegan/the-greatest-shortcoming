@@ -74,12 +74,6 @@ The fourth QC chapter establishes algorithmic fine-tuning as the book's fourth i
 
 The fourth EFI chapter develops "temporal gerrymandering" as a concept for how pronatalist politics manipulates demographic time horizons to manufacture urgency. It opens with a specific pronatalist media appearance or policy document that frames under-population as an emergency. The concept is built inductively from the Mifepristone complaint, European policies, and pronatalist conference rhetoric: just as partisan gerrymandering draws district boundaries to predetermine electoral outcomes, temporal gerrymandering draws time-horizon boundaries to predetermine demographic conclusions. The chapter shows how the portfolio metaphor reframes human reproduction as demographic asset management and traces the continuity between immigration restriction's infrastructure and pronatalist coercion's infrastructure. Temporal gerrymandering recombines all three EFI rows: it naturalizes (fertility decline as ecological crisis), hierarchizes (which populations' fertility "counts"), and instrumentalizes (reproductive governance as fiscal policy).
 
-**Recombination of all three EFI rows** governs this chapter, marking the analytical climax for the ecofascist imaginary triptych. Together with Chapter 8, the Portfolio pair is where the full 3×3 matrix becomes visible in a single political operation.
-
-**Key topics:** Temporal gerrymandering as concept; the portfolio metaphor analyzed through the four-element diagnostic; the shift from restriction to production; the bipartisan pronatalist consensus; the continuity of instrumentalization across eras.
-
-**Key actors:** Viktor Orbán, pronatalist advocates, economists producing dependency-ratio models, legal actors in reproductive policy.
-
 ---
 
 ## Chapter 10: Infrastructures of Safety for the Long Heat (Conclusion)
@@ -111,5 +105,3 @@ The conclusion moves through three stages: **speculate**, **invert**, and **grou
 | 8 | Fine-Tuning | QC | Portfolio | Pronatalist demographic optimization |
 | 9 | Temporal Gerrymandering | EFI | Portfolio | Demographic asset management |
 | 10 | Infrastructures of Safety for the Long Heat | Conclusion | Evacuation + Counter | Speculate, invert, ground |
-
-The book's story in one sentence: The population concern community built a pedagogical instrument that taught Americans to see demographic growth as ecological catastrophe, and across four eras that pedagogy became immigration restriction, became replacement anxiety, became pronatalist coercion, and threatens to become selective rescue — unless we build the alternative.

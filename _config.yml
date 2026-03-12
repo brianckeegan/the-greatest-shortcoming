@@ -1,8 +1,8 @@
 # site settings
 title: The Greatest Shortcoming
-subtitle: Malthusianism and ecofascism in Boulder
+subtitle: Quantitative chauvinism and ecofascist imaginaries
 email: brian.keegan@colorado.edu
-description: Re-appraising Al Bartlett's legacy
+description: The Greatest Shortcoming traces how demographic numbers become instruments for exclusionary environmental politics. Across four eras of American history, the book shows how quantitative authority provides the infrastructure for ecofascist imaginaries and imagines alternatives in the service of solidarity.
 baseurl: "/" # the subpath of your site, e.g. /blog
 url: # the base hostname & protocol for your site
 author: Brian C. Keegan
@@ -15,7 +15,7 @@ phone:
 
 # homepage tiles
 tiles-source: pages # accepts "posts" or "pages"
-tiles-count: 5
+tiles-count: 4
 
 # social settings (key must match name of font awesome icon)
 # see https://fontawesome.com/icons?d=gallery&p=2&s=brands
