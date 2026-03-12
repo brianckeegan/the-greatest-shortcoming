@@ -11,11 +11,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.1'
-          bundler-cache: true
+      - name: Install Ruby and Bundler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ruby-full zlib1g-dev
+      - name: Install gems
+        run: bundle install
       - name: Build with Jekyll
         run: bundle exec jekyll build
         env:
