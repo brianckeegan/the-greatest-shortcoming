@@ -1,0 +1,28 @@
+# Per-step node sets for the boulder reading. Cumulative: each step's `nodes`
+# are added to the network; `focus` highlights the marquee entities for that step.
+# Era titles, subtitles, num, kicker come from _data/eras.yml.
+
+steps:
+  - id: prelude
+    nodes: [olmsted_jr, olmsted_brothers, bcia, chautauqua, olmsted_report, will_to_simplify]
+    focus: [olmsted_jr, olmsted_report]
+
+  - id: free_fall
+    nodes: [mckelvey, bartlett, cu_boulder, los_alamos, plan_boulder, blue_line, open_space_program, danish_plan, bvcp, exponential_curve, sierra_club, bartlett_lecture, blue_line_amendment_doc, danish_plan_doc, carrying_capacity, population_bomb, quant_chauvinism]
+    focus: [bartlett, exponential_curve, blue_line]
+
+  - id: quarantine
+    nodes: [tanton, cis, fiscal_impact, rule_of_expertise, porter, desrosieres]
+    focus: [tanton, fiscal_impact, rule_of_expertise]
+
+  - id: swarm
+    nodes: [census_bureau, majority_minority, census_2008_proj, politics_of_inevitability, arendt, jasanoff, griffin, ecofascist_imaginary, palingenesis]
+    focus: [majority_minority, politics_of_inevitability, ecofascist_imaginary]
+
+  - id: portfolio
+    nodes: []
+    focus: []
+
+  - id: evacuation
+    nodes: []
+    focus: []

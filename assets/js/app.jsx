@@ -6,9 +6,10 @@
 
 const { useState, useEffect, useRef, useMemo } = React;
 const D = window.GS_DATA;
-const STEPS = window.STEPS;
+const PAGE = window.PAGE_CONTEXT || {};
+const STEPS = PAGE.steps || window.STEPS || [];
 const SITE = window.SITE;
-const PROSE = window.GS_PROSE;
+const PROSE = PAGE.prose || {};
 
 const TWEAK_DEFAULTS = SITE.themeDefaults || { theme: "cool", net: "rough", fontSize: 18 };
 

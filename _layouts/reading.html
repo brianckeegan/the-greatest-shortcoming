@@ -16,6 +16,7 @@
 
   <!-- Site data injected from Jekyll _data/*.yml — consumed by app.jsx -->
   {% include site-data.html %}
+  {% include page-context.html %}
 
   <script type="text/babel" src="{{ '/assets/js/tweaks-panel.jsx' | relative_url }}"></script>
   <script type="text/babel" src="{{ '/assets/js/scrolly-network.jsx' | relative_url }}"></script>
@@ -34,12 +35,14 @@
       {%- capture doc_open -%}{% raw %}{{ DOC:{% endraw %}{%- endcapture -%}
       {%- capture quote_open -%}{% raw %}{{ QUOTE:{% endraw %}{%- endcapture -%}
       {%- capture brace_close -%}{% raw %}}}{% endraw %}{%- endcapture -%}
+      {%- assign prose_key = page.prose_key | default: page.page_id | default: 'boulder' -%}
+      {%- assign prose_data = site.data.prose[prose_key] -%}
       {% for era in site.data.eras %}
         <hr style="border: none; border-top: 1px solid #ddd; margin: 32px 0;" />
         <div style="font-family: monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #888;">{{ era.num }} · {{ era.kicker }}</div>
         <h2 style="font-size: 32px; margin: 8px 0 4px;">{{ era.title }}</h2>
         <div style="color: #999; font-family: monospace; font-size: 12px;">{{ era.subtitle }}</div>
-        <div>{{ site.data.prose[era.id] | replace: doc_open, '<!--DOC:' | replace: quote_open, '<!--QUOTE:' | replace: brace_close, '-->' }}</div>
+        <div>{{ prose_data[era.id] | replace: doc_open, '<!--DOC:' | replace: quote_open, '<!--QUOTE:' | replace: brace_close, '-->' }}</div>
       {% endfor %}
       <p style="margin-top: 48px;"><a href="{{ '/' | relative_url }}">← Back to the book site</a></p>
     </div>
