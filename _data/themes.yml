@@ -1,0 +1,51 @@
+# Themes are the conceptual scaffolding of the chapter.
+# `kind: theme` is the default; one entry below uses kind: instrument because it's
+# a measurement instrument that doubles as a theme. Both render identically.
+
+- id: quant_chauvinism
+  name: "Quantitative Chauvinism"
+  kind: theme
+  blurb: "The deployment of numerical instruments to foreclose political deliberation by converting contested claims into apparent technical necessities."
+  links: [will_to_simplify, rule_of_expertise, politics_of_inevitability, porter, desrosieres, arendt]
+
+- id: ecofascist_imaginary
+  name: "Eco-fascist Imaginary"
+  kind: theme
+  blurb: "Organized visions of environmental futures that naturalize hierarchy and exclusion as ecological necessity."
+  links: [palingenesis, jasanoff, griffin, arendt]
+
+- id: will_to_simplify
+  name: "Will to Simplify"
+  kind: theme
+  blurb: "Compression of complex demographic and ecological processes into a single governing metric."
+  links: [exponential_curve, bartlett, quant_chauvinism, free_fall]
+
+- id: rule_of_expertise
+  name: "Rule of Expertise"
+  kind: theme
+  blurb: "Insulation of quantified claims from democratic scrutiny through credentialed authority."
+  links: [fiscal_impact, tanton, porter, quant_chauvinism, quarantine]
+
+- id: politics_of_inevitability
+  name: "Politics of Inevitability"
+  kind: theme
+  blurb: "Conversion of conditional projections into mandates that foreclose political choice."
+  links: [majority_minority, census_bureau, quant_chauvinism, swarm]
+
+- id: palingenesis
+  name: "Palingenesis"
+  kind: theme
+  blurb: "Myth of national rebirth from decadence — the structure that distinguishes fascism from adjacent forms."
+  links: [griffin, ecofascist_imaginary]
+
+- id: carrying_capacity
+  name: "Carrying Capacity"
+  kind: instrument
+  blurb: "A bounded endowment, a threat of irreversible loss, expert authority translating threat into urgency."
+  links: [danish_plan, bvcp, will_to_simplify]
+
+- id: population_bomb
+  name: "The Population Bomb"
+  kind: theme
+  blurb: "Crisis narrative assembled by demographers, ecologists, and foundation officers from uncertain projections."
+  links: [merchant, connelly, hartmann, exponential_curve]

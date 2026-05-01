@@ -1,44 +1,134 @@
-# site settings
-title: The Greatest Shortcoming
-subtitle: Quantitative chauvinism and ecofascist imaginaries
-email: brian.keegan@colorado.edu
-description: The Greatest Shortcoming traces how demographic numbers become instruments for exclusionary environmental politics. Across four eras of American history, the book shows how quantitative authority provides the infrastructure for ecofascist imaginaries and imagines alternatives in the service of solidarity.
-baseurl: "/" # the subpath of your site, e.g. /blog
-url: # the base hostname & protocol for your site
-author: Brian C. Keegan
-street_address: 
-city: Boulder
-state: Colorado
-zip_code: 80309
-country: United States of America
-phone: 
+# ============================================================================
+# greatest-shortcoming · a Jekyll theme for book / network-reading websites
+# ============================================================================
+# This site is built with Jekyll and deploys to GitHub Pages out of the box.
+# Edit this file to retitle, recolor, and rewire the site without touching code.
+# Add or edit entities under `_data/` to grow the network.
 
-# homepage tiles
-tiles-source: pages # accepts "posts" or "pages"
-tiles-count: 4
+# ---- Site identity ---------------------------------------------------------
+title: "The Greatest Shortcoming"
+subtitle: "a network reading"
+description: >-
+  How a community abstracts its anxieties about disorder, contamination, and
+  change into technical problems subject to "objective" numerical analysis —
+  and how those quantitative logics travel from progressive city councils to
+  the journals of white nationalists.
+url: ""           # e.g. "https://username.github.io"
+baseurl: ""       # e.g. "/greatest-shortcoming" if deploying under a path
+lang: en
 
-# social settings (key must match name of font awesome icon)
-# see https://fontawesome.com/icons?d=gallery&p=2&s=brands
-# Icons are not shown if value is empty
-# You need to restart jekyll for changes to have an effect
-socials:
-  GitHub: https://github.com/brianckeegan
-  GitLab:
-  Google-Plus: 
-  Instagram:
-  LinkedIn: 
-  Twitter: 
-  Facebook:
-  Slack:
+# ---- Hero (homepage) -------------------------------------------------------
+hero:
+  title_lines: ["The Greatest", "Shortcoming"]
+  deck: >-
+    How a community abstracts its anxieties about disorder, contamination, and
+    change into technical problems subject to "objective" numerical analysis —
+    and how those quantitative logics travel from progressive city councils to
+    the journals of white nationalists. Five eras. One mechanism.
+  scroll_cue: "scroll to begin"
 
-# build settings
-markdown: kramdown
+# ---- Top-level navigation --------------------------------------------------
+# Each item links either to a section anchor on the home page or to a sub-page.
+nav:
+  - { label: "Eras", kind: "eras-menu" }   # special: opens dropdown of eras
+  - { label: "Book", url: "#book" }
+  - { label: "Author", url: "#author" }
+  - { label: "Resources", url: "#resources" }
 
-sass:
-  style: compressed
+# ---- Two analytical registers (definition bars beneath the hero) -----------
+registers:
+  - id: "quant-chauvinism"
+    kicker: "epistemic register · i"
+    title: "Quantitative Chauvinism"
+    body: >-
+      <em>n.</em> A political operation: the deployment of numerical
+      instruments to foreclose political deliberation by converting contested
+      claims into apparent technical necessities. It operates through three
+      reinforcing patterns — the <b>will to simplify</b> (compressing complex
+      social processes into a single governing metric), the <b>rule of
+      expertise</b> (insulating quantified claims from democratic scrutiny
+      through credentialed authority), and the <b>politics of inevitability</b>
+      (converting conditional projections into mandates that foreclose
+      political choice).
+  - id: "ecofascist-imaginaries"
+    kicker: "political register · ii"
+    title: "Ecofascist Imaginaries"
+    body: >-
+      <em>n.</em> Organized visions of environmental futures that naturalize
+      hierarchy and exclusion as ecological necessity. Three constitutive
+      features: ecological crisis as the ground for <b>palingenetic
+      purification</b> (national rebirth from decadence); demographic content
+      given to that contamination (the wrong bodies, the wrong fertility); and
+      the <b>coercive sorting of populations</b> authorized as stewardship
+      rather than violence. Made durable, in Sheila Jasanoff's terms, through
+      the laws, infrastructures, and administrative routines that enact them.
+
+# ---- Coda sections (after the scrollytelling) ------------------------------
+# Each becomes an in-page section AND can be expanded as its own page later.
+coda:
+  - id: "book"
+    kicker: "about"
+    title: "The Book"
+    body: >-
+      <i>The Greatest Shortcoming</i> traces a hundred years of American
+      demographic and environmental governance through five eras — from the
+      Olmsted Report's grammar of scarcity to climate triage as administrative
+      routine. It identifies the actors who built the instruments, the
+      organizations that circulated them, the metaphors that made them
+      persuasive, and the political projects they served. And it asks whether
+      measurement can be redirected: whether the same quantitative tools that
+      narrowed the circle of concern can be rebuilt to widen it.
+  - id: "author"
+    kicker: "about"
+    title: "The Author"
+    body: >-
+      <span style="color:var(--ink-soft);font-style:italic">↳ Author bio
+      placeholder — edit <code>_config.yml</code> to replace.</span>
+  - id: "resources"
+    kicker: "further"
+    title: "Resources"
+    body: >-
+      Selected works referenced in chapter 1: Theodore Porter, <i>Trust in
+      Numbers</i>; Alain Desrosières, <i>The Politics of Large Numbers</i>;
+      Hannah Arendt, <i>The Origins of Totalitarianism</i>; Matthew Connelly,
+      <i>Fatal Misconception</i>; Emily Klancher Merchant, <i>Building the
+      Population Bomb</i>; Betsy Hartmann, <i>Reproductive Rights and
+      Wrongs</i>; Sheila Jasanoff &amp; Sang-Hyun Kim, <i>Dreamscapes of
+      Modernity</i>; Roger Griffin on palingenetic ultranationalism.
+
+# ---- Theme tokens (overridable knobs) --------------------------------------
+theme_defaults:
+  theme: "cool"      # "warm" | "ivory" | "cool"
+  net: "rough"       # "rough" | "clean"
+  fontSize: 18
+
+# ---- Footer ----------------------------------------------------------------
+footer:
+  left:  "The Greatest Shortcoming · ch. 1 Boulder · network reading"
+  right: "scroll-driven"
+
+# ---- Jekyll plumbing -------------------------------------------------------
+# Compatible with the github-pages gem; no plugins beyond GH Pages allow-list.
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+permalink: pretty
 
 exclude:
-- "*.gemspec"
-- LICENSE.md
-- CONTRIBUTING.md
-- README.md 
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - node_modules
+  - "*.napkin"
+  - "Wireframes.html"
+  - "Greatest Shortcoming v1.html"
+  - "components.jsx"
+  - "pages.jsx"
+  - "design-canvas.jsx"
+  - "styles.css"
+
+defaults:
+  - scope: { path: "" }
+    values:
+      layout: "default"

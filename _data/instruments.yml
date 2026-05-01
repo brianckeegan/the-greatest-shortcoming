@@ -1,0 +1,53 @@
+- id: blue_line
+  name: "Blue Line Amendment"
+  kind: instrument
+  year: 1959
+  era: [free_fall]
+  blurb: "Prohibited the city from extending water service above a fixed elevation contour, making hillside development administratively impossible."
+  links: [plan_boulder, bartlett, mckelvey, olmsted_report]
+
+- id: open_space_program
+  name: "Open Space Program"
+  kind: instrument
+  year: 1967
+  era: [free_fall]
+  blurb: "Authorized the city to purchase and permanently retire land on its mountain and plains perimeter."
+  links: [plan_boulder, blue_line]
+
+- id: danish_plan
+  name: "Danish Plan"
+  kind: instrument
+  year: 1976
+  era: [free_fall]
+  blurb: "Capped annual residential building permits at 450 units, derived from infrastructure and carrying-capacity calculations."
+  links: [carrying_capacity, plan_boulder]
+
+- id: bvcp
+  name: "Boulder Valley Comprehensive Plan"
+  kind: instrument
+  year: 1977
+  era: [free_fall]
+  blurb: "Formalized a population ceiling for the planning area; translated intuition about proper scale into administrative target."
+  links: [carrying_capacity, danish_plan]
+
+- id: exponential_curve
+  name: "The Exponential Curve"
+  kind: instrument
+  era: [free_fall, quarantine]
+  blurb: "Bartlett's portable doubling-time thought experiment. Compresses fertility, mortality, migration, technology, consumption, distribution into a single alarming metric."
+  links: [bartlett, will_to_simplify, population_bomb, sierra_club]
+
+- id: fiscal_impact
+  name: "Fiscal Impact Statement"
+  kind: instrument
+  era: [quarantine]
+  blurb: "Per-household burden calculation that converts a political claim ('certain people cost too much') into an administrative finding."
+  links: [cis, tanton, rule_of_expertise]
+
+- id: majority_minority
+  name: "Majority-Minority Projection"
+  kind: instrument
+  year: 2008
+  era: [swarm]
+  blurb: "Census Bureau projection showing non-Hispanic whites becoming a minority by 2042. Conditional projection rendered as countdown."
+  links: [census_bureau, politics_of_inevitability]

@@ -1,0 +1,57 @@
+# Eras drive both the timeline and the scrollytelling steps.
+# `prelude` is treated specially (no era boundary on the network).
+# Add or reorder freely; the home page picks them up automatically.
+
+- id: prelude
+  title: "Boulder"
+  subtitle: "1898 — 1959"
+  start: 1898
+  end: 1959
+  num: "00"
+  kicker: "Prelude"
+  blurb: "The civic identity built atop accumulated catastrophe was a sustained act of collective forgetting."
+
+- id: free_fall
+  title: "Free Fall"
+  subtitle: "1968 — 1994"
+  start: 1968
+  end: 1994
+  num: "01"
+  kicker: "The Will to Simplify"
+  blurb: "Exponential arithmetic converted population dynamics into a moral emergency."
+
+- id: quarantine
+  title: "Quarantine"
+  subtitle: "1995 — 2008"
+  start: 1995
+  end: 2008
+  num: "02"
+  kicker: "The Rule of Expertise"
+  blurb: "Immigration restriction survived delegitimation by embedding itself in the aesthetic of policy expertise."
+
+- id: swarm
+  title: "Swarm"
+  subtitle: "2009 — 2024"
+  start: 2009
+  end: 2024
+  num: "03"
+  kicker: "The Politics of Inevitability"
+  blurb: "Decomposed demographic data became raw material for 'great replacement' narratives."
+
+- id: portfolio
+  title: "Portfolio"
+  subtitle: "2025 — 2048"
+  start: 2025
+  end: 2048
+  num: "04"
+  kicker: "Demography as Asset Class"
+  blurb: "Fertility rates as investment metrics; demography as asset class."
+
+- id: evacuation
+  title: "Evacuation"
+  subtitle: "2049 — 2068"
+  start: 2049
+  end: 2068
+  num: "05"
+  kicker: "Climate Triage"
+  blurb: "Climate triage and selective rescue as administrative routine."

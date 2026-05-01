@@ -1,0 +1,40 @@
+{%- comment -%}
+  Render YAML data + config as window globals consumed by the React app.
+  This is the bridge between Jekyll's data layer and the client-side renderer.
+{%- endcomment -%}
+<script>
+window.SITE = {
+  title: {{ site.title | jsonify }},
+  subtitle: {{ site.subtitle | jsonify }},
+  hero: {{ site.hero | jsonify }},
+  nav: {{ site.nav | jsonify }},
+  registers: {{ site.registers | jsonify }},
+  coda: {{ site.coda | jsonify }},
+  themeDefaults: {{ site.theme_defaults | jsonify }}
+};
+
+window.GS_DATA = (function(){
+  const eras = {{ site.data.eras | jsonify }};
+  const people = ({{ site.data.people | jsonify }} || []).map(x => ({ ...x, kind: 'person' }));
+  const orgs = ({{ site.data.orgs | jsonify }} || []).map(x => ({ ...x, kind: 'org' }));
+  const themes = ({{ site.data.themes | jsonify }} || []).map(x => ({ ...x, kind: x.kind || 'theme' }));
+  const instruments = ({{ site.data.instruments | jsonify }} || []).map(x => ({ ...x, kind: 'instrument' }));
+  const documents = ({{ site.data.documents | jsonify }} || []).map(x => ({ ...x, kind: 'document' }));
+
+  const all = [
+    ...people, ...orgs, ...themes, ...instruments, ...documents,
+    ...eras.map(x => ({ ...x, kind: 'era', name: x.title }))
+  ];
+  return {
+    eras, people, orgs, themes, instruments, documents,
+    byId: Object.fromEntries(all.map(x => [x.id, x])),
+    all
+  };
+})();
+
+window.GS_PROSE = {
+{%- for era in site.data.eras %}
+  {{ era.id | jsonify }}: {{ site.data.prose[era.id] | default: '' | jsonify }}{% unless forloop.last %},{% endunless %}
+{%- endfor %}
+};
+</script>
