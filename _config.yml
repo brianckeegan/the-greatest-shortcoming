@@ -50,6 +50,7 @@ nav_reading:
   - { label: "Eras", kind: "eras-menu" }
   - { label: "Book", url: "#book" }
   - { label: "Author", url: "#author" }
+  - { label: "News", url: "#news" }
   - { label: "Resources", url: "#resources" }
   - { label: "← Site", url: "/" }
 
@@ -102,6 +103,10 @@ coda:
     body: >-
       <span style="color:var(--ink-soft);font-style:italic">↳ Author bio
       placeholder — edit <code>_config.yml</code> to replace.</span>
+  - id: "news"
+    kicker: "latest"
+    title: "News"
+    body: ""   # empty signals app.jsx to render the latest items from _data/news.yml
   - id: "resources"
     kicker: "further"
     title: "Resources"

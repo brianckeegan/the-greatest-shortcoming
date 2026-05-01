@@ -162,5 +162,4 @@ const ScrollyNetwork = ({ stepIndex, activeId, onNodeClick, hoveredId, setHovere
 };
 
 window.ScrollyNetwork = ScrollyNetwork;
-window.STEPS = STEPS;
 window.NodeShape = NodeShape;

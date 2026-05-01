@@ -1,0 +1,27 @@
+# News & events. Most recent first. Surfaces in the homepage Coda (latest 3) and
+# in the full /news/ archive page.
+#
+# Fields:
+#   date  — YYYY-MM-DD (sortable)
+#   kind  — talk | review | event | press | release
+#   title — short headline
+#   blurb — one-sentence context (optional)
+#   link  — URL (optional; if omitted, item renders as plain text)
+
+- date: "2026-05-01"
+  kind: "release"
+  title: "Manuscript drafted through chapter 8"
+  blurb: "Chapters 2–8 are in author review; the network reading of chapter 1 is live."
+  link: "/draft-status/"
+
+- date: "2026-04-15"
+  kind: "release"
+  title: "Network reading: Boulder"
+  blurb: "A scrollytelling pass through chapter 1 with the entity graph behind it."
+  link: "/reading/boulder/"
+
+- date: "2026-03-20"
+  kind: "press"
+  title: "Project page goes live"
+  blurb: "The Greatest Shortcoming has a public home for the first time."
+  link: "/about/"

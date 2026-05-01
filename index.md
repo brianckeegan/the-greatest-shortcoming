@@ -1,6 +1,8 @@
 ---
-layout: home
+layout: scrolly
 permalink: /
+page_kind: home
+page_id: home
 title: null
 description: >-
   How a community abstracts its anxieties about disorder, contamination, and
