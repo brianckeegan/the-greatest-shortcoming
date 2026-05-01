@@ -78,9 +78,6 @@
   </ol>
 </section>
 {% endif %}
-{% if meta.reading_url %}
-<section class="chapter__reading-link"><p>A scrollytelling pass through this chapter with the entity graph is available at <a href="{{ meta.reading_url | relative_url }}">{{ meta.reading_url }}</a>.</p></section>
-{% endif %}
 <nav class="chapter-nav">
   <div class="chapter-nav__prev">
     {% if prev_meta %}<a href="{{ '/chapters/' | append: prev_meta.slug | append: '/' | relative_url }}"><span class="kicker">← previous</span><span class="chapter-nav__title">{{ prev_meta.title | default: 'Forthcoming chapter' }}</span></a>

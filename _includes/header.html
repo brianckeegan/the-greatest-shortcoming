@@ -1,53 +1,52 @@
+{%- comment -%}
+  Static-page header: HTML/CSS mirror of the React <Header> in app.jsx so the
+  chrome on /about/, /news/, /contents/, /bibliography/, /draft-status/ matches
+  the React-rendered chrome on / and /chapters/*. The Eras menu links into the
+  homepage scrollytelling sections (e.g. /#step-prelude).
+{%- endcomment -%}
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header" role="banner">
-  <div class="site-header__inner">
-    <a class="site-header__brand" href="{{ '/' | relative_url }}">
-      <span class="site-header__title">The Greatest Shortcoming</span>
-      <span class="site-header__subtitle">{{ site.subtitle }}</span>
+<header class="top-header">
+  <div class="title">
+    <a href="{{ '/' | relative_url }}" style="color: inherit; text-decoration: none;">
+      <b>{{ site.title }}</b>{% if site.subtitle %} <span style="color: var(--ink-soft)">· {{ site.subtitle }}</span>{% endif %}
     </a>
-    <nav class="site-nav" aria-label="Primary">
-      <ul>
-        {% for item in site.nav %}
-          {%- assign is_current = false -%}
-          {%- if item.url == "/" and page.url == "/" -%}{%- assign is_current = true -%}{%- endif -%}
-          {%- if item.url != "/" and page.url contains item.url -%}{%- assign is_current = true -%}{%- endif -%}
-          <li><a href="{{ item.url | relative_url }}"{% if is_current %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
-        {% endfor %}
-      </ul>
-    </nav>
-    <button id="theme-toggle"
-            class="theme-toggle"
-            type="button"
-            aria-label="Toggle dark mode"
-            aria-pressed="false"
-            title="Toggle dark mode">
-      <span class="theme-toggle__icon" aria-hidden="true">◐</span>
-      <span class="theme-toggle__label">Dark</span>
-    </button>
   </div>
+  <nav class="nav-main" aria-label="Primary">
+    <div class="menu-wrap" id="static-eras-menu">
+      <button class="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'block':'none';this.setAttribute('aria-expanded', this.classList.contains('open'));event.stopPropagation();">
+        Eras<span class="caret">▼</span>
+      </button>
+      <div class="menu-pop" style="display:none">
+        {% for era in site.data.eras %}
+          <a href="{{ '/#step-' | append: era.id | relative_url }}">
+            <span>{{ era.title }}</span>
+            <span class="yrs">{{ era.subtitle }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% for item in site.nav %}
+      {%- assign is_current = false -%}
+      {%- if item.url == "/" and page.url == "/" -%}{%- assign is_current = true -%}{%- endif -%}
+      {%- if item.url != "/" and page.url contains item.url -%}{%- assign is_current = true -%}{%- endif -%}
+      <a class="menu-btn"
+         href="{{ item.url | relative_url }}"
+         {% if is_current %}aria-current="page" style="background: var(--rule);"{% endif %}>{{ item.label }}</a>
+    {% endfor %}
+  </nav>
 </header>
-
 <script>
   (function () {
-    var btn = document.getElementById("theme-toggle");
-    if (!btn) return;
-    var html = document.documentElement;
-
-    function sync() {
-      var mode = html.getAttribute("data-theme-mode") || "light";
-      var nextLabel = mode === "dark" ? "Light" : "Dark";
-      btn.querySelector(".theme-toggle__label").textContent = nextLabel;
-      btn.setAttribute("aria-pressed", mode === "dark" ? "true" : "false");
-    }
-
-    sync();
-
-    btn.addEventListener("click", function () {
-      var current = html.getAttribute("data-theme-mode") || "light";
-      var next = current === "dark" ? "light" : "dark";
-      html.setAttribute("data-theme-mode", next);
-      try { localStorage.setItem("tgs-theme-mode", next); } catch (e) {}
-      sync();
+    var menu = document.getElementById('static-eras-menu');
+    if (!menu) return;
+    document.addEventListener('click', function (e) {
+      if (menu.contains(e.target)) return;
+      var btn = menu.querySelector('.menu-btn');
+      var pop = menu.querySelector('.menu-pop');
+      btn.classList.remove('open');
+      pop.style.display = 'none';
+      btn.setAttribute('aria-expanded', 'false');
     });
   })();
 </script>

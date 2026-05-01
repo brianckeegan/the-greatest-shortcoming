@@ -1,10 +1,10 @@
 # ============================================================================
-# greatest-shortcoming · landing site + scrollytelling reading
+# greatest-shortcoming · scrollytelling book site
 # ============================================================================
-# Two surfaces in one repo:
-#   /                    — the spec'd promotional landing site for the book
-#   /reading/boulder/    — the React scrollytelling reading of chapter 1
-# Both share fonts, color tokens (assets/css/scrolly.css → _sass/tgs.scss).
+# One unified design across every page. The homepage and each chapter page
+# mount the same React shell at /assets/js/app.jsx; static pages share the
+# same chrome rendered as plain HTML. Design tokens live in
+# assets/css/scrolly.css → _sass/tgs.scss.
 #
 # Edit this file to retitle, recolor, and rewire. Add chapters in
 # _data/chapters.yml. Add network entities under _data/{people,orgs,...}.yml.
@@ -35,17 +35,17 @@ hero:
     the journals of white nationalists.
   scroll_cue: "scroll to begin"
 
-# ---- Top-level navigation (landing site) -----------------------------------
-# Used by _includes/header.html on every static page. The /reading/ scrollytelling
-# uses its own header (in app.jsx) driven by `nav_reading` further down.
+# ---- Top-level navigation (static-page header) -----------------------------
+# Used by _includes/header.html on /about/, /contents/, /bibliography/, /news/,
+# /draft-status/. The React shell on the homepage and chapter pages renders
+# its own nav from `nav_reading` further down.
 nav:
   - { label: "Contents",     url: "/contents/" }
   - { label: "Preface",      url: "/chapters/preface/" }
-  - { label: "Reading",      url: "/reading/boulder/" }
   - { label: "About",        url: "/about/" }
   - { label: "News",         url: "/news/" }
 
-# ---- Scrollytelling navigation (used by app.jsx on /reading/ only) ---------
+# ---- Scrollytelling navigation (used by the React app on home + chapters) --
 nav_reading:
   - { label: "Eras", kind: "eras-menu" }
   - { label: "Book", url: "#book" }
@@ -127,7 +127,7 @@ theme_defaults:
 
 # ---- Footer ----------------------------------------------------------------
 footer:
-  left:  "The Greatest Shortcoming · ch. 1 Boulder · network reading"
+  left:  "The Greatest Shortcoming · scrollytelling book site"
   right: "scroll-driven"
 
 # ---- Jekyll plumbing -------------------------------------------------------
@@ -139,18 +139,14 @@ plugins:
 permalink: pretty
 
 # ---- Collections -----------------------------------------------------------
-# `chapters`: front matter, drafted chapters, and forthcoming stubs at /chapters/<slug>/
-# `reading`:  the React scrollytelling readings at /reading/<slug>/
+# `chapters`: drafted chapters and the preface at /chapters/<slug>/
 collections:
   chapters:
     output: true
     permalink: /chapters/:path/
-  reading:
-    output: true
-    permalink: /reading/:path/
 
 # Default layouts per scope. Pages at the root pick up `default`; chapter
-# collection items use `chapter`; reading items mount the React app.
+# collection items mount the React scrollytelling shell.
 defaults:
   - scope: { path: "" }
     values:
@@ -159,9 +155,6 @@ defaults:
     values:
       layout: "scrolly"
       page_kind: "chapter"
-  - scope: { path: "", type: "reading" }
-    values:
-      layout: "reading"
   - scope: { path: "pages" }
     values:
       layout: "page"

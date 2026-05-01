@@ -11,14 +11,14 @@
 - date: "2026-05-01"
   kind: "release"
   title: "Manuscript drafted through chapter 8"
-  blurb: "Chapters 2–8 are in author review; the network reading of chapter 1 is live."
+  blurb: "All eight chapters and the preface are in author review; the homepage scrollytelling summarizes the book at altitude."
   link: "/draft-status/"
 
 - date: "2026-04-15"
   kind: "release"
-  title: "Network reading: Boulder"
-  blurb: "A scrollytelling pass through chapter 1 with the entity graph behind it."
-  link: "/reading/boulder/"
+  title: "Site redesign: unified scrollytelling"
+  blurb: "The homepage and every chapter page now share one design and one navbar — QC, six eras, and EFI."
+  link: "/"
 
 - date: "2026-03-20"
   kind: "press"
