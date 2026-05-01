@@ -1,0 +1,13 @@
+---
+layout: default
+---
+<article class="page">
+  <header class="page__head">
+    {% if page.kicker %}<p class="kicker">{{ page.kicker }}</p>{% endif %}
+    <h1 class="page__title">{{ page.title }}</h1>
+    {% if page.subtitle %}<p class="page__subtitle">{{ page.subtitle }}</p>{% endif %}
+  </header>
+  <div class="page__body">
+    {{ content }}
+  </div>
+</article>

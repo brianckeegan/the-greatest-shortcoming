@@ -1,0 +1,58 @@
+# Drives the table of contents, chapter cards, and prev/next navigation.
+# `slug` controls the URL: /chapters/<slug>/
+# Eight drafted chapters plus the preface. No forthcoming stubs.
+
+- num: "00"
+  slug: preface
+  title: "Preface"
+  status: drafted
+  pitch: "An archival encounter, the naming of two operating concepts, and a politically direct closing."
+
+- num: "01"
+  slug: 01-boulder
+  title: "Boulder"
+  status: drafted
+  reading_url: /reading/boulder/
+  pitch: "Boulder, Colorado: a nominally progressive community where conservation slid gradually into exclusion, each step looking like responsible stewardship from the inside."
+
+- num: "02"
+  slug: 02-the-free-fall
+  title: "The Free Fall"
+  status: drafted
+  pitch: "Exponential arithmetic converted population dynamics into a moral emergency; Albert Bartlett's lecture as portable instrument."
+
+- num: "03"
+  slug: 03-the-quarantine
+  title: "The Quarantine"
+  status: drafted
+  pitch: "DRAFT pitch — author review pending."
+
+- num: "04"
+  slug: 04-the-swarm
+  title: "The Swarm"
+  status: drafted
+  pitch: "DRAFT pitch — author review pending."
+
+- num: "05"
+  slug: 05-the-portfolio
+  title: "The Portfolio"
+  status: drafted
+  pitch: "DRAFT pitch — author review pending."
+
+- num: "06"
+  slug: 06-the-shock
+  title: "The Shock"
+  status: drafted
+  pitch: "DRAFT pitch — author review pending."
+
+- num: "07"
+  slug: 07-the-alternatives
+  title: "The Alternatives"
+  status: drafted
+  pitch: "DRAFT pitch — author review pending."
+
+- num: "08"
+  slug: 08-boulder-again
+  title: "Boulder Again"
+  status: drafted
+  pitch: "DRAFT pitch — author review pending."

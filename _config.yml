@@ -1,21 +1,29 @@
 # ============================================================================
-# greatest-shortcoming · a Jekyll theme for book / network-reading websites
+# greatest-shortcoming · landing site + scrollytelling reading
 # ============================================================================
-# This site is built with Jekyll and deploys to GitHub Pages out of the box.
-# Edit this file to retitle, recolor, and rewire the site without touching code.
-# Add or edit entities under `_data/` to grow the network.
+# Two surfaces in one repo:
+#   /                    — the spec'd promotional landing site for the book
+#   /reading/boulder/    — the React scrollytelling reading of chapter 1
+# Both share fonts, color tokens (assets/css/scrolly.css → _sass/tgs.scss).
+#
+# Edit this file to retitle, recolor, and rewire. Add chapters in
+# _data/chapters.yml. Add network entities under _data/{people,orgs,...}.yml.
 
 # ---- Site identity ---------------------------------------------------------
 title: "The Greatest Shortcoming"
-subtitle: "a network reading"
+subtitle: "Quantitative Chauvinism and Ecofascist Imaginaries"
+author: "Brian C. Keegan"
 description: >-
   How a community abstracts its anxieties about disorder, contamination, and
   change into technical problems subject to "objective" numerical analysis —
   and how those quantitative logics travel from progressive city councils to
   the journals of white nationalists.
-url: ""           # e.g. "https://username.github.io"
-baseurl: ""       # e.g. "/greatest-shortcoming" if deploying under a path
+url: ""           # e.g. "https://brianckeegan.github.io"
+baseurl: ""       # e.g. "/the-greatest-shortcoming" if deploying under a path
 lang: en
+# To set a custom domain: create a CNAME file at the repo root with the domain
+# (e.g. greatestshortcoming.com), then enable HTTPS under Settings → Pages.
+status_line: "in progress · drafted through chapter 8"
 
 # ---- Hero (homepage) -------------------------------------------------------
 hero:
@@ -24,16 +32,26 @@ hero:
     How a community abstracts its anxieties about disorder, contamination, and
     change into technical problems subject to "objective" numerical analysis —
     and how those quantitative logics travel from progressive city councils to
-    the journals of white nationalists. Five eras. One mechanism.
+    the journals of white nationalists.
   scroll_cue: "scroll to begin"
 
-# ---- Top-level navigation --------------------------------------------------
-# Each item links either to a section anchor on the home page or to a sub-page.
+# ---- Top-level navigation (landing site) -----------------------------------
+# Used by _includes/header.html on every static page. The /reading/ scrollytelling
+# uses its own header (in app.jsx) driven by `nav_reading` further down.
 nav:
-  - { label: "Eras", kind: "eras-menu" }   # special: opens dropdown of eras
+  - { label: "Contents",     url: "/contents/" }
+  - { label: "Preface",      url: "/chapters/preface/" }
+  - { label: "Reading",      url: "/reading/boulder/" }
+  - { label: "About",        url: "/about/" }
+  - { label: "News",         url: "/news/" }
+
+# ---- Scrollytelling navigation (used by app.jsx on /reading/ only) ---------
+nav_reading:
+  - { label: "Eras", kind: "eras-menu" }
   - { label: "Book", url: "#book" }
   - { label: "Author", url: "#author" }
   - { label: "Resources", url: "#resources" }
+  - { label: "← Site", url: "/" }
 
 # ---- Two analytical registers (definition bars beneath the hero) -----------
 registers:
@@ -71,13 +89,13 @@ coda:
     title: "The Book"
     body: >-
       <i>The Greatest Shortcoming</i> traces a hundred years of American
-      demographic and environmental governance through five eras — from the
-      Olmsted Report's grammar of scarcity to climate triage as administrative
-      routine. It identifies the actors who built the instruments, the
-      organizations that circulated them, the metaphors that made them
-      persuasive, and the political projects they served. And it asks whether
-      measurement can be redirected: whether the same quantitative tools that
-      narrowed the circle of concern can be rebuilt to widen it.
+      demographic and environmental governance — from the Olmsted Report's
+      grammar of scarcity to climate triage as administrative routine. It
+      identifies the actors who built the instruments, the organizations that
+      circulated them, the metaphors that made them persuasive, and the
+      political projects they served. And it asks whether measurement can be
+      redirected: whether the same quantitative tools that narrowed the circle
+      of concern can be rebuilt to widen it.
   - id: "author"
     kicker: "about"
     title: "The Author"
@@ -115,10 +133,40 @@ plugins:
 
 permalink: pretty
 
+# ---- Collections -----------------------------------------------------------
+# `chapters`: front matter, drafted chapters, and forthcoming stubs at /chapters/<slug>/
+# `reading`:  the React scrollytelling readings at /reading/<slug>/
+collections:
+  chapters:
+    output: true
+    permalink: /chapters/:path/
+  reading:
+    output: true
+    permalink: /reading/:path/
+
+# Default layouts per scope. Pages at the root pick up `default`; chapter
+# collection items use `chapter`; reading items mount the React app.
+defaults:
+  - scope: { path: "" }
+    values:
+      layout: "default"
+  - scope: { path: "", type: "chapters" }
+    values:
+      layout: "chapter"
+  - scope: { path: "", type: "reading" }
+    values:
+      layout: "reading"
+  - scope: { path: "pages" }
+    values:
+      layout: "page"
+
 exclude:
   - Gemfile
   - Gemfile.lock
   - README.md
+  - MAINTAINERS.md
+  - CLAUDE.md
+  - scripts
   - node_modules
   - "*.napkin"
   - "Wireframes.html"
@@ -127,8 +175,3 @@ exclude:
   - "pages.jsx"
   - "design-canvas.jsx"
   - "styles.css"
-
-defaults:
-  - scope: { path: "" }
-    values:
-      layout: "default"
