@@ -309,6 +309,64 @@ function RawHtml({ html, onEnt }) {
   return <div ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+/* ---------- Bartlett epigraphs ----------
+ * Three epigraphs revealed in cumulative scrolly succession: each fades from
+ * dimmed/translated to fully present as it scrolls into view; once revealed,
+ * stays revealed.
+ */
+function BartlettEpigraphs() {
+  const items = useMemo(() => [
+    {
+      quote: 'The greatest shortcoming of the human race is our inability to understand the exponential function.',
+      cite: 'Al Bartlett, 1972'
+    },
+    {
+      quote: 'Immigration is the main driver of population growth in the U.S. … therefore any discussion of sustainability in the U.S. must address the need to reduce or eliminate immigration, both legal and illegal, into the U.S.',
+      cite: 'Al Bartlett'
+    },
+    {
+      quote: 'Anyone who thinks that you can stop population growth to save the environment without reducing immigration is innumerate.',
+      cite: 'Al Bartlett'
+    }
+  ], []);
+
+  const refs = useRef([]);
+  const [revealed, setRevealed] = useState(items.map(() => false));
+
+  useEffect(() => {
+    const observers = items.map((_, i) => {
+      const el = refs.current[i];
+      if (!el) return null;
+      const io = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealed(prev => {
+            if (prev[i]) return prev;
+            const next = prev.slice();
+            next[i] = true;
+            return next;
+          });
+        }
+      }, { threshold: 0.45, rootMargin: '0px 0px -10% 0px' });
+      io.observe(el);
+      return io;
+    });
+    return () => observers.forEach(io => io && io.disconnect());
+  }, [items]);
+
+  return (
+    <div className="bartlett-epigraphs" aria-label="Bartlett epigraphs">
+      {items.map((item, i) => (
+        <blockquote key={i}
+                    ref={el => { refs.current[i] = el; }}
+                    className={'epigraph' + (revealed[i] ? ' revealed' : '')}>
+          <p>&ldquo;{item.quote}&rdquo;</p>
+          {item.cite && <cite>&mdash; {item.cite}</cite>}
+        </blockquote>
+      ))}
+    </div>
+  );
+}
+
 /* ---------- News coda ----------
  * Renders the latest N items from window.GS_DATA.news as compact cards plus
  * a link to the full /news/ archive.
@@ -405,6 +463,41 @@ function App() {
     return <p dangerouslySetInnerHTML={{ __html: c.body }} />;
   };
 
+  // Render order on the homepage: Book + Author appear above the stepper, the
+  // first register (QC) frames the eras, the second (EFI) follows the eras as
+  // the closing analytical register, then News + Resources. Chapter pages keep
+  // the simpler intro → stepper → outro → coda flow.
+  const isHome = PAGE.kind === 'home' || PAGE.kind === 'reading';
+  const codaById = Object.fromEntries(coda.map(c => [c.id, c]));
+  const renderCodaSection = (c, children) => (
+    <section key={c.id} id={c.id} className="coda">
+      <div className="kicker">{c.kicker}</div>
+      <h2>{c.title}</h2>
+      {renderCodaBody(c)}
+      {children}
+    </section>
+  );
+  const homeCodaPre  = isHome ? [codaById.book, codaById.author].filter(Boolean) : [];
+  const homeCodaPost = isHome ? [codaById.news, codaById.resources].filter(Boolean) : [];
+  const codaIdsHandled = new Set(homeCodaPre.concat(homeCodaPost).map(c => c.id));
+  const remainingCoda = isHome
+    ? coda.filter(c => !codaIdsHandled.has(c.id))   // anything custom the user added
+    : coda;
+
+  const qcRegister  = (SITE.registers || [])[0] || null;
+  const efiRegister = (SITE.registers || [])[1] || null;
+  const extraRegisters = (SITE.registers || []).slice(2);
+
+  const renderDefBar = (r) => (
+    <section key={r.id} id={r.id} className="def-bar">
+      <div className="def-inner">
+        <div className="kicker">{r.kicker}</div>
+        <h3>{r.title}</h3>
+        <p dangerouslySetInnerHTML={{ __html: r.body }} />
+      </div>
+    </section>
+  );
+
   return (
     <>
       <div className="scroll-progress"><div className="bar" style={{ width: (progress * 100) + '%' }} /></div>
@@ -431,17 +524,12 @@ function App() {
 
       {intro && <section className="page-intro"><RawHtml html={intro.html} onEnt={onEnt} /></section>}
 
+      {/* Home: Book + Author first; the Book block hosts the Bartlett epigraphs */}
+      {homeCodaPre.map(c => renderCodaSection(c, c.id === 'book' ? <BartlettEpigraphs /> : null))}
+
       {showStepper && <EraStepper activeStep={activeStep} onJump={jumpToEra} />}
 
-      {showRegisters && SITE.registers.map(r => (
-        <section key={r.id} id={r.id} className="def-bar">
-          <div className="def-inner">
-            <div className="kicker">{r.kicker}</div>
-            <h3>{r.title}</h3>
-            <p dangerouslySetInnerHTML={{ __html: r.body }} />
-          </div>
-        </section>
-      ))}
+      {showRegisters && qcRegister && renderDefBar(qcRegister)}
 
       {showNetwork && hasProse && (
         <div className="scrolly">
@@ -478,15 +566,15 @@ function App() {
         </div>
       )}
 
+      {/* EFI follows the eras as the closing analytical register */}
+      {showRegisters && efiRegister && renderDefBar(efiRegister)}
+      {showRegisters && extraRegisters.map(renderDefBar)}
+
       {outro && <section className="page-outro"><RawHtml html={outro.html} onEnt={onEnt} /></section>}
 
-      {coda.map(c => (
-        <section key={c.id} id={c.id} className="coda">
-          <div className="kicker">{c.kicker}</div>
-          <h2>{c.title}</h2>
-          {renderCodaBody(c)}
-        </section>
-      ))}
+      {/* Home: News + Resources after EFI. Chapter/reading: full coda here. */}
+      {homeCodaPost.map(c => renderCodaSection(c))}
+      {remainingCoda.map(c => renderCodaSection(c))}
 
       <EntDrawer id={drawerId} onClose={() => setDrawerId(null)} onNavigate={setDrawerId} />
 

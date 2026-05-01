@@ -113,8 +113,12 @@ h3 { font-size: 1.3rem; font-style: italic; }
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
   background: var(--paper-tint, var(--paper));
-  padding: 36px 28px;
+  padding: 24px 28px;
   margin: 0;
+  /* Sticky top-header (~48px) + sticky era-stepper (~48px) cover the top
+     of the viewport when an in-page anchor link scrolls a section into view.
+     This margin keeps the heading visible beneath both bars. */
+  scroll-margin-top: 110px;
 }
 .def-bar + .def-bar { border-top: none; }
 .def-inner {
@@ -217,19 +221,21 @@ h3 { font-size: 1.3rem; font-style: italic; }
 
 /* === Prose column === */
 .prose {
-  padding: 24px 0 24px 24px;
+  padding: 8px 0 8px 24px;
   max-width: 580px;
 }
 @media (max-width: 900px) {
-  .prose { padding: 24px 0; max-width: 100%; }
+  .prose { padding: 8px 0; max-width: 100%; }
 }
 
 /* Each era as a long step */
 .era-step {
-  padding: 60vh 0 40vh;
+  padding: 40vh 0 25vh;
   border-top: 1px solid var(--rule);
+  scroll-margin-top: 110px;
 }
-.era-step:first-of-type { border-top: none; padding-top: 30vh; }
+.era-step:first-of-type { border-top: none; padding-top: 8vh; }
+.era-step:last-of-type { padding-bottom: 12vh; }
 .era-step .era-num {
   font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
   text-transform: uppercase; color: var(--ink-soft);
@@ -379,10 +385,12 @@ h3 { font-size: 1.3rem; font-style: italic; }
 
 /* Coda */
 .coda {
-  max-width: 760px; margin: 80px auto; padding: 0 28px 120px;
+  max-width: 760px; margin: 32px auto; padding: 0 28px 32px;
   text-align: left;
+  scroll-margin-top: 110px;
 }
-.coda h2 { font-size: 2.4rem; }
+.coda + .coda { margin-top: 8px; }
+.coda h2 { font-size: 2.4rem; margin-top: 8px; }
 .coda p { font-size: 1.08rem; }
 
 .footer {
@@ -404,7 +412,10 @@ h3 { font-size: 1.3rem; font-style: italic; }
 .ent-drawer .close {
   position: absolute; top: 14px; right: 14px;
   width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--ink);
-  background: var(--paper); cursor: pointer; font-size: 14px;
+  background: var(--paper); color: var(--ink); cursor: pointer;
+  font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
 }
 .ent-drawer .close:hover { background: var(--ink); color: var(--paper); }
 .ent-drawer h3 { font-size: 1.6rem; margin-top: 16px; }
@@ -511,3 +522,47 @@ a.news-item:hover {
   border-color: var(--ink);
 }
 .news-item .kicker { color: var(--ink-soft); margin-bottom: 4px; }
+
+/* ============================================================================
+ * Bartlett epigraphs — three quotes revealed cumulatively as the reader
+ * scrolls into each one. Once revealed, they stay revealed.
+ * ============================================================================ */
+.bartlett-epigraphs {
+  margin: 24px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18vh;
+  padding: 6vh 0 4vh;
+}
+.bartlett-epigraphs .epigraph {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.45rem;
+  line-height: 1.45;
+  margin: 0;
+  padding: 6px 0 6px 22px;
+  border-left: 3px solid var(--tufte-red);
+  color: var(--ink);
+  opacity: 0.18;
+  transform: translateY(10px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.bartlett-epigraphs .epigraph.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.bartlett-epigraphs .epigraph p { margin: 0; }
+.bartlett-epigraphs .epigraph cite {
+  display: block;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 14px;
+}
+@media (max-width: 760px) {
+  .bartlett-epigraphs { gap: 14vh; padding: 4vh 0 3vh; }
+  .bartlett-epigraphs .epigraph { font-size: 1.2rem; padding-left: 16px; }
+}
