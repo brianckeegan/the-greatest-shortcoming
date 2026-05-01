@@ -70,7 +70,10 @@ layout: default
   {%- comment -%} prev/next nav {%- endcomment -%}
   {%- assign prev_meta = nil -%}
   {%- assign next_meta = nil -%}
-  {%- if idx > 0 -%}{%- assign prev_meta = all_ch[idx | minus: 1] -%}{%- endif -%}
+  {%- if idx > 0 -%}
+    {%- assign prev_idx = idx | minus: 1 -%}
+    {%- assign prev_meta = all_ch[prev_idx] -%}
+  {%- endif -%}
   {%- if idx >= 0 and idx < all_ch.size -%}
     {%- assign next_idx = idx | plus: 1 -%}
     {%- if next_idx < all_ch.size -%}{%- assign next_meta = all_ch[next_idx] -%}{%- endif -%}

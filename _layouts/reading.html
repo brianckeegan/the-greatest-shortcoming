@@ -31,12 +31,15 @@
       <h1 style="font-size: 48px; line-height: 1; margin: 0 0 16px;">{{ site.hero.title_lines | join: ' ' }}</h1>
       <p style="color: #666; font-style: italic;">{{ site.subtitle }}</p>
       <p>{{ site.hero.deck }}</p>
+      {%- capture doc_open -%}{% raw %}{{ DOC:{% endraw %}{%- endcapture -%}
+      {%- capture quote_open -%}{% raw %}{{ QUOTE:{% endraw %}{%- endcapture -%}
+      {%- capture brace_close -%}{% raw %}}}{% endraw %}{%- endcapture -%}
       {% for era in site.data.eras %}
         <hr style="border: none; border-top: 1px solid #ddd; margin: 32px 0;" />
         <div style="font-family: monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #888;">{{ era.num }} · {{ era.kicker }}</div>
         <h2 style="font-size: 32px; margin: 8px 0 4px;">{{ era.title }}</h2>
         <div style="color: #999; font-family: monospace; font-size: 12px;">{{ era.subtitle }}</div>
-        <div>{{ site.data.prose[era.id] | replace: '{{ DOC:', '<!--DOC:' | replace: '{{ QUOTE:', '<!--QUOTE:' | replace: '}}', '-->' }}</div>
+        <div>{{ site.data.prose[era.id] | replace: doc_open, '<!--DOC:' | replace: quote_open, '<!--QUOTE:' | replace: brace_close, '-->' }}</div>
       {% endfor %}
       <p style="margin-top: 48px;"><a href="{{ '/' | relative_url }}">← Back to the book site</a></p>
     </div>
