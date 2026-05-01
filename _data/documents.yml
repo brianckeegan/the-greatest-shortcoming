@@ -1,0 +1,41 @@
+- id: olmsted_report
+  name: "Improvement of Boulder, Colorado"
+  kind: document
+  year: 1910
+  author: "Olmsted Jr."
+  blurb: "A genuinely reformist work that is also one of the earliest codifications of a vision of environmental preservation specifying who belongs."
+  excerpt: "The Cost of Delay recurs through the report like a drumbeat, marking each moment where inaction is characterized not as a value-neutral choice but as responsible stewardship deferred at collective expense."
+  pages: "p. 65"
+  links: [olmsted_jr, olmsted_brothers, bcia, blue_line, will_to_simplify, chautauqua]
+
+- id: bartlett_lecture
+  name: '"Arithmetic, Population & Energy"'
+  kind: document
+  year: 1976
+  author: "Bartlett"
+  blurb: "The bottle, the bacterium, the doubling time. Pedagogically brilliant; politically consequential."
+  excerpt: '"At what time was the bottle half full?" Bartlett asks. The audience hesitates. "Eleven fifty-nine," he says. "One minute before noon."'
+  pages: "Bartlett (1976)"
+  links: [bartlett, exponential_curve, will_to_simplify, population_bomb]
+
+- id: blue_line_amendment_doc
+  name: "Blue Line Amendment (text)"
+  kind: document
+  year: 1959
+  blurb: "Charter provision prohibiting water service above a fixed elevation."
+  excerpt: "The city needed only to define a line on a map to achieve its policy goal."
+  links: [blue_line, plan_boulder, bartlett, mckelvey]
+
+- id: danish_plan_doc
+  name: "Danish Plan (ordinance)"
+  kind: document
+  year: 1976
+  blurb: "450-unit cap, derived from calculations about infrastructure capacity and environmental carrying capacity that arrived at the city council bearing the authority of technical necessity."
+  links: [danish_plan, carrying_capacity]
+
+- id: census_2008_proj
+  name: "2008 Census Projection"
+  kind: document
+  year: 2008
+  blurb: "Crossover chart with converging lines and marked intersection point — the visual grammar of a countdown."
+  links: [majority_minority, census_bureau, politics_of_inevitability]
