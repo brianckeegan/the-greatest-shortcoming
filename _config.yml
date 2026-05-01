@@ -157,7 +157,8 @@ defaults:
       layout: "default"
   - scope: { path: "", type: "chapters" }
     values:
-      layout: "chapter"
+      layout: "scrolly"
+      page_kind: "chapter"
   - scope: { path: "", type: "reading" }
     values:
       layout: "reading"

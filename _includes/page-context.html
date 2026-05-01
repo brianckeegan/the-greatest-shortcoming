@@ -17,13 +17,19 @@
 {%- endcomment -%}
 
 {%- assign page_kind = page.page_kind | default: "static" -%}
-{%- assign page_id = page.page_id | default: page_kind -%}
+{%- comment -%}
+  page_id default: explicit `page.page_id`, else page.slug for chapter pages,
+  else page_kind. Lets chapter pages fall through to `_data/scrolly/<slug>.yml`
+  without per-file frontmatter.
+{%- endcomment -%}
+{%- assign page_id = page.page_id | default: page.slug | default: page_kind -%}
 {%- assign scrolly_key = page.scrolly_key | default: page_id -%}
 {%- assign prose_key = page.prose_key | default: page_id -%}
 
-{%- assign scrolly_data = site.data.scrolly[scrolly_key] -%}
-{%- if scrolly_data.steps_inherit -%}
-  {%- assign scrolly_data = site.data.scrolly[scrolly_data.steps_inherit] -%}
+{%- assign raw_scrolly_data = site.data.scrolly[scrolly_key] -%}
+{%- assign scrolly_data = raw_scrolly_data -%}
+{%- if raw_scrolly_data.steps_inherit -%}
+  {%- assign scrolly_data = site.data.scrolly[raw_scrolly_data.steps_inherit] -%}
 {%- endif -%}
 {%- assign step_specs = scrolly_data.steps -%}
 
@@ -64,7 +70,8 @@
   };
 
   // Stepper config: chapter pages pin a highlighted era; home/reading scroll-drive it.
-  var highlightEraId = {{ page.highlight_era | jsonify }} || null;
+  // `highlight_era` may be set in page frontmatter OR in _data/scrolly/<key>.yml.
+  var highlightEraId = {{ page.highlight_era | default: raw_scrolly_data.highlight_era | jsonify }} || null;
   var stepper = {
     show: steps.length > 0,
     leftBracket:  { label: 'Quantitative chauvinism', href: '#quant-chauvinism' },
@@ -73,7 +80,7 @@
   };
 
   // Network: defaults on for home/reading, off for chapter pages unless overridden.
-  var networkSpec = {{ scrolly_data.network | default: empty | jsonify }} || {};
+  var networkSpec = {{ raw_scrolly_data.network | default: empty | jsonify }} || {};
   var networkDefault = (pageKind === 'home' || pageKind === 'reading');
   var network = {
     show: networkSpec.show !== undefined ? networkSpec.show : networkDefault,
