@@ -457,3 +457,57 @@ h3 { font-size: 1.3rem; font-style: italic; }
 @media (max-width: 760px) { .top-header .nav-main { gap: 0; } .menu-btn { padding: 6px 6px; } }
 
 
+
+/* ============================================================================
+ * Page intro / outro slots — used by chapter pages mounted in the scrolly
+ * shell to render the chapter header (above the era stepper) and the chapter
+ * excerpt + prev/next nav (below the coda area).
+ * ============================================================================ */
+.page-intro,
+.page-outro {
+  max-width: 60ch;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+.page-outro { margin-bottom: 64px; }
+
+/* Anchor variant of era stepper buttons — chapter pages render era stops as
+ * <a> tags so they can navigate cross-chapter. */
+.stepper-eras a {
+  appearance: none; background: transparent; border: 1px solid transparent;
+  display: inline-flex; flex-direction: column; align-items: center;
+  padding: 6px 10px; cursor: pointer; min-width: 70px;
+  font-family: var(--mono); color: var(--ink); text-decoration: none;
+  border-radius: 2px;
+}
+.stepper-eras a:hover { background: var(--highlight); }
+.stepper-eras a.active { border-color: var(--ink); background: var(--paper); }
+.stepper-eras a .enum { font-size: 9px; letter-spacing: .14em; color: var(--ink-soft); }
+.stepper-eras a .ename { font-family: var(--serif); font-style: italic; font-size: 13px; }
+
+/* ============================================================================
+ * News list — coda block + standalone /news/ page
+ * ============================================================================ */
+.news-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+@media (min-width: 760px) { .news-list { grid-template-columns: 1fr 1fr; } }
+.news-item {
+  display: block;
+  border: 1px solid var(--rule);
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--paper);
+  box-shadow: 3px 3px 0 var(--rule);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+a.news-item:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--rule);
+  border-color: var(--ink);
+}
+.news-item .kicker { color: var(--ink-soft); margin-bottom: 4px; }

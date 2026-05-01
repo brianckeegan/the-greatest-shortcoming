@@ -1,0 +1,28 @@
+# Per-step node sets for the homepage book-summary scrollytelling.
+# Marquee selection — 1-3 entities per era to anchor the network at book altitude.
+# Refine as the book-level argument tightens.
+
+steps:
+  - id: prelude
+    nodes: [olmsted_jr, olmsted_report, will_to_simplify]
+    focus: [olmsted_jr, will_to_simplify]
+
+  - id: free_fall
+    nodes: [bartlett, exponential_curve, blue_line, plan_boulder, quant_chauvinism]
+    focus: [bartlett, quant_chauvinism]
+
+  - id: quarantine
+    nodes: [tanton, cis, fiscal_impact, rule_of_expertise, porter]
+    focus: [rule_of_expertise, tanton]
+
+  - id: swarm
+    nodes: [census_bureau, majority_minority, politics_of_inevitability, ecofascist_imaginary, griffin]
+    focus: [politics_of_inevitability, ecofascist_imaginary]
+
+  - id: portfolio
+    nodes: [ecofascist_imaginary, palingenesis]
+    focus: [palingenesis]
+
+  - id: evacuation
+    nodes: [ecofascist_imaginary, jasanoff]
+    focus: [jasanoff]

@@ -6,9 +6,10 @@
 
 const { useState, useEffect, useRef, useMemo } = React;
 const D = window.GS_DATA;
-const STEPS = window.STEPS;
+const PAGE = window.PAGE_CONTEXT || {};
+const STEPS = PAGE.steps || [];
 const SITE = window.SITE;
-const PROSE = window.GS_PROSE;
+const PROSE = PAGE.prose || {};
 
 const TWEAK_DEFAULTS = SITE.themeDefaults || { theme: "cool", net: "rough", fontSize: 18 };
 
@@ -58,7 +59,12 @@ function renderProse(html, onEnt) {
   });
 }
 
-/* ---------- Header ---------- */
+/* ---------- Header ----------
+ * On home/reading, anchor links scroll within the page. On chapter pages,
+ * they navigate to the homepage anchor (e.g. /#book) so the header acts as
+ * site-wide wayfinding. Era buttons inside the eras-menu navigate to the
+ * mapped chapter URL when on a chapter page.
+ */
 function Header({ activeStep, onJumpEra, onJumpTop }) {
   const [erasOpen, setErasOpen] = useState(false);
   useEffect(() => {
@@ -70,11 +76,22 @@ function Header({ activeStep, onJumpEra, onJumpTop }) {
     return () => document.removeEventListener('click', close);
   }, [erasOpen]);
 
+  const isChapterPage = PAGE.kind === 'chapter';
   const currentEra = STEPS[activeStep];
+
+  const followHashLink = (href) => {
+    const id = (href || '').replace(/^#/, '');
+    if (!id) return;
+    if (isChapterPage) {
+      window.location.href = '/#' + id;
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <header className="top-header">
-      <div className="title" onClick={onJumpTop} style={{ cursor: 'pointer' }}>
+      <div className="title" onClick={isChapterPage ? () => { window.location.href = '/'; } : onJumpTop} style={{ cursor: 'pointer' }}>
         <b>{SITE.title}</b> {SITE.subtitle && <span style={{ color: 'var(--ink-soft)' }}>· {SITE.subtitle}</span>}
       </div>
       <nav className="nav-main">
@@ -89,23 +106,33 @@ function Header({ activeStep, onJumpEra, onJumpTop }) {
                 </button>
                 {erasOpen && (
                   <div className="menu-pop">
-                    {STEPS.map((s, idx) => (
-                      <a key={s.id} href={"#step-" + s.id}
-                         onClick={(e) => { e.preventDefault(); setErasOpen(false); onJumpEra(idx); }}>
-                        <span>{s.title}</span>
-                        <span className="yrs">{s.subtitle}</span>
-                      </a>
-                    ))}
+                    {STEPS.map((s, idx) => {
+                      const era = (D.eras || []).find(e => e.id === s.id);
+                      const slug = era && era.chapter_slug;
+                      const href = isChapterPage && slug ? `/chapters/${slug}/` : `#step-${s.id}`;
+                      return (
+                        <a key={s.id} href={href}
+                           onClick={(e) => {
+                             setErasOpen(false);
+                             if (isChapterPage && slug) return; // let the navigation happen
+                             e.preventDefault();
+                             onJumpEra(idx);
+                           }}>
+                          <span>{s.title}</span>
+                          <span className="yrs">{s.subtitle}</span>
+                        </a>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             );
           }
+          if (item.url && !item.url.startsWith('#')) {
+            return <a key={i} className="menu-btn" href={item.url}>{item.label}</a>;
+          }
           return (
-            <button key={i} className="menu-btn" onClick={() => {
-              const id = (item.url || "").replace(/^#/, "");
-              if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-            }}>{item.label}</button>
+            <button key={i} className="menu-btn" onClick={() => followHashLink(item.url)}>{item.label}</button>
           );
         })}
       </nav>
@@ -199,31 +226,116 @@ function EraStep({ era, idx, onEnt }) {
   );
 }
 
-/* ---------- Era stepper ---------- */
+/* ---------- Era stepper ----------
+ * Home/reading: clicking an era scrolls to the matching scrolly section; the
+ * active state tracks the scroll position. Chapter pages: clicking an era
+ * navigates to the mapped chapter URL; the active state pins to the
+ * chapter's `highlightEraId`. QC/EFI brackets always link to register
+ * sections — on chapter pages, those are on the homepage so the link form is
+ * `/#quant-chauvinism`.
+ */
 function EraStepper({ activeStep, onJump }) {
+  const isChapterPage = PAGE.kind === 'chapter';
+  const stepperCfg = PAGE.stepper || {};
+  const pinnedEraId = stepperCfg.highlightEraId || null;
+  const pinnedIdx = pinnedEraId ? STEPS.findIndex(s => s.id === pinnedEraId) : -1;
+
+  const left = stepperCfg.leftBracket || { label: 'Quantitative chauvinism', href: '#quant-chauvinism' };
+  const right = stepperCfg.rightBracket || { label: 'Ecofascist imaginaries', href: '#ecofascist-imaginaries' };
+
+  const followBracket = (href) => {
+    const id = (href || '').replace(/^#/, '');
+    if (!id) return;
+    if (isChapterPage) {
+      window.location.href = '/#' + id;
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="era-stepper">
-      <a className="stepper-bracket left" href="#quant-chauvinism"
-         onClick={(e) => { e.preventDefault(); document.getElementById('quant-chauvinism')?.scrollIntoView({ behavior: 'smooth' }); }}>
-        <span className="bracket-label">Quantitative chauvinism</span>
+      <a className="stepper-bracket left" href={isChapterPage ? '/' + left.href : left.href}
+         onClick={(e) => { e.preventDefault(); followBracket(left.href); }}>
+        <span className="bracket-label">{left.label}</span>
         <span className="bracket-line" />
       </a>
       <div className="stepper-eras">
-        {STEPS.map((s, i) => (
-          <button key={s.id}
-                  className={(i === activeStep ? "active" : "") + (i < activeStep ? " passed" : "")}
-                  onClick={() => onJump(i)}>
-            <span className="enum">{String(i).padStart(2, '0')}</span>
-            <span className="ename">{s.title}</span>
-          </button>
-        ))}
+        {STEPS.map((s, i) => {
+          const era = (D.eras || []).find(e => e.id === s.id);
+          const slug = era && era.chapter_slug;
+          const isActive = isChapterPage ? (i === pinnedIdx) : (i === activeStep);
+          const isPassed = !isChapterPage && i < activeStep;
+          const cls = (isActive ? "active" : "") + (isPassed ? " passed" : "");
+          if (isChapterPage && slug) {
+            return (
+              <a key={s.id} className={cls} href={`/chapters/${slug}/`}>
+                <span className="enum">{String(i).padStart(2, '0')}</span>
+                <span className="ename">{s.title}</span>
+              </a>
+            );
+          }
+          return (
+            <button key={s.id} className={cls} onClick={() => onJump(i)}>
+              <span className="enum">{String(i).padStart(2, '0')}</span>
+              <span className="ename">{s.title}</span>
+            </button>
+          );
+        })}
       </div>
-      <a className="stepper-bracket right" href="#ecofascist-imaginaries"
-         onClick={(e) => { e.preventDefault(); document.getElementById('ecofascist-imaginaries')?.scrollIntoView({ behavior: 'smooth' }); }}>
+      <a className="stepper-bracket right" href={isChapterPage ? '/' + right.href : right.href}
+         onClick={(e) => { e.preventDefault(); followBracket(right.href); }}>
         <span className="bracket-line" />
-        <span className="bracket-label">Ecofascist imaginaries</span>
+        <span className="bracket-label">{right.label}</span>
       </a>
     </div>
+  );
+}
+
+/* ---------- Raw HTML block (for intro/outro from chapter pages) ---------- */
+function RawHtml({ html, onEnt }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const handlers = [];
+    ref.current.querySelectorAll('[data-ent]').forEach(el => {
+      const handler = (e) => { e.preventDefault(); onEnt(el.dataset.ent); };
+      el.addEventListener('click', handler);
+      el.style.cursor = 'pointer';
+      handlers.push([el, handler]);
+    });
+    return () => handlers.forEach(([el, h]) => el.removeEventListener('click', h));
+  }, [html, onEnt]);
+  return <div ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+/* ---------- News coda ----------
+ * Renders the latest N items from window.GS_DATA.news as compact cards plus
+ * a link to the full /news/ archive.
+ */
+function NewsCoda({ limit = 3 }) {
+  const items = (D.news || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, limit);
+  if (!items.length) {
+    return <p style={{ color: 'var(--ink-soft)', fontStyle: 'italic' }}>No news yet — check back soon.</p>;
+  }
+  return (
+    <>
+      <div className="news-list">
+        {items.map((it, i) => {
+          const inner = (
+            <>
+              <div className="kicker">{it.date}{it.kind ? ` · ${it.kind}` : ''}</div>
+              <h4 style={{ margin: '4px 0 6px', fontStyle: 'italic' }}>{it.title}</h4>
+              {it.blurb && <p style={{ margin: 0, color: 'var(--ink-soft)' }}>{it.blurb}</p>}
+            </>
+          );
+          return it.link
+            ? <a key={i} className="news-item" href={it.link}>{inner}</a>
+            : <div key={i} className="news-item">{inner}</div>;
+        })}
+      </div>
+      <p style={{ marginTop: 16 }}><a href="/news/">see all news →</a></p>
+    </>
   );
 }
 
@@ -235,6 +347,20 @@ function App() {
   const [drawerId, setDrawerId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
 
+  // PAGE_CONTEXT defaults so partial fixtures don't crash the app.
+  const heroCfg = PAGE.hero || {};
+  const stepperCfg = PAGE.stepper || {};
+  const networkCfg = PAGE.network || {};
+  const registersCfg = PAGE.registers || {};
+  const coda = (PAGE.coda && PAGE.coda.length ? PAGE.coda : (SITE.coda || []));
+  const intro = PAGE.intro || null;
+  const outro = PAGE.outro || null;
+  const showHero = heroCfg.show !== false;
+  const showStepper = stepperCfg.show !== false && STEPS.length > 0;
+  const showRegisters = registersCfg.show !== false;
+  const showNetwork = networkCfg.show !== false && STEPS.length > 0;
+  const hasProse = STEPS.length > 0 && STEPS.some(s => PROSE[s.id]);
+
   useEffect(() => {
     document.documentElement.dataset.theme = tweaks.theme;
     document.documentElement.dataset.net = tweaks.net;
@@ -242,6 +368,7 @@ function App() {
   }, [tweaks]);
 
   useEffect(() => {
+    if (!hasProse) return; // no scroll-driven step tracking on chapter pages
     const sections = STEPS.map(s => document.getElementById('step-' + s.id)).filter(Boolean);
     const onScroll = () => {
       const docH = document.documentElement.scrollHeight - window.innerHeight;
@@ -257,7 +384,7 @@ function App() {
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [hasProse]);
 
   const jumpToEra = (i) => {
     const el = document.getElementById('step-' + STEPS[i].id);
@@ -270,7 +397,13 @@ function App() {
   const onEnt = (id) => setDrawerId(id);
 
   const { TweaksPanel, TweakSection, TweakRadio, TweakSlider } = window;
-  const heroTitle = SITE.hero.title_lines || ["The Greatest", "Shortcoming"];
+  const heroTitle = heroCfg.titleLines && heroCfg.titleLines.length ? heroCfg.titleLines : (SITE.hero.title_lines || ["The Greatest", "Shortcoming"]);
+
+  // Coda body: empty body + id 'news' is the signal to render the live news list.
+  const renderCodaBody = (c) => {
+    if (c.id === 'news' && (!c.body || !c.body.trim())) return <NewsCoda />;
+    return <p dangerouslySetInnerHTML={{ __html: c.body }} />;
+  };
 
   return (
     <>
@@ -278,25 +411,29 @@ function App() {
 
       <Header activeStep={activeStep} onJumpEra={jumpToEra} onJumpTop={jumpTop} />
 
-      <div className="hero">
-        <h1>{heroTitle.map((line, i) => <React.Fragment key={i}>{line}{i < heroTitle.length - 1 ? <br /> : null}</React.Fragment>)}</h1>
-        <div className="kicker hero-kicker">
-          {SITE.registers.map((r, i) => (
-            <React.Fragment key={r.id}>
-              {i > 0 && <span className="amp"> &amp; </span>}
-              <a href={"#" + r.id} onClick={(e) => { e.preventDefault(); document.getElementById(r.id)?.scrollIntoView({ behavior: 'smooth' }); }}>
-                {r.title.toLowerCase()}{i === SITE.registers.length - 1 ? " →" : ""}
-              </a>
-            </React.Fragment>
-          ))}
+      {showHero && (
+        <div className="hero">
+          <h1>{heroTitle.map((line, i) => <React.Fragment key={i}>{line}{i < heroTitle.length - 1 ? <br /> : null}</React.Fragment>)}</h1>
+          <div className="kicker hero-kicker">
+            {SITE.registers.map((r, i) => (
+              <React.Fragment key={r.id}>
+                {i > 0 && <span className="amp"> &amp; </span>}
+                <a href={"#" + r.id} onClick={(e) => { e.preventDefault(); document.getElementById(r.id)?.scrollIntoView({ behavior: 'smooth' }); }}>
+                  {r.title.toLowerCase()}{i === SITE.registers.length - 1 ? " →" : ""}
+                </a>
+              </React.Fragment>
+            ))}
+          </div>
+          <p className="deck">{heroCfg.deck || SITE.hero.deck}</p>
+          {(heroCfg.scrollCue || SITE.hero.scroll_cue) && <div className="scroll-cue">{heroCfg.scrollCue || SITE.hero.scroll_cue}</div>}
         </div>
-        <p className="deck">{SITE.hero.deck}</p>
-        <div className="scroll-cue">{SITE.hero.scroll_cue}</div>
-      </div>
+      )}
 
-      <EraStepper activeStep={activeStep} onJump={jumpToEra} />
+      {intro && <section className="page-intro"><RawHtml html={intro.html} onEnt={onEnt} /></section>}
 
-      {SITE.registers.map(r => (
+      {showStepper && <EraStepper activeStep={activeStep} onJump={jumpToEra} />}
+
+      {showRegisters && SITE.registers.map(r => (
         <section key={r.id} id={r.id} className="def-bar">
           <div className="def-inner">
             <div className="kicker">{r.kicker}</div>
@@ -306,41 +443,48 @@ function App() {
         </section>
       ))}
 
-      <div className="scrolly">
-        <div className="sticky-figure">
-          <div className="figure-frame">
-            <div className="figure-caption">
-              <span><b>Figure 1.</b> The network grows era by era.</span>
-              <span>step {String(activeStep + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')} · {STEPS[activeStep].title}</span>
-            </div>
-            <div className="figure-svg-wrap">
-              <window.ScrollyNetwork
-                stepIndex={activeStep}
-                activeId={drawerId}
-                hoveredId={hoveredId}
-                setHoveredId={setHoveredId}
-                onNodeClick={(id) => setDrawerId(id)} />
-            </div>
-            <div className="figure-legend">
-              <span><i className="person" />person</span>
-              <span><i className="org" />organization</span>
-              <span><i className="theme" />theme</span>
-              <span><i className="instrument" />instrument</span>
-              <span><i className="doc" />document</span>
+      {showNetwork && hasProse && (
+        <div className="scrolly">
+          <div className="sticky-figure">
+            <div className="figure-frame">
+              <div className="figure-caption">
+                <span><b>Figure 1.</b> {networkCfg.caption || 'The network grows era by era.'}</span>
+                <span>step {String(activeStep + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')} · {STEPS[activeStep] ? STEPS[activeStep].title : ''}</span>
+              </div>
+              <div className="figure-svg-wrap">
+                <window.ScrollyNetwork
+                  stepIndex={activeStep}
+                  activeId={drawerId}
+                  hoveredId={hoveredId}
+                  setHoveredId={setHoveredId}
+                  onNodeClick={(id) => setDrawerId(id)} />
+              </div>
+              <div className="figure-legend">
+                <span><i className="person" />person</span>
+                <span><i className="org" />organization</span>
+                <span><i className="theme" />theme</span>
+                <span><i className="instrument" />instrument</span>
+                <span><i className="doc" />document</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="prose">
-          {D.eras.map((era, i) => <EraStep key={era.id} era={era} idx={i} onEnt={onEnt} />)}
+          <div className="prose">
+            {STEPS.map((s, i) => {
+              const era = (D.eras || []).find(e => e.id === s.id) || s;
+              return <EraStep key={era.id} era={era} idx={i} onEnt={onEnt} />;
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {SITE.coda.map(c => (
+      {outro && <section className="page-outro"><RawHtml html={outro.html} onEnt={onEnt} /></section>}
+
+      {coda.map(c => (
         <section key={c.id} id={c.id} className="coda">
           <div className="kicker">{c.kicker}</div>
           <h2>{c.title}</h2>
-          <p dangerouslySetInnerHTML={{ __html: c.body }} />
+          {renderCodaBody(c)}
         </section>
       ))}
 

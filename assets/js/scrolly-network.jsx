@@ -1,6 +1,9 @@
-/* Scroll-driven network — nodes/edges activate by step */
+/* Scroll-driven network — nodes/edges activate by step.
+ * STEPS comes from window.PAGE_CONTEXT.steps (set by _includes/page-context.html
+ * from per-page _data/scrolly/{key}.yml + _data/eras.yml). */
 
 const D = window.GS_DATA;
+const STEPS = (window.PAGE_CONTEXT && window.PAGE_CONTEXT.steps) || [];
 
 // kind shape
 const NodeShape = ({ kind, r = 11 }) => {
@@ -11,58 +14,6 @@ const NodeShape = ({ kind, r = 11 }) => {
   if (kind === 'document')    return <path className="node-shape" d={`M ${-r} ${-r*0.9} L ${r*0.7} ${-r*0.9} L ${r} ${-r*0.55} L ${r} ${r*0.9} L ${-r} ${r*0.9} Z`} />;
   return <circle className="node-shape" r={r} />;
 };
-
-/* Per-era node sets (cumulative). Each step adds nodes that build the full network. */
-const STEPS = [
-  // 0: Prelude — Olmsted era
-  {
-    id: 'prelude',
-    title: 'Prelude',
-    subtitle: 'Boulder, 1898–1959',
-    nodes: ['olmsted_jr','olmsted_brothers','bcia','chautauqua','olmsted_report','will_to_simplify'],
-    focus: ['olmsted_jr','olmsted_report'],
-  },
-  // 1: Free Fall
-  {
-    id: 'free_fall',
-    title: 'Free Fall',
-    subtitle: '1968 — 1994',
-    nodes: ['mckelvey','bartlett','cu_boulder','los_alamos','plan_boulder','blue_line','open_space_program','danish_plan','bvcp','exponential_curve','sierra_club','bartlett_lecture','blue_line_amendment_doc','danish_plan_doc','carrying_capacity','population_bomb','quant_chauvinism'],
-    focus: ['bartlett','exponential_curve','blue_line'],
-  },
-  // 2: Quarantine
-  {
-    id: 'quarantine',
-    title: 'Quarantine',
-    subtitle: '1995 — 2008',
-    nodes: ['tanton','cis','fiscal_impact','rule_of_expertise','porter','desrosieres'],
-    focus: ['tanton','fiscal_impact','rule_of_expertise'],
-  },
-  // 3: Swarm
-  {
-    id: 'swarm',
-    title: 'Swarm',
-    subtitle: '2009 — 2024',
-    nodes: ['census_bureau','majority_minority','census_2008_proj','politics_of_inevitability','arendt','jasanoff','griffin','ecofascist_imaginary','palingenesis'],
-    focus: ['majority_minority','politics_of_inevitability','ecofascist_imaginary'],
-  },
-  // 4: Portfolio
-  {
-    id: 'portfolio',
-    title: 'Portfolio',
-    subtitle: '2025 — 2048',
-    nodes: [],
-    focus: [],
-  },
-  // 5: Evacuation
-  {
-    id: 'evacuation',
-    title: 'Evacuation',
-    subtitle: '2049 — 2068',
-    nodes: [],
-    focus: [],
-  },
-];
 
 /* Compute layout once: a wide network with regions per era */
 function computeLayout(W, H) {
@@ -211,5 +162,4 @@ const ScrollyNetwork = ({ stepIndex, activeId, onNodeClick, hoveredId, setHovere
 };
 
 window.ScrollyNetwork = ScrollyNetwork;
-window.STEPS = STEPS;
 window.NodeShape = NodeShape;

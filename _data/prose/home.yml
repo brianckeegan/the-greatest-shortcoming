@@ -1,0 +1,79 @@
+# Home book-summary prose. One short paragraph per era — the book at altitude.
+# Same markup conventions as boulder.yml:
+#   <span class="ent" data-ent="ID">label</span>   — entity reference (opens drawer)
+#   <span class="hl">…</span>                       — highlighted phrase
+#   {{ DOC:doc_id }}                                — inline document vignette
+#   {{ QUOTE:source | body }}                       — pull-quote
+# Rewrite freely; this is the book-level register, not chapter 1.
+
+prelude: |
+  <p class="dropcap">
+    The book begins in <span class="ent" data-ent="chautauqua">Boulder</span>, where a 1910
+    survey by <span class="ent" data-ent="olmsted_jr">Frederick Law Olmsted Jr.</span>
+    codified an early grammar of environmental preservation that already specified <i>who
+    belongs</i>. The instruments came later; the
+    <span class="ent" data-ent="will_to_simplify">will to simplify</span> was already in place.
+  </p>
+
+free_fall: |
+  <p class="dropcap">
+    Half a century later, the physicist <span class="ent" data-ent="bartlett">Albert Bartlett</span>
+    translated radioactive decay into a pedagogy of population: a single bacterium, a doubling
+    time, a bottle that fills. The <span class="ent" data-ent="exponential_curve">exponential
+    curve</span> compressed fertility, mortality, migration, and political economy into one
+    alarming metric. This is the book's first analytical register —
+    <strong><span class="ent" data-ent="quant_chauvinism">quantitative chauvinism</span></strong>:
+    numerical instruments deployed to foreclose political deliberation by converting contested
+    claims into apparent technical necessities.
+  </p>
+
+quarantine: |
+  <p class="dropcap">
+    By the 1990s the same template had migrated from city councils to think tanks. The
+    <span class="ent" data-ent="tanton">Tanton network</span> — the
+    <span class="ent" data-ent="cis">Center for Immigration Studies</span> chief among them —
+    re-tooled the apparatus as <span class="ent" data-ent="fiscal_impact">fiscal impact
+    statements</span>: immigrants priced and ranked. As
+    <span class="ent" data-ent="porter">Theodore Porter</span> observed, numerical objectivity
+    spread less because it described the world accurately than because it supplied a politically
+    useful pose of impersonality. The
+    <span class="ent" data-ent="rule_of_expertise">rule of expertise</span> insulated the
+    arithmetic from democratic scrutiny.
+  </p>
+
+swarm: |
+  <p class="dropcap">
+    In 2008 the <span class="ent" data-ent="census_bureau">U.S. Census Bureau</span> released a
+    projection of a <span class="ent" data-ent="majority_minority">majority-minority</span>
+    America. The conditional became a countdown; the
+    <span class="ent" data-ent="politics_of_inevitability">politics of inevitability</span>
+    converted scenarios into destinies. The political projects that recruited this authority
+    are the book's second register —
+    <strong><span class="ent" data-ent="ecofascist_imaginary">eco-fascist imaginaries</span></strong>:
+    organized visions of environmental futures that naturalize hierarchy and exclusion as
+    ecological necessity.
+  </p>
+
+portfolio: |
+  <p class="dropcap">
+    The instruments find a new asset class. Pronatalist longtermism reframes demography as a
+    portfolio problem — fertility rates as investment metrics, populations to be hedged and
+    underwritten. The
+    <span class="ent" data-ent="ecofascist_imaginary">eco-fascist imaginary</span> turns
+    technocratic; the <span class="hl">will to simplify</span> becomes the will to optimize.
+  </p>
+  <p style="color:var(--ink-soft);font-style:italic">
+    ↳ The book-level summary of this era will tighten as the chapter is drafted.
+  </p>
+
+evacuation: |
+  <p class="dropcap">
+    Climate planning normalizes triage. Selective rescue, demographic sorting, and the camp
+    become administrative routines, made durable in
+    <span class="ent" data-ent="jasanoff">Sheila Jasanoff's</span> sense by the laws,
+    infrastructures, and reporting requirements that enact them. The hundred-year arc closes
+    where it began — a quiet machinery for deciding who counts.
+  </p>
+  <p style="color:var(--ink-soft);font-style:italic">
+    ↳ Will be developed alongside the chapter draft.
+  </p>

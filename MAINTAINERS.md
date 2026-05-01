@@ -6,21 +6,32 @@ maintainers and you. The most important rules are at the top; operational
 recipes for common tasks are in the middle; design rationale and the
 where-to-edit map are at the end.
 
-The repo contains **two surfaces in one Jekyll site**:
+The repo presents the book through **one unified scrollytelling design**.
+The React app shell drives the homepage and every chapter page identically.
+Static pages share matching chrome (rendered as plain HTML) so the visual
+idiom is end-to-end.
 
 | Path | What it is | Layout | JS? |
 |------|------------|--------|-----|
-| `/` and `/contents/`, `/about/`, `/chapters/<slug>/`, `/bibliography/`, `/news/` | The promotional / landing site, JS-light, restrained academic look. | `default` → `home` / `chapter` / `page` | Only the dark-mode toggle and the bibliography filter. |
-| `/reading/boulder/` | A React + Babel-via-CDN scrollytelling "network reading" of chapter 1. Has its own header, hero, scrolly stage, drawer, Tweaks panel. | `reading` (does NOT inherit `default`) | Yes — React app loaded from `assets/js/*.jsx` via `@babel/standalone`. |
+| `/` | Book-summary scrollytelling — hero, QC \| 6 era buttons \| EFI navbar, register def-bars, scrolly figure + book-summary prose, coda (Book / Author / News / Resources). | `scrolly` (mounts React) | Yes |
+| `/chapters/<slug>/` (preface + 8 chapters) | Chapter abstract above the stepper, chapter excerpt below. The stepper pins the chapter's mapped era and lets readers jump cross-chapter. All chapters are treated identically. | `scrolly` (mounts React; chapter intro/outro captured via Liquid in `_layouts/scrolly.html`) | Yes |
+| `/about/`, `/contents/`, `/bibliography/`, `/news/`, `/draft-status/` | Static pages. Same `.top-header` chrome as React surface, rendered as plain HTML. | `default` → `page` | Bibliography filter + dark-mode toggle only. |
 
-Both surfaces share the **same design language**: the same fonts, palette,
-italic headings, and accent. That sharing is a contract; do not break it.
+The React app reads its content from per-page Jekyll data: the homepage
+prose comes from `_data/prose/home.yml`, every chapter's stepper config
+from `_data/scrolly/<slug>.yml` (chapters inherit their step set from
+`home` via `steps_inherit`). The bridge is `window.PAGE_CONTEXT`, emitted
+by `_includes/page-context.html`.
+
+The shared design language is a contract; do not break it.
 
 ## Ground rules
 
-1. **Do not blow away the `/reading/` scrollytelling.** It is real, working
-   work driven by `_data/{eras,people,orgs,instruments,themes,documents,prose}.yml`
-   and `assets/js/{app,scrolly-network,tweaks-panel}.jsx`. Preserve it.
+1. **Do not break the React scrollytelling shell.** It drives every chapter
+   page and the homepage. Driven by
+   `_data/{eras,people,orgs,instruments,themes,documents,news}.yml`,
+   `_data/prose/*.yml`, `_data/scrolly/*.yml`, and
+   `assets/js/{app,scrolly-network,tweaks-panel}.jsx`. Preserve it.
 2. **The preface and chapter excerpts are a contract.** Only the preface and
    curated 200–400 word excerpts may appear as body text on the site. Never
    publish more chapter prose than that, even if the manuscript is right
@@ -89,25 +100,25 @@ Why one accent and not two:
 Why brick red and not ink blue: scrolly.css already used brick red. The
 landing site harmonizes rather than introducing a new identity.
 
-### Why two surfaces share one stylesheet
+### Why one stylesheet, one design across all pages
 
-The original repo was a React + Babel-via-CDN scrollytelling reading. The
-landing-site spec asked for a `minima`-flavored static site, which would
-have introduced a second visual identity in the same repo. The compromise
-was to keep `scrolly.css` as the design ground truth and have the landing
-site inherit its tokens, fonts, and base typography. This means:
+The original repo had two surfaces with separate stylesheets — a static
+landing site and a React scrollytelling reading. After a redesign pass
+(see PR history), the homepage and every chapter page were promoted to
+the React shell so the book reads as one project, not two templates.
 
-- A reader who lands on `/` and clicks through to `/reading/boulder/` does
-  not experience a typographic break. The book is one project, not two
-  templates.
-- Token changes propagate. Edit `--tufte-red` once and both surfaces update.
-- New layouts on the landing site can ship without re-deciding fonts.
+The current invariant: `scrolly.css` is the design ground truth and is
+loaded by every page (React-mounted or static). `main.css` adds layout
+patterns used by both surfaces (chapter content styles, action cards,
+TOC). Tokens defined in `scrolly.css` propagate everywhere — edit
+`--tufte-red` once and the homepage, every chapter page, and /about/ all
+update.
 
 ### Why no animation, no parallax, no reveal-on-load
 
-The scrollytelling reading at `/reading/boulder/` is the one place
-animation belongs (the network SVG re-arranges as the reader scrolls). The
-landing site is dignified-and-still. No fade-in, no parallax, no
+The scrollytelling on the homepage (and any future chapter readings) is the
+one place animation belongs — the network SVG re-arranges as the reader
+scrolls. Static pages are dignified-and-still. No fade-in, no parallax, no
 intersection-observer reveal. The only motion is a 0.12s color/border
 transition on hover, which is functional feedback, not decoration.
 
@@ -132,17 +143,20 @@ The dark palette is intentionally **warm dark** (`#1c1a17`), not flat black
 (`#000`). Black is harsher than ink-on-paper inverted. Warm dark preserves
 the manuscript-like feel.
 
-### Why the React reading lives at `/reading/boulder/`, not `/`
+### Why every chapter is treated identically
 
-Two reasons:
+Every chapter renders through the same React shell with the same chrome.
+The stepper pins the chapter's mapped era (`_data/scrolly/<slug>.yml`'s
+`highlight_era`) and the era buttons let readers jump cross-chapter; the
+chapter abstract sits above the stepper, the excerpt below. There is no
+"deep dive" variant for any one chapter — uniformity is the design.
 
-1. The book has eight drafted chapters, and only one has a network reading.
-   Making the network reading the front door over-promises what's available
-   for chapters 2–8.
-2. The landing site is the durable surface. When the manuscript ships, the
-   landing site is what readers will arrive at from press releases, search,
-   and citations. The scrollytelling reading is a deeper artifact — it
-   should be deliberately reached, not stumbled into.
+If a future chapter needs an immersive scrollytelling pass with its own
+network/prose (the kind chapter 1 had at `/reading/boulder/` in earlier
+drafts), the path is to author per-chapter `_data/prose/<slug>.yml` and
+populate `_data/scrolly/<slug>.yml`'s `steps` (instead of inheriting from
+`home`). Then enable the network on that chapter via
+`network: { show: true }`. The shell already handles it.
 
 ## Design language ground truth
 
@@ -358,7 +372,7 @@ To remove a draft tag once content is approved: delete the
 - Dark tokens live in `_sass/tgs.scss` under `[data-theme-mode="dark"]`. The
   scrollytelling Tweaks panel's `[data-theme="warm|cool|ivory"]` themes are
   re-stated as dark variants there too, so dark mode survives a Tweaks
-  switch on `/reading/boulder/`.
+  switch on the React surface.
 - The `prefers-color-scheme` media query is the **first-visit fallback only**.
   Once the user toggles, their explicit choice wins.
 
@@ -374,7 +388,6 @@ If you change tokens, update **both** the light tokens (in scrolly.css's
      title: "Some Title"
      status: drafted          # or: forthcoming
      pitch: "One sentence."
-     reading_url: /reading/some-slug/   # optional — only if a scrolly reading exists
    ```
 2. Create the chapter file at `_chapters/09-some-slug.md` matching the slug:
    ```markdown
@@ -392,21 +405,33 @@ If you change tokens, update **both** the light tokens (in scrolly.css's
 
    <!-- 200–400 word verbatim excerpt as Markdown. -->
    ```
-3. The chapter renders at `/chapters/09-some-slug/`. The TOC and the
+3. Create `_data/scrolly/09-some-slug.yml` so the React shell knows what to
+   pin in the era stepper:
+   ```yaml
+   highlight_era: portfolio   # the era this chapter maps to (or omit if none)
+   network: { show: false }
+   steps_inherit: home        # reuse the homepage stepper
+   ```
+4. (Optional) Add `chapter_slug: 09-some-slug` to the matching era in
+   `_data/eras.yml` so cross-chapter navigation lands on this chapter when
+   readers click that era from another chapter's stepper.
+5. The chapter renders at `/chapters/09-some-slug/`. The TOC and the
    prev/next nav update automatically — they iterate `_data/chapters.yml`.
 
 ## Adding a news item
 
-Append to `pages/news.md`. The page is intentionally a static list — no
-collection, no posts directory. Format:
+Append to `_data/news.yml`:
 
-```html
-<article class="news-item">
-  <p class="kicker">2026-06-15 · talk</p>
-  <h2>Title</h2>
-  <p>One or two sentences. Optional <a href="…">link</a>.</p>
-</article>
+```yaml
+- date: "2026-06-15"
+  kind: "talk"        # talk | review | event | press | release
+  title: "Title of the talk or event"
+  blurb: "One sentence about it."
+  link: "https://…"   # optional
 ```
+
+It surfaces automatically in the homepage Coda (latest 3 by date) and in
+the full archive at `/news/`. The page is sorted descending by `date`.
 
 ## Refreshing the bibliography
 
@@ -506,14 +531,20 @@ After a build succeeds, the deploy job prints a URL like
 `https://brianckeegan.github.io/the-greatest-shortcoming/`. Visit it and
 walk:
 
-1. The home page loads, three Bartlett epigraphs render, the dark-mode
-   toggle works.
+1. The home page loads. The hero renders, the QC | 6 era buttons | EFI
+   stepper appears, the network SVG draws, the prose advances on scroll,
+   the coda shows Book / Author / News / Resources, the Tweaks panel opens,
+   the dark-mode toggle works.
 2. `/contents/` lists eight chapters and the preface.
-3. `/chapters/preface/` renders the verbatim preface.
-4. `/reading/boulder/` mounts the React scrollytelling — the network SVG
-   draws, the Tweaks panel opens, the stepper advances on scroll.
-5. `/bibliography/` lists entries and the filter input narrows them.
-6. `View source` on any page — confirm there are no surviving `\textit`,
+3. `/chapters/preface/` and a couple of `/chapters/<slug>/` pages render
+   the chapter abstract above the stepper, content below, with the mapped
+   era pinned in the stepper.
+4. `/about/`, `/news/`, `/bibliography/` render with the same `.top-header`
+   chrome as the React surface (single-row brand + nav, no double row).
+5. `/news/` lists every item from `_data/news.yml`, newest first; the
+   homepage Coda shows the latest three.
+6. `/bibliography/` lists entries and the filter input narrows them.
+7. `View source` on any page — confirm there are no surviving `\textit`,
    `\cite`, `% ` LaTeX residues.
 
 ### Rolling back a bad deploy
@@ -586,17 +617,20 @@ The pre-paint script in `_includes/head-extra.html` is supposed to set
 moved the include later in `<head>` or wrapped it in `defer`/`async`, the
 flash returns. The include must run synchronously at the top of `<head>`.
 
-### React reading at /reading/boulder/ shows a blank page
+### Homepage or a chapter page shows a blank shell
 
 Open the browser console.
 
 - `ReferenceError: React is not defined` — the React UMD `<script>` tag
   failed (network, integrity hash mismatch). Check the integrity attributes
-  in `_layouts/reading.html` against the version pinned. If you bumped the
-  version, regenerate the SRI hashes from
-  https://www.srihash.org/.
+  in `_layouts/scrolly.html` against the version pinned. If you bumped the
+  version, regenerate the SRI hashes from https://www.srihash.org/.
 - A Babel parse error — your edit to `assets/js/app.jsx` (or another `.jsx`)
   has a syntax error. Babel-standalone reports line numbers; fix in source.
+- `Cannot read properties of undefined (reading 'steps')` — `PAGE_CONTEXT`
+  isn't set. Confirm `_includes/page-context.html` runs after
+  `site-data.html` and before any `.jsx` script tag in
+  `_layouts/scrolly.html`.
 - The `<noscript>` fallback shows but the React render doesn't — JavaScript
   is disabled or blocked by a content blocker. Not a site bug.
 
@@ -667,7 +701,7 @@ keep to it.
 - **Branch:** all Pages deploys come off `master`. Long work goes on a
   topic branch and merges in. Do not push WIP directly to `master`.
 - **Commit messages:** imperative mood, ≤ 72 chars in the subject. Body
-  explains *why* if non-obvious. Example: `Move scrollytelling to /reading/boulder/`.
+  explains *why* if non-obvious. Example: `Wire all chapter pages to the scrolly layout`.
 - **Atomic commits:** scaffold, content, layout, deploy config — each its
   own commit. Avoid mixing layout edits with copy edits in one commit;
   diffs become hard to review.
@@ -732,11 +766,12 @@ If the site is broken on `master` and you don't know why:
 
 If the React reading is the only thing broken (landing pages render fine):
 
-- Check `_data/site-data.html`'s JSON serialization. Liquid filters
-  occasionally produce invalid JSON when a YAML field has unescaped quotes
-  or newlines. Look at `view-source:/reading/boulder/` and find the
-  `<script>window.SITE = …</script>` block — if it's malformed, Babel
-  fails silently.
+- Check `_includes/site-data.html`'s and `_includes/page-context.html`'s
+  JSON serialization. Liquid filters occasionally produce invalid JSON when
+  a YAML field has unescaped quotes or newlines. Look at the page source
+  and find the `<script>window.SITE = …</script>` and
+  `<script>(function(){... window.PAGE_CONTEXT = ... })();</script>` blocks
+  — if either is malformed, Babel fails silently.
 - Try setting `assets/js/app.jsx` aside and loading a minimal hello-world
   React component first. If that mounts, the issue is in your data; if
   not, the issue is in the React/Babel CDN load.
@@ -754,12 +789,13 @@ If the Pages build itself is failing (Action red across multiple commits):
 
 ## Files NOT to touch
 
-- `assets/js/*.jsx` — the React scrollytelling code. Edits here change
-  `/reading/boulder/` behavior. Edit only with intent and only if you know
-  React + the in-page Babel compilation flow.
-- `_data/{people,orgs,instruments,themes,documents,prose,eras}.yml` — the
-  network-reading entity graph. Edits here change `/reading/boulder/`
-  content.
+- `assets/js/*.jsx` — the React scrollytelling code. Edits here change the
+  homepage and every chapter page's behavior. Edit only with intent and only
+  if you know React + the in-page Babel compilation flow.
+- `_data/{people,orgs,instruments,themes,documents,eras}.yml` and
+  `_data/prose/*.yml`, `_data/scrolly/*.yml` — the entity graph and per-page
+  prose/step configs that drive the React surface. Edits here change the
+  homepage and chapter content.
 - `assets/css/scrolly.css` — the design language. Edit deliberately, since
   the landing site inherits from it.
 - `bibliography.bib` (in `uploads/`) — manuscript artifact. Source of truth
@@ -781,54 +817,62 @@ three moments. Future sessions should respect these:
 
 ```
 .
-├── _config.yml             # site identity, nav, registers, coda, collections, defaults
+├── _config.yml             # site identity, nav, nav_reading, registers, coda (with News),
+│                           #   theme defaults, collections, defaults (chapters → scrolly + page_kind: chapter)
 ├── Gemfile                 # github-pages gem
-├── CLAUDE.md               # this file
-├── README.md               # README for the scrollytelling layer (predates the landing site)
+├── README.md               # high-level reference (run, deploy, customize, troubleshoot)
+├── MAINTAINERS.md          # this file
 ├── LICENSE.md
 ├── _data/
-│   ├── chapters.yml        # drives TOC, chapter cards, prev/next
+│   ├── chapters.yml        # drives TOC, chapter cards, prev/next nav
 │   ├── bibliography.yml    # generated by scripts/bib_to_yaml.rb
-│   ├── eras.yml            # /reading/ scrollytelling
-│   ├── people.yml          # /reading/ scrollytelling
-│   ├── orgs.yml            # /reading/ scrollytelling
-│   ├── themes.yml          # /reading/ scrollytelling
-│   ├── instruments.yml     # /reading/ scrollytelling
-│   ├── documents.yml       # /reading/ scrollytelling
-│   └── prose.yml           # /reading/ scrollytelling
+│   ├── eras.yml            # the 6 eras + chapter_slug mapping (era → chapter URL)
+│   ├── people.yml          # entity graph
+│   ├── orgs.yml            # entity graph
+│   ├── themes.yml          # entity graph (incl. QC, EFI)
+│   ├── instruments.yml     # entity graph
+│   ├── documents.yml       # entity graph
+│   ├── news.yml            # news/event items (latest 3 in homepage Coda; full list at /news/)
+│   ├── prose/              # per-page era prose
+│   │   └── home.yml        # book-summary (homepage)
+│   └── scrolly/            # per-page step (nodes/focus) configs
+│       ├── home.yml        # homepage book-summary (was hard-coded in scrolly-network.jsx)
+│       ├── preface.yml     # chapter stub (no era pinned)
+│       ├── 01-boulder.yml  # chapter stubs — `steps_inherit: home` reuses home steps
+│       ├── 02-the-free-fall.yml
+│       └── …
 ├── _includes/
 │   ├── head-extra.html     # pre-paint dark-mode setter
-│   ├── header.html         # landing-site header + nav + theme toggle
-│   ├── footer.html         # landing-site footer
+│   ├── header.html         # static-page top header (HTML mirror of React <Header>)
+│   ├── footer.html         # static-page footer
 │   ├── chapter-card.html   # one TOC card
-│   ├── epigraph.html       # the three Bartlett epigraphs
-│   └── site-data.html      # /reading/ React data bridge
+│   ├── epigraph.html       # the three Bartlett epigraphs (legacy; not used in current home)
+│   ├── site-data.html      # Jekyll → window.SITE / window.GS_DATA bridge (page-invariant)
+│   └── page-context.html   # Jekyll → window.PAGE_CONTEXT bridge (per-page steps/prose/intro/outro)
 ├── _layouts/
-│   ├── default.html        # landing-site shell (no React)
-│   ├── home.html           # landing hero + epigraphs + argument + registers + author + actions
-│   ├── chapter.html        # preface + chapter pages
-│   ├── page.html           # about, contents, bibliography, news, draft-status
-│   └── reading.html        # /reading/ shell — loads React + Babel
+│   ├── default.html        # static-page shell (no React)
+│   ├── scrolly.html        # React mount + chapter intro/outro Liquid capture
+│   └── page.html           # about, contents, bibliography, news, draft-status
 ├── _sass/
 │   └── tgs.scss            # dark-mode tokens (overrides scrolly.css)
 ├── assets/
 │   ├── css/
-│   │   ├── scrolly.css     # design ground truth (fonts, palette, base typography)
-│   │   └── main.scss       # landing-site layout patterns; compiles to main.css
+│   │   ├── scrolly.css     # design ground truth (fonts, palette, base typography, top-header,
+│   │   │                   #   stepper, news-list, page-intro/outro, register def-bars, …)
+│   │   └── main.scss       # layout patterns shared by both shells; compiles to main.css
 │   ├── js/
-│   │   ├── app.jsx                  # /reading/ React app
-│   │   ├── scrolly-network.jsx      # /reading/ network SVG
-│   │   └── tweaks-panel.jsx         # /reading/ in-page Tweaks UI
+│   │   ├── app.jsx                  # main React app — reads window.PAGE_CONTEXT
+│   │   ├── scrolly-network.jsx      # network SVG — reads STEPS from PAGE_CONTEXT.steps
+│   │   └── tweaks-panel.jsx         # in-page Tweaks UI
 │   └── img/                # optional cover art / social cards
-├── _chapters/              # collection: 00-preface.md … 08-boulder-again.md
-├── _reading/               # collection: boulder.html (mounts React)
+├── _chapters/              # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter via _config defaults)
 ├── pages/                  # static pages: about, contents, bibliography, news, draft-status
 ├── scripts/
 │   └── bib_to_yaml.rb      # bibliography.bib → _data/bibliography.yml
 ├── uploads/
 │   ├── bibliography.bib    # downloadable from /bibliography/
-│   └── ch_01.pdf           # original chapter PDF, predates the landing site
-├── index.md                # / — uses home layout
+│   └── ch_01.pdf           # original chapter PDF
+├── index.md                # / (page_kind: home, page_id: home — uses scrolly layout)
 └── .github/
     ├── FUNDING.yml
     └── workflows/github-pages.yml

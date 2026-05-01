@@ -1,0 +1,3 @@
+# Preface: no era pinned (frames the whole book). Stepper hidden because
+# steps_inherit isn't set; an empty steps array suppresses the navbar.
+network: { show: false }

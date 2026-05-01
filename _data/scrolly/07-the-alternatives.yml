@@ -1,0 +1,4 @@
+# Closing chapter — looks past the era arc, no specific era pinned, but the
+# stepper still shows for cross-chapter navigation.
+network: { show: false }
+steps_inherit: home

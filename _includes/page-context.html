@@ -1,0 +1,114 @@
+{%- comment -%}
+  Emit window.PAGE_CONTEXT for the current page. The React app reads from this
+  instead of from hard-coded literals so multiple scrollytelling pages (home,
+  reading, chapter) can share one app shell.
+
+  Resolves data via page frontmatter:
+    page.page_kind   → 'home' | 'reading' | 'chapter' | 'static'  (default 'static')
+    page.page_id     → key for prose / scrolly lookups            (default page_kind)
+    page.scrolly_key → override scrolly file key                  (default page_id)
+    page.prose_key   → override prose file key                    (default page_id)
+    page.highlight_era → era id pinned in the stepper (chapter pages)
+
+  Steps merge the per-page nodes/focus with eras.yml metadata (title, num, etc.).
+  A scrolly file may set `steps_inherit: <other_key>` to reuse another page's steps.
+
+  Must run AFTER site-data.html (so window.GS_DATA is set) and BEFORE any .jsx.
+{%- endcomment -%}
+
+{%- assign page_kind = page.page_kind | default: "static" -%}
+{%- comment -%}
+  page_id default: explicit `page.page_id`, else page.slug for chapter pages,
+  else page_kind. Lets chapter pages fall through to `_data/scrolly/<slug>.yml`
+  without per-file frontmatter.
+{%- endcomment -%}
+{%- assign page_id = page.page_id | default: page.slug | default: page_kind -%}
+{%- assign scrolly_key = page.scrolly_key | default: page_id -%}
+{%- assign prose_key = page.prose_key | default: page_id -%}
+
+{%- assign raw_scrolly_data = site.data.scrolly[scrolly_key] -%}
+{%- assign scrolly_data = raw_scrolly_data -%}
+{%- if raw_scrolly_data.steps_inherit -%}
+  {%- assign scrolly_data = site.data.scrolly[raw_scrolly_data.steps_inherit] -%}
+{%- endif -%}
+{%- assign step_specs = scrolly_data.steps -%}
+
+{%- assign prose_data = site.data.prose[prose_key] -%}
+
+<script>
+(function () {
+  var ERAS = (window.GS_DATA && window.GS_DATA.eras) || [];
+  var ERA_BY_ID = {};
+  ERAS.forEach(function (e) { ERA_BY_ID[e.id] = e; });
+
+  var stepSpecs = {{ step_specs | default: empty | jsonify }} || [];
+  var steps = stepSpecs.map(function (spec, i) {
+    var era = ERA_BY_ID[spec.id] || {};
+    return {
+      id: spec.id,
+      title: era.title || spec.id,
+      subtitle: era.subtitle || '',
+      num: era.num || String(i).padStart(2, '0'),
+      kicker: era.kicker || '',
+      nodes: spec.nodes || [],
+      focus: spec.focus || []
+    };
+  });
+
+  var prose = {{ prose_data | default: empty | jsonify }} || {};
+
+  // Compose hero from page frontmatter, falling back to SITE.hero on home/reading.
+  var pageKind = {{ page_kind | jsonify }};
+  var pageHero = {{ page.hero | default: empty | jsonify }};
+  var siteHero = (window.SITE && window.SITE.hero) || {};
+  var hero = {
+    show: pageHero.show !== undefined ? pageHero.show : (pageKind === 'home' || pageKind === 'reading'),
+    titleLines: pageHero.title_lines || siteHero.title_lines || [],
+    deck: pageHero.deck || siteHero.deck || '',
+    scrollCue: pageHero.scroll_cue || siteHero.scroll_cue || '',
+    kicker: pageHero.kicker || ''
+  };
+
+  // Stepper config: chapter pages pin a highlighted era; home/reading scroll-drive it.
+  // `highlight_era` may be set in page frontmatter OR in _data/scrolly/<key>.yml.
+  var highlightEraId = {{ page.highlight_era | default: raw_scrolly_data.highlight_era | jsonify }} || null;
+  var stepper = {
+    show: steps.length > 0,
+    leftBracket:  { label: 'Quantitative chauvinism', href: '#quant-chauvinism' },
+    rightBracket: { label: 'Ecofascist imaginaries', href: '#ecofascist-imaginaries' },
+    highlightEraId: highlightEraId
+  };
+
+  // Network: defaults on for home/reading, off for chapter pages unless overridden.
+  var networkSpec = {{ raw_scrolly_data.network | default: empty | jsonify }} || {};
+  var networkDefault = (pageKind === 'home' || pageKind === 'reading');
+  var network = {
+    show: networkSpec.show !== undefined ? networkSpec.show : networkDefault,
+    caption: networkSpec.caption || 'The network grows era by era.'
+  };
+
+  var registers = { show: pageKind === 'home' || pageKind === 'reading' };
+
+  // Coda: page can override; otherwise SITE.coda.
+  var pageCoda = {{ page.coda | default: empty | jsonify }};
+  var coda = pageCoda && pageCoda.length ? pageCoda : ((window.SITE && window.SITE.coda) || []);
+
+  // Intro / outro HTML — chapter pages use these for abstract above and excerpt+nav below.
+  var intro = {{ page.intro_html | default: '' | jsonify }};
+  var outro = {{ page.outro_html | default: '' | jsonify }};
+
+  window.PAGE_CONTEXT = {
+    kind: pageKind,
+    pageId: {{ page_id | jsonify }},
+    hero: hero,
+    stepper: stepper,
+    steps: steps,
+    prose: prose,
+    network: network,
+    registers: registers,
+    coda: coda,
+    intro: intro ? { html: intro } : null,
+    outro: outro ? { html: outro } : null
+  };
+})();
+</script>

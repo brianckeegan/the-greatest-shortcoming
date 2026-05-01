@@ -1,13 +1,14 @@
 {%- comment -%}
   Render YAML data + config as window globals consumed by the React app.
-  This is the bridge between Jekyll's data layer and the client-side renderer.
+  Page-invariant data only. Per-page prose / steps live on window.PAGE_CONTEXT
+  (emitted by _includes/page-context.html).
 {%- endcomment -%}
 <script>
 window.SITE = {
   title: {{ site.title | jsonify }},
   subtitle: {{ site.subtitle | jsonify }},
   hero: {{ site.hero | jsonify }},
-  nav: {{ site.nav | jsonify }},
+  nav: {{ site.nav_reading | default: site.nav | jsonify }},
   registers: {{ site.registers | jsonify }},
   coda: {{ site.coda | jsonify }},
   themeDefaults: {{ site.theme_defaults | jsonify }}
@@ -20,21 +21,16 @@ window.GS_DATA = (function(){
   const themes = ({{ site.data.themes | jsonify }} || []).map(x => ({ ...x, kind: x.kind || 'theme' }));
   const instruments = ({{ site.data.instruments | jsonify }} || []).map(x => ({ ...x, kind: 'instrument' }));
   const documents = ({{ site.data.documents | jsonify }} || []).map(x => ({ ...x, kind: 'document' }));
+  const news = {{ site.data.news | default: empty | jsonify }} || [];
 
   const all = [
     ...people, ...orgs, ...themes, ...instruments, ...documents,
     ...eras.map(x => ({ ...x, kind: 'era', name: x.title }))
   ];
   return {
-    eras, people, orgs, themes, instruments, documents,
+    eras, people, orgs, themes, instruments, documents, news,
     byId: Object.fromEntries(all.map(x => [x.id, x])),
     all
   };
 })();
-
-window.GS_PROSE = {
-{%- for era in site.data.eras %}
-  {{ era.id | jsonify }}: {{ site.data.prose[era.id] | default: '' | jsonify }}{% unless forloop.last %},{% endunless %}
-{%- endfor %}
-};
 </script>

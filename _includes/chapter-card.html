@@ -18,7 +18,4 @@
     <span class="status-badge status-badge--{{ ch.status }}">{{ ch.status | capitalize }}</span>
   </p>
   {% if ch.pitch %}<p class="ch-card__pitch">{{ ch.pitch }}</p>{% endif %}
-  {% if ch.reading_url %}
-    <p class="ch-card__reading"><a href="{{ ch.reading_url | relative_url }}">→ Network reading</a></p>
-  {% endif %}
 </article>
