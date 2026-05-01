@@ -1,4 +1,26 @@
 {%- comment -%}
-  Drop additional <script> tags, fonts, analytics, etc. by editing this file.
-  Loaded inside <head> after the site data and before the app.
+  Loaded inside <head>. Used for fonts, analytics, and the pre-paint
+  theme-mode setter. Both _layouts/default.html (landing pages) and
+  _layouts/reading.html (the React scrollytelling) include this file.
 {%- endcomment -%}
+
+<!-- Theme mode setter — runs synchronously to avoid a flash of light/dark.
+     Reads localStorage first, then falls back to prefers-color-scheme.
+     Toggle is wired in _includes/header.html. -->
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem("tgs-theme-mode");
+      var mode;
+      if (stored === "dark" || stored === "light") {
+        mode = stored;
+      } else {
+        mode = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+               ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme-mode", mode);
+    } catch (e) {
+      document.documentElement.setAttribute("data-theme-mode", "light");
+    }
+  })();
+</script>

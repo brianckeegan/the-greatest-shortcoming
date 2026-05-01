@@ -1,22 +1,79 @@
 ---
 layout: default
 ---
-<div id="root"></div>
+<section class="hero hero--home">
+  <p class="kicker">forthcoming · {{ site.status_line }}</p>
+  <h1 class="hero__title">The Greatest Shortcoming</h1>
+  <p class="hero__subtitle">{{ site.subtitle }}</p>
+  <p class="hero__deck">
+    How a community abstracts its anxieties about disorder, contamination, and
+    change into technical problems subject to &ldquo;objective&rdquo; numerical
+    analysis &mdash; and how those quantitative logics travel from progressive
+    city councils to the journals of white nationalists.
+  </p>
+</section>
 
-<!-- Static fallback content (no-JS / SEO). Mirrors the React render. -->
-<noscript>
-  <div class="noscript-fallback" style="max-width: 720px; margin: 80px auto; padding: 0 24px; font-family: Georgia, serif; line-height: 1.7;">
-    <h1 style="font-size: 48px; line-height: 1; margin: 0 0 16px;">{{ site.hero.title_lines | join: ' ' }}</h1>
-    <p style="color: #666; font-style: italic;">{{ site.subtitle }}</p>
-    <p>{{ site.hero.deck }}</p>
-    {% for era in site.data.eras %}
-      <hr style="border: none; border-top: 1px solid #ddd; margin: 32px 0;" />
-      <div style="font-family: monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #888;">{{ era.num }} · {{ era.kicker }}</div>
-      <h2 style="font-size: 32px; margin: 8px 0 4px;">{{ era.title }}</h2>
-      <div style="color: #999; font-family: monospace; font-size: 12px;">{{ era.subtitle }}</div>
-      <div>{{ site.data.prose[era.id] | replace: '{{ DOC:', '<!--DOC:' | replace: '{{ QUOTE:', '<!--QUOTE:' | replace: '}}', '-->' }}</div>
-    {% endfor %}
+{% include epigraph.html %}
+
+<section class="argument" id="argument">
+  <h2 class="section-rule">What this book argues</h2>
+  <div class="argument__body">
+    <p>
+      <i>The Greatest Shortcoming</i> traces two intertwined operations across
+      a century of American demographic and environmental governance.
+      <b>Quantitative chauvinism</b> is the use of numerical instruments to
+      foreclose political deliberation by converting contested claims into
+      apparent technical necessities. <b>Ecofascist imaginaries</b> are
+      organized visions of environmental futures that naturalize hierarchy and
+      exclusion as ecological necessity. The book follows their interaction
+      from the Olmsted Report's grammar of scarcity to climate triage as
+      administrative routine, and asks whether measurement can be redirected:
+      whether the same quantitative tools that narrowed the circle of concern
+      can be rebuilt to widen it.
+      <span class="draft-tag" title="Draft description — author review pending">draft</span>
+    </p>
   </div>
-</noscript>
+</section>
 
-<script type="text/babel" src="{{ '/assets/js/app.jsx' | relative_url }}"></script>
+<section class="registers">
+  {% for r in site.registers %}
+    <article class="register" id="{{ r.id }}">
+      <p class="kicker">{{ r.kicker }}</p>
+      <h3 class="register__title">{{ r.title }}</h3>
+      <div class="register__body">{{ r.body }}</div>
+    </article>
+  {% endfor %}
+</section>
+
+<section class="author" id="author">
+  <h2 class="section-rule">Author</h2>
+  <p>
+    Brian C. Keegan is a computational social scientist trained as a mechanical
+    engineer, then in quantitative communication studies, with detours through
+    political science and business. He works in the discipline of misfit toys
+    known as information science, studying digital traces of social behavior
+    from online communities like Wikipedia, Reddit, and Twitter. This book is
+    a return to his STS undergraduate roots after almost two decades in the
+    theories and methods of other disciplines.
+    <span class="draft-tag" title="Draft bio — author review pending">draft</span>
+  </p>
+  <p><a href="{{ '/about/' | relative_url }}">More about the author and the project →</a></p>
+</section>
+
+<section class="actions" aria-label="Where to go next">
+  <a class="action-card" href="{{ '/contents/' | relative_url }}">
+    <span class="action-card__kicker">browse</span>
+    <span class="action-card__title">Table of contents</span>
+    <span class="action-card__hint">The eight drafted chapters and the preface.</span>
+  </a>
+  <a class="action-card" href="{{ '/chapters/preface/' | relative_url }}">
+    <span class="action-card__kicker">read</span>
+    <span class="action-card__title">Preface</span>
+    <span class="action-card__hint">The full preface from the May 2026 manuscript draft.</span>
+  </a>
+  <a class="action-card" href="{{ '/reading/boulder/' | relative_url }}">
+    <span class="action-card__kicker">explore</span>
+    <span class="action-card__title">Network reading: Boulder</span>
+    <span class="action-card__hint">A scrollytelling pass through chapter 1 with the entity graph.</span>
+  </a>
+</section>

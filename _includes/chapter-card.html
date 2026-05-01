@@ -1,0 +1,24 @@
+{%- comment -%}
+  Render a chapter card on the TOC.
+  Pass: include chapter-card.html ch=<one-entry-from-_data/chapters.yml>
+{%- endcomment -%}
+{%- assign ch = include.ch -%}
+<article class="ch-card ch-card--{{ ch.status }}">
+  <p class="kicker ch-card__num">Chapter {{ ch.num }}</p>
+  <h3 class="ch-card__title">
+    {% if ch.status == "drafted" or ch.slug == "preface" %}
+      <a href="{{ '/chapters/' | append: ch.slug | append: '/' | relative_url }}">
+        {{ ch.title | default: 'Untitled' }}
+      </a>
+    {% else %}
+      {{ ch.title | default: 'Forthcoming' }}
+    {% endif %}
+  </h3>
+  <p class="ch-card__status">
+    <span class="status-badge status-badge--{{ ch.status }}">{{ ch.status | capitalize }}</span>
+  </p>
+  {% if ch.pitch %}<p class="ch-card__pitch">{{ ch.pitch }}</p>{% endif %}
+  {% if ch.reading_url %}
+    <p class="ch-card__reading"><a href="{{ ch.reading_url | relative_url }}">→ Network reading</a></p>
+  {% endif %}
+</article>

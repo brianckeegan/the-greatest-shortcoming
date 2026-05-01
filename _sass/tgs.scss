@@ -1,0 +1,27 @@
+// _sass/tgs.scss — landing-site overrides on top of assets/css/scrolly.css
+//
+// Design language ground truth lives in assets/css/scrolly.css. The :root
+// variables (--paper, --ink, --ink-soft, --rule, --tufte-red, --highlight,
+// --serif, --hand, --mono) are declared there and consumed here. To swap the
+// accent color, edit --tufte-red in scrolly.css (one place).
+//
+// Dark mode is gated on [data-theme-mode="dark"], which is set by the
+// pre-paint script in _includes/head-extra.html. The header toggle in
+// _includes/header.html flips it and persists to localStorage. The script
+// reads prefers-color-scheme on first visit only — once the user toggles,
+// their explicit choice wins.
+
+[data-theme-mode="dark"] {
+  --paper: #1c1a17;       // warm dark, not flat black
+  --ink: #efece4;
+  --ink-soft: #b9b3a6;
+  --rule: #3d3934;
+  --highlight: #4a3f1e;
+  --tufte-red: #d96058;   // bumped slightly brighter on dark for legibility
+}
+
+// Re-state the cool / ivory data-theme overrides as dark variants so the
+// scrollytelling Tweaks panel stays usable in dark mode.
+[data-theme-mode="dark"][data-theme="cool"]  { --paper: #16191e; --tufte-red: #6da4d6; }
+[data-theme-mode="dark"][data-theme="warm"]  { --paper: #1c1a17; --tufte-red: #d96058; }
+[data-theme-mode="dark"][data-theme="ivory"] { --paper: #1f1c16; --tufte-red: #d68a72; }
