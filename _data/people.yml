@@ -1,0 +1,94 @@
+# People in the network. `links` is a list of other entity ids (across any
+# of the entity files: people, orgs, themes, instruments, documents, eras).
+
+- id: olmsted_jr
+  name: "Frederick Law Olmsted Jr."
+  role: "Landscape architect"
+  dates: "1870–1957"
+  era: [prelude]
+  blurb: >-
+    Authored the 1910 Boulder report; codified a grammar of scarcity and urgency that
+    subordinated private property rights to a collectively defined vision of community character.
+  links: [olmsted_report, chautauqua, blue_line, will_to_simplify]
+
+- id: bartlett
+  name: "Albert Bartlett"
+  role: "Nuclear physicist · CU Boulder"
+  dates: "1923–2013"
+  era: [free_fall, quarantine]
+  blurb: >-
+    Manhattan Project alum who spent half a century translating exponential mathematics of
+    radioactivity into a persuasive template about the consequences of growth. Co-instigator
+    of the Blue Line.
+  links: [mckelvey, plan_boulder, blue_line, exponential_curve, will_to_simplify, bartlett_lecture, cu_boulder, los_alamos]
+
+- id: mckelvey
+  name: "Bob McKelvey"
+  role: "Mathematics · CU Boulder"
+  dates: "fl. 1958"
+  era: [free_fall]
+  blurb: "In 1958 told Bartlett that something had to be done about the foothills. Co-instigator of PLAN-Boulder."
+  links: [bartlett, plan_boulder, blue_line, cu_boulder]
+
+- id: porter
+  name: "Theodore Porter"
+  role: "Historian of science"
+  era: [quarantine, swarm]
+  blurb: >-
+    Diagnosed quantification as a "technology of trust": numerical objectivity spreads not by
+    accuracy but by supplying a politically useful pose of impersonality.
+  links: [rule_of_expertise, quant_chauvinism]
+
+- id: desrosieres
+  name: "Alain Desrosières"
+  role: "Sociologist of statistics"
+  era: [quarantine]
+  blurb: "Showed that statistical categories are political settlements naturalized through institutional routinization."
+  links: [rule_of_expertise, quant_chauvinism]
+
+- id: arendt
+  name: "Hannah Arendt"
+  role: "Political theorist"
+  dates: "1906–1975"
+  blurb: >-
+    Defined chauvinism as the conversion of asserted superiority into self-evident premise of
+    political judgment. Race-thinking and the camp as political technology.
+  links: [quant_chauvinism, ecofascist_imaginary]
+
+- id: griffin
+  name: "Roger Griffin"
+  role: "Fascism theorist"
+  blurb: "Defined fascism as palingenetic ultranationalism — the myth of national rebirth from decadence — distinguishing ecofascism from adjacent forms."
+  links: [ecofascist_imaginary, palingenesis]
+
+- id: jasanoff
+  name: "Sheila Jasanoff"
+  role: "STS scholar"
+  blurb: "Sociotechnical imaginaries: collectively held visions stabilized through laws, infrastructures, and routines that enact futures rather than merely describe them."
+  links: [ecofascist_imaginary, quant_chauvinism]
+
+- id: connelly
+  name: "Matthew Connelly"
+  role: "Historian"
+  era: [free_fall]
+  blurb: "Showed how mid-century demographic science was recruited into a coercive apparatus targeting the fertility of women in the Global South."
+  links: [population_bomb, quant_chauvinism]
+
+- id: merchant
+  name: "Emily Klancher Merchant"
+  role: "Historian of demography"
+  blurb: "Reconstructed how 'the population bomb' was assembled as a scientific and policy object."
+  links: [population_bomb]
+
+- id: hartmann
+  name: "Betsy Hartmann"
+  role: "Feminist scholar"
+  blurb: "Population control as global governance project that subordinated women's reproductive autonomy to demographic targets."
+  links: [population_bomb]
+
+- id: tanton
+  name: "John Tanton (network)"
+  role: "Anti-immigration network"
+  era: [quarantine, swarm]
+  blurb: "Network whose impact statements hierarchized immigrant populations by fiscal burden."
+  links: [fiscal_impact, rule_of_expertise]
