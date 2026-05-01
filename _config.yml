@@ -101,8 +101,12 @@ coda:
     kicker: "about"
     title: "The Author"
     body: >-
-      <span style="color:var(--ink-soft);font-style:italic">↳ Author bio
-      placeholder — edit <code>_config.yml</code> to replace.</span>
+      Brian C. Keegan, Ph.D. is a computational social scientist and an associate
+      professor of information science at the University of Colorado Boulder. 
+      He received undergraduate degrees from MIT, M.A. and Ph.D. degrees from 
+      Northwestern University's School of Communication, and completed post-doctoral 
+      training at Northeastern University and the Harvard Business School. He
+      currently resides in Boulder, Colorado with his wife and two sons.
   - id: "news"
     kicker: "latest"
     title: "News"
