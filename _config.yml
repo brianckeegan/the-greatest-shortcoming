@@ -18,16 +18,16 @@ description: >-
   change into technical problems subject to "objective" numerical analysis —
   and how those quantitative logics travel from progressive city councils to
   the journals of white nationalists.
-url: ""           # e.g. "https://brianckeegan.github.io"
+url: "https://www.thegreatestshortcoming.com"           # e.g. "https://brianckeegan.github.io"
 baseurl: ""       # e.g. "/the-greatest-shortcoming" if deploying under a path
 lang: en
 # To set a custom domain: create a CNAME file at the repo root with the domain
 # (e.g. greatestshortcoming.com), then enable HTTPS under Settings → Pages.
-status_line: "in progress · drafted through chapter 8"
+status_line: "in progress"
 
 # ---- Hero (homepage) -------------------------------------------------------
 hero:
-  title_lines: ["The Greatest", "Shortcoming"]
+  title_lines: ["The Greatest Shortcoming"]
   deck: >-
     How a community abstracts its anxieties about disorder, contamination, and
     change into technical problems subject to "objective" numerical analysis —
@@ -123,12 +123,12 @@ coda:
 theme_defaults:
   theme: "cool"      # "warm" | "ivory" | "cool"
   net: "rough"       # "rough" | "clean"
-  fontSize: 18
+  fontSize: 20
 
 # ---- Footer ----------------------------------------------------------------
 footer:
-  left:  "The Greatest Shortcoming · scrollytelling book site"
-  right: "scroll-driven"
+  left:  "scrollytelling theme"
+  right: "Copyright 2026"
 
 # ---- Jekyll plumbing -------------------------------------------------------
 # Compatible with the github-pages gem; no plugins beyond GH Pages allow-list.
@@ -167,10 +167,3 @@ exclude:
   - CLAUDE.md
   - scripts
   - node_modules
-  - "*.napkin"
-  - "Wireframes.html"
-  - "Greatest Shortcoming v1.html"
-  - "components.jsx"
-  - "pages.jsx"
-  - "design-canvas.jsx"
-  - "styles.css"
