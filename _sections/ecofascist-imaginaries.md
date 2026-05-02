@@ -1,6 +1,6 @@
 ---
 kind: coda
-slot: post-scrolly
+slot: pre-scrolly
 kicker: "political register · ii"
 title: "Ecofascist Imaginaries"
 ---

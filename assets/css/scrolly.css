@@ -615,18 +615,27 @@ a.news-item:hover {
  * ============================================================================ */
 .epigraph-reveal {
   max-width: 1200px;
-  margin: 24px auto;
-  padding: 4vh 48px 4vh;
+  margin: 0 auto;
+  padding: 0 48px;
   scroll-margin-top: 110px;
   display: flex;
   flex-direction: column;
-  gap: 22vh;
+  /* No outer gap — each card supplies its own viewport height below. */
 }
 .epigraph-reveal__card {
+  /* Each epigraph occupies a full viewport. `svh` (small-viewport-height,
+     per the scrollytelling skill) keeps the layout stable on mobile when
+     the browser chrome toggles; falls back to `vh` on older browsers. */
+  min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   padding: 28px 36px;
   border-left: 5px solid var(--tufte-red);
   background: var(--paper);
+  /* Center each epigraph vertically within its viewport-tall slot. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   opacity: 0.18;
   transform: translateY(12px);
   transition: opacity 0.7s ease-out, transform 0.7s ease-out;
@@ -634,6 +643,15 @@ a.news-item:hover {
 .epigraph-reveal__card.revealed {
   opacity: 1;
   transform: translateY(0);
+}
+/* Reduced-motion (mandatory per WCAG SC 2.3.3 / the scrollytelling skill):
+   show every epigraph at full opacity immediately, no transition. */
+@media (prefers-reduced-motion: reduce) {
+  .epigraph-reveal__card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 .epigraph-reveal__quote {
   margin: 0;
@@ -656,7 +674,7 @@ a.news-item:hover {
   color: var(--ink-soft);
 }
 @media (max-width: 760px) {
-  .epigraph-reveal { padding: 3vh 24px; gap: 16vh; }
+  .epigraph-reveal { padding: 0 24px; }
   .epigraph-reveal__card { padding: 20px 22px; }
   .epigraph-reveal__quote { font-size: clamp(1.3rem, 5vw, 1.7rem); }
 }
