@@ -1,11 +1,11 @@
 # People in the network. `links` is a list of other entity ids (across any
-# of the entity files: people, orgs, themes, instruments, documents, eras).
+# of the entity files: people, orgs, themes, instruments, documents).
 
 - id: olmsted_jr
   name: "Frederick Law Olmsted Jr."
   role: "Landscape architect"
   dates: "1870–1957"
-  era: [prelude]
+  part: [prelude]
   blurb: >-
     Authored the 1910 Boulder report; codified a grammar of scarcity and urgency that
     subordinated private property rights to a collectively defined vision of community character.
@@ -15,7 +15,7 @@
   name: "Albert Bartlett"
   role: "Nuclear physicist · CU Boulder"
   dates: "1923–2013"
-  era: [free_fall, quarantine]
+  part: [free_fall, quarantine]
   blurb: >-
     Manhattan Project alum who spent half a century translating exponential mathematics of
     radioactivity into a persuasive template about the consequences of growth. Co-instigator
@@ -26,14 +26,14 @@
   name: "Bob McKelvey"
   role: "Mathematics · CU Boulder"
   dates: "fl. 1958"
-  era: [free_fall]
+  part: [free_fall]
   blurb: "In 1958 told Bartlett that something had to be done about the foothills. Co-instigator of PLAN-Boulder."
   links: [bartlett, plan_boulder, blue_line, cu_boulder]
 
 - id: porter
   name: "Theodore Porter"
   role: "Historian of science"
-  era: [quarantine, swarm]
+  part: [quarantine, swarm]
   blurb: >-
     Diagnosed quantification as a "technology of trust": numerical objectivity spreads not by
     accuracy but by supplying a politically useful pose of impersonality.
@@ -42,7 +42,7 @@
 - id: desrosieres
   name: "Alain Desrosières"
   role: "Sociologist of statistics"
-  era: [quarantine]
+  part: [quarantine]
   blurb: "Showed that statistical categories are political settlements naturalized through institutional routinization."
   links: [rule_of_expertise, quant_chauvinism]
 
@@ -70,7 +70,7 @@
 - id: connelly
   name: "Matthew Connelly"
   role: "Historian"
-  era: [free_fall]
+  part: [free_fall]
   blurb: "Showed how mid-century demographic science was recruited into a coercive apparatus targeting the fertility of women in the Global South."
   links: [population_bomb, quant_chauvinism]
 
@@ -89,6 +89,6 @@
 - id: tanton
   name: "John Tanton (network)"
   role: "Anti-immigration network"
-  era: [quarantine, swarm]
+  part: [quarantine, swarm]
   blurb: "Network whose impact statements hierarchized immigrant populations by fiscal burden."
   links: [fiscal_impact, rule_of_expertise]

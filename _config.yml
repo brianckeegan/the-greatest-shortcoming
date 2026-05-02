@@ -65,13 +65,13 @@ nav_reading:
 #
 # `slot` selects WHERE in the page flow the section renders:
 #
-#   pre-stepper   → between the hero and the era stepper
-#   pre-scrolly   → between the stepper and the scrolly figure (frames the eras)
-#   post-scrolly  → between the scrolly figure and the bottom block (closes the eras)
+#   pre-stepper   → between the hero and the parts stepper
+#   pre-scrolly   → between the stepper and the scrolly figure (frames the parts)
+#   post-scrolly  → between the scrolly figure and the bottom block (closes the parts)
 #   post-coda     → at the bottom of the page
 #
 # Section `id` becomes the DOM anchor (e.g. clicking the QC bracket on the
-# era stepper jumps to #quant-chauvinism). Reorder freely; the React app
+# parts stepper jumps to #quant-chauvinism). Reorder freely; the React app
 # rebuilds hero kicker links from sections of kind `register`.
 sections:
 
