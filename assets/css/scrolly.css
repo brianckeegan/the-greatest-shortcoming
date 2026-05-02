@@ -660,3 +660,130 @@ a.news-item:hover {
   .epigraph-reveal__card { padding: 20px 22px; }
   .epigraph-reveal__quote { font-size: clamp(1.3rem, 5vw, 1.7rem); }
 }
+
+/* ============================================================================
+   Islands bundle styles — see assets/js/islands/*.tsx
+   ============================================================================ */
+
+/* QC × EFI matrix island */
+.qc-efi-matrix {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 24px 28px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.qc-efi-matrix__caption {
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+}
+.qc-efi-matrix__plot {
+  width: 100%;
+  min-height: 320px;
+}
+.qc-efi-matrix--empty {
+  padding: 24px 28px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* Per-part chart island shell */
+.part-chart {
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 20px 28px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper-tint, var(--paper));
+}
+.part-chart__caption {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.part-chart__title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+.part-chart__badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  background: var(--highlight);
+  color: var(--ink);
+  border-radius: 2px;
+}
+.part-chart__body {
+  width: 100%;
+  min-height: 200px;
+}
+.part-chart__placeholder-note {
+  font-style: italic;
+  color: var(--ink-soft);
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+}
+.part-chart--placeholder {
+  background: transparent;
+  border-style: dashed;
+}
+
+/* Scroller island (sticky-pane scrollytelling primitive). Built on
+   react-scrollama; uses CSS sticky per the scrollytelling skill's
+   recommendation rather than JS scroll listeners. */
+.scroller {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 28px;
+}
+.scroller__sticky {
+  position: sticky;
+  top: 110px;
+  align-self: start;
+  height: clamp(420px, 68vh, 560px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.scroller__flow {
+  display: flex;
+  flex-direction: column;
+}
+.scroller__beat {
+  min-height: 80vh;
+  padding: 20vh 0;
+  opacity: 0.45;
+  transition: opacity 0.25s ease-in-out;
+}
+.scroller__beat.is-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .scroller__beat { opacity: 1; transition: none; }
+}
+@media (max-width: 760px) {
+  .scroller { grid-template-columns: 1fr; gap: 16px; }
+  .scroller__sticky {
+    position: relative;
+    top: 0;
+    height: clamp(220px, 40vh, 340px);
+  }
+  .scroller__beat { min-height: 50vh; padding: 12vh 0; }
+}
+.scroller--reduced-motion .scroller__beat {
+  min-height: 0;
+  padding: 16px 0;
+  opacity: 1;
+}
