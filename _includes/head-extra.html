@@ -1,8 +1,20 @@
 {%- comment -%}
-  Loaded inside <head>. Used for fonts, analytics, and the pre-paint
-  theme-mode setter. Both _layouts/default.html (landing pages) and
-  _layouts/reading.html (the React scrollytelling) include this file.
+  Loaded inside <head>. Used for favicons, fonts, analytics, and the
+  pre-paint theme-mode setter. Both _layouts/default.html (landing
+  pages — also extended by _layouts/page.html) and _layouts/scrolly.html
+  (React scrollytelling) include this file, so every page on the site
+  gets the same head additions.
 {%- endcomment -%}
+
+<!-- Favicons. Files live at the site root so /favicon.ico resolves
+     directly (legacy browser fallback) and the manifest's absolute
+     paths (/android-chrome-*.png) work without rewriting. -->
+<link rel="icon" href="{{ '/favicon.ico' | relative_url }}" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ '/favicon-32x32.png' | relative_url }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ '/favicon-16x16.png' | relative_url }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ '/apple-touch-icon.png' | relative_url }}">
+<link rel="manifest" href="{{ '/site.webmanifest' | relative_url }}">
+<meta name="theme-color" content="#fffff8">
 
 <!-- Theme mode setter — runs synchronously to avoid a flash of light/dark.
      Reads localStorage first, then falls back to prefers-color-scheme.
