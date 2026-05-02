@@ -19,9 +19,15 @@
       </button>
       <div class="menu-pop" style="display:none">
         {% for era in site.data.eras %}
+          {%- assign era_years = '' -%}
+          {%- if era.start and era.end -%}
+            {%- assign era_years = era.start | append: ' – ' | append: era.end -%}
+          {%- elsif era.subtitle -%}
+            {%- assign era_years = era.subtitle -%}
+          {%- endif -%}
           <a href="{{ '/#step-' | append: era.id | relative_url }}">
             <span>{{ era.title }}</span>
-            <span class="yrs">{{ era.subtitle }}</span>
+            <span class="yrs">{{ era_years }}</span>
           </a>
         {% endfor %}
       </div>

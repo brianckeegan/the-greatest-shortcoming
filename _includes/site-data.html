@@ -9,8 +9,10 @@ window.SITE = {
   subtitle: {{ site.subtitle | jsonify }},
   hero: {{ site.hero | jsonify }},
   nav: {{ site.nav_reading | default: site.nav | jsonify }},
-  registers: {{ site.registers | jsonify }},
-  coda: {{ site.coda | jsonify }},
+  // Unified sections list (renderer-flagged via `kind`, positioned via `slot`).
+  // Replaces the legacy `registers:` + `coda:` config blocks; the React app
+  // groups by slot and renders kind-aware.
+  sections: {{ site.sections | jsonify }},
   themeDefaults: {{ site.theme_defaults | jsonify }}
 };
 
