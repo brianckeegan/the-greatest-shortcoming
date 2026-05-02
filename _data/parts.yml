@@ -1,0 +1,108 @@
+# Parts drive both the timeline navigation (the stepper) and the scrolly
+# figure's per-step prose.
+#
+# Two `kind` values:
+#   step    — a chapter-level part (Boulder, Free Fall, …). The scrolly
+#             figure pulls prose for these; the stepper renders them as
+#             numbered stops with year ranges.
+#   bracket — a flanking marker (an analytical register like QC or EFI).
+#             Renders in the stepper as a single-label stop but isn't a
+#             scrolly step.
+#
+# Stepper visual customization (per item, optional):
+#   color             CSS color token to accent this stop (no `--` prefix);
+#                     defaults to `ink` for steps and `tufte-red` for
+#                     brackets.
+#   bracket_line      true → render the connecting bracket-line ornament.
+#   underline_active  true → underline the label when this stop is the
+#                     active scroll position. Defaults to true; set to
+#                     false to suppress the bar for any individual stop.
+#
+# The step-kind subtitle (year range) is derived from `start` + `end` in
+# _includes/page-context.html (en dash with spaces). Don't add a `subtitle:`
+# field unless an item genuinely needs free-form text (e.g. "circa 1900").
+
+# ---- Bracket: opening register ---------------------------------------------
+- id: quant-chauvinism
+  kind: bracket
+  label: "Quantitative chauvinism"
+  short_label: "QC"
+  color: tufte-red
+  bracket_line: true
+  underline_active: true
+
+# ---- Steps: the chapter-level parts ----------------------------------------
+- id: prelude
+  kind: step
+  title: "Boulder"
+  start: 1898
+  end: 1959
+  num: "00"
+  kicker: "Prelude"
+  blurb: "The civic identity built atop accumulated catastrophe was a sustained act of collective forgetting."
+  chapter_slug: 01-boulder
+  underline_active: true
+
+- id: free_fall
+  kind: step
+  title: "Free Fall"
+  start: 1968
+  end: 1994
+  num: "01"
+  kicker: "The Will to Simplify"
+  blurb: "Exponential arithmetic converted population dynamics into a moral emergency."
+  chapter_slug: 02-the-free-fall
+  underline_active: true
+
+- id: quarantine
+  kind: step
+  title: "Quarantine"
+  start: 1995
+  end: 2008
+  num: "02"
+  kicker: "The Rule of Expertise"
+  blurb: "Immigration restriction survived delegitimation by embedding itself in the aesthetic of policy expertise."
+  chapter_slug: 03-the-quarantine
+  underline_active: true
+
+- id: swarm
+  kind: step
+  title: "Swarm"
+  start: 2009
+  end: 2028
+  num: "03"
+  kicker: "The Politics of Inevitability"
+  blurb: "Decomposed demographic data became raw material for 'great replacement' narratives."
+  chapter_slug: 04-the-swarm
+  underline_active: true
+
+- id: portfolio
+  kind: step
+  title: "Portfolio"
+  start: 2029
+  end: 2048
+  num: "04"
+  kicker: "Demography as Asset Class"
+  blurb: "Fertility rates as investment metrics; demography as asset class."
+  chapter_slug: 05-the-portfolio
+  underline_active: true
+
+- id: evacuation
+  kind: step
+  title: "Evacuation"
+  start: 2049
+  end: 2068
+  num: "05"
+  kicker: "Climate Triage"
+  blurb: "Climate triage and selective rescue as administrative routine."
+  chapter_slug: 06-the-shock
+  underline_active: true
+
+# ---- Bracket: closing register ---------------------------------------------
+- id: ecofascist-imaginaries
+  kind: bracket
+  label: "Ecofascist imaginaries"
+  short_label: "EFI"
+  color: tufte-red
+  bracket_line: true
+  underline_active: true

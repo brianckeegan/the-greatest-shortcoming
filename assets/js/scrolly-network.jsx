@@ -1,6 +1,6 @@
 /* Scroll-driven network — nodes/edges activate by step.
  * STEPS comes from window.PAGE_CONTEXT.steps (set by _includes/page-context.html
- * from per-page _data/scrolly/{key}.yml + _data/eras.yml). */
+ * from per-page _data/scrolly/{key}.yml + _data/parts.yml). */
 
 const D = window.GS_DATA;
 const STEPS = (window.PAGE_CONTEXT && window.PAGE_CONTEXT.steps) || [];
@@ -15,27 +15,27 @@ const NodeShape = ({ kind, r = 11 }) => {
   return <circle className="node-shape" r={r} />;
 };
 
-/* Compute layout once: a wide network with regions per era */
+/* Compute layout once: a wide network with regions per part */
 function computeLayout(W, H) {
-  // Place each era's new nodes in a vertical band; build cumulatively.
+  // Place each part's new nodes in a vertical band; build cumulatively.
   const cumNodes = [];
   const seen = new Set();
   STEPS.forEach((s, si) => {
     s.nodes.forEach(id => {
       if (!seen.has(id)) {
         seen.add(id);
-        cumNodes.push({ id, era: si });
+        cumNodes.push({ id, part: si });
       }
     });
   });
 
-  // Group nodes by era and lay out per band
+  // Group nodes by part and lay out per band
   const bands = STEPS.length;
   const positions = {};
   const padX = 60, padY = 60;
   const bandW = (W - padX*2) / bands;
   STEPS.forEach((s, si) => {
-    const inBand = cumNodes.filter(n => n.era === si);
+    const inBand = cumNodes.filter(n => n.part === si);
     if (!inBand.length) return;
     const cx = padX + bandW * (si + 0.5);
     inBand.forEach((n, i) => {
@@ -101,7 +101,7 @@ const ScrollyNetwork = ({ stepIndex, activeId, onNodeClick, hoveredId, setHovere
 
   return (
     <svg className="sketch" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
-      {/* faint era band labels */}
+      {/* faint part band labels */}
       {STEPS.map((s, si) => {
         const padX = 60, bandW = (W - padX*2) / STEPS.length;
         const cx = padX + bandW * (si + 0.5);

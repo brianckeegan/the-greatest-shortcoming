@@ -1,3 +1,3 @@
-highlight_era: evacuation
+highlight_part: evacuation
 network: { show: false }
 steps_inherit: home

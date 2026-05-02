@@ -66,7 +66,7 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 .
 ├── _config.yml              # site identity, hero, nav, registers, coda, theme defaults, defaults
 ├── _data/
-│   ├── eras.yml             # the 6 eras — drives stepper, network, chapter mapping (chapter_slug)
+│   ├── parts.yml            # the 6 parts (chapter-level) + bracket stops — drives stepper, network, chapter mapping (chapter_slug)
 │   ├── people.yml           # individuals in the network
 │   ├── orgs.yml             # organizations
 │   ├── themes.yml           # concepts / theoretical scaffolding
@@ -78,7 +78,7 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 │   ├── prose/               # per-page era prose
 │   │   └── home.yml         # book-summary (homepage)
 │   └── scrolly/             # per-page step (nodes/focus) configs
-│       ├── home.yml         # homepage book-summary (all 6 era marquees)
+│       ├── home.yml         # homepage book-summary (marquee node sets per part)
 │       ├── 01-boulder.yml   # one per chapter; uses `steps_inherit: home`
 │       ├── 02-the-free-fall.yml
 │       └── …
@@ -99,7 +99,7 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 │   │   └── main.scss        # static-page layout patterns; compiles to main.css (loaded by both shells)
 │   └── js/
 │       ├── app.jsx          # main React app (header, hero, stepper, prose, drawer, news coda)
-│       ├── scrolly-network.jsx  # the era-stepped sketchy network SVG
+│       ├── scrolly-network.jsx  # the part-banded sketchy network SVG
 │       └── tweaks-panel.jsx     # the in-page Tweaks panel framework
 ├── index.md                 # / (page_kind: home, page_id: home → uses scrolly layout)
 ├── _chapters/               # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter from _config defaults)
@@ -129,7 +129,7 @@ collection) tells the React app what to render:
 | `page_kind` | What's rendered | Where set |
 |------------|----------------|-----------|
 | `home`     | hero, QC|eras|EFI stepper, register def-bars, scrolly figure + prose, coda (incl. live News) | `index.md` |
-| `chapter`  | chapter intro (header + abstract) → stepper (era pinned to `highlight_era`) → coda → outro (excerpt + prev/next nav) | `_config.yml` `defaults` for `type: chapters` |
+| `chapter`  | chapter intro (header + abstract) → stepper (era pinned to `highlight_part`) → coda → outro (excerpt + prev/next nav) | `_config.yml` `defaults` for `type: chapters` |
 | `static`   | (default) — page is rendered through `_layouts/default.html` instead of React | implicit |
 
 ---
@@ -159,13 +159,13 @@ hero:
 `nav` is the static-page top nav (links to /contents/, /about/, etc.).
 `nav_reading` is the in-app nav rendered by the React `<Header>` on home and
 chapter pages — items are either anchor links (`url: "#book"`) or the
-special `{ kind: "eras-menu" }` (renders the dropdown of all 6 eras).
+special `{ kind: "parts-menu" }` (renders the dropdown of all step-kind parts (chapter parts; brackets are excluded)).
 
 ### `registers`
 
 The two definition bars (Quantitative Chauvinism, Ecofascist Imaginaries)
 beneath the hero. Each has `id`, `kicker`, `title`, and HTML `body`. The
-EraStepper brackets link to these by `id`.
+Stepper brackets link to these by `id`.
 
 ### `coda`
 
@@ -207,10 +207,10 @@ The `links` field is bidirectional in spirit but unidirectional in storage —
 list links from one side and the drawer surfaces them. List from both sides
 if you want them to show up in both drawers.
 
-### Eras (`_data/eras.yml`) and chapter mapping
+### Eras (`_data/parts.yml`) and chapter mapping
 
 Each era has an optional `chapter_slug` field that maps it to a chapter for
-cross-navigation in the EraStepper:
+cross-navigation in the Stepper:
 
 ```yaml
 - id: free_fall
@@ -321,7 +321,7 @@ You shouldn't need to touch these for content edits. If you want to change
 
 ## Adding a new era
 
-1. Add an entry to `_data/eras.yml`:
+1. Add an entry to `_data/parts.yml`:
    ```yaml
    - id: aftermath
      title: "Aftermath"
@@ -345,7 +345,7 @@ You shouldn't need to touch these for content edits. If you want to change
      focus: ['…ids to highlight…']
    ```
 
-That's it — the EraStepper, network, prose column, and (if `chapter_slug`
+That's it — the Stepper, network, prose column, and (if `chapter_slug`
 is set) cross-chapter navigation all rebuild from the data.
 
 ---
@@ -435,7 +435,7 @@ needs `id: "book"` in `coda`). On non-scrollytelling pages the link form is
 
 **A chapter page renders blank or with `null` headings.**
 The page expects to find `_data/scrolly/<page.slug>.yml`. Create the file
-(usually a 3-line stub with `highlight_era`, `network: { show: false }`, and
+(usually a 3-line stub with `highlight_part`, `network: { show: false }`, and
 `steps_inherit: home`).
 
 ---

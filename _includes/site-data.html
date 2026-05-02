@@ -17,7 +17,7 @@ window.SITE = {
 };
 
 window.GS_DATA = (function(){
-  const eras = {{ site.data.eras | jsonify }};
+  const parts = {{ site.data.parts | jsonify }};
   const people = ({{ site.data.people | jsonify }} || []).map(x => ({ ...x, kind: 'person' }));
   const orgs = ({{ site.data.orgs | jsonify }} || []).map(x => ({ ...x, kind: 'org' }));
   const themes = ({{ site.data.themes | jsonify }} || []).map(x => ({ ...x, kind: x.kind || 'theme' }));
@@ -25,12 +25,15 @@ window.GS_DATA = (function(){
   const documents = ({{ site.data.documents | jsonify }} || []).map(x => ({ ...x, kind: 'document' }));
   const news = {{ site.data.news | default: empty | jsonify }} || [];
 
+  // Only step-kind parts go into the byId entity index — brackets are
+  // navigation stops, not addressable entities.
+  const stepParts = parts.filter(p => (p.kind || 'step') === 'step');
   const all = [
     ...people, ...orgs, ...themes, ...instruments, ...documents,
-    ...eras.map(x => ({ ...x, kind: 'era', name: x.title }))
+    ...stepParts.map(x => ({ ...x, kind: 'part', name: x.title }))
   ];
   return {
-    eras, people, orgs, themes, instruments, documents, news,
+    parts, people, orgs, themes, instruments, documents, news,
     byId: Object.fromEntries(all.map(x => [x.id, x])),
     all
   };

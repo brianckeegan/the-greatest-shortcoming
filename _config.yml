@@ -47,7 +47,10 @@ nav:
 
 # ---- Scrollytelling navigation (used by the React app on home + chapters) --
 nav_reading:
-  - { label: "Eras", kind: "eras-menu" }
+  # `kind: parts-menu` renders the navbar dropdown of every part. The `label`
+  # field is what the user sees on the menu button — keep it as "Eras" for
+  # this site, or rename to "Parts", "Chapters", "Acts", etc.
+  - { label: "Eras", kind: "parts-menu" }
   - { label: "Book", url: "#book" }
   - { label: "Author", url: "#author" }
   - { label: "News", url: "#news" }

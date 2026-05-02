@@ -29,7 +29,7 @@ The shared design language is a contract; do not break it.
 
 1. **Do not break the React scrollytelling shell.** It drives every chapter
    page and the homepage. Driven by
-   `_data/{eras,people,orgs,instruments,themes,documents,news}.yml`,
+   `_data/{parts,people,orgs,instruments,themes,documents,news}.yml`,
    `_data/prose/*.yml`, `_data/scrolly/*.yml`, and
    `assets/js/{app,scrolly-network,tweaks-panel}.jsx`. Preserve it.
 2. **The preface and chapter excerpts are a contract.** Only the preface and
@@ -147,7 +147,7 @@ the manuscript-like feel.
 
 Every chapter renders through the same React shell with the same chrome.
 The stepper pins the chapter's mapped era (`_data/scrolly/<slug>.yml`'s
-`highlight_era`) and the era buttons let readers jump cross-chapter; the
+`highlight_part`) and the era buttons let readers jump cross-chapter; the
 chapter abstract sits above the stepper, the excerpt below. There is no
 "deep dive" variant for any one chapter — uniformity is the design.
 
@@ -408,12 +408,12 @@ If you change tokens, update **both** the light tokens (in scrolly.css's
 3. Create `_data/scrolly/09-some-slug.yml` so the React shell knows what to
    pin in the era stepper:
    ```yaml
-   highlight_era: portfolio   # the era this chapter maps to (or omit if none)
+   highlight_part: portfolio   # the era this chapter maps to (or omit if none)
    network: { show: false }
    steps_inherit: home        # reuse the homepage stepper
    ```
 4. (Optional) Add `chapter_slug: 09-some-slug` to the matching era in
-   `_data/eras.yml` so cross-chapter navigation lands on this chapter when
+   `_data/parts.yml` so cross-chapter navigation lands on this chapter when
    readers click that era from another chapter's stepper.
 5. The chapter renders at `/chapters/09-some-slug/`. The TOC and the
    prev/next nav update automatically — they iterate `_data/chapters.yml`.

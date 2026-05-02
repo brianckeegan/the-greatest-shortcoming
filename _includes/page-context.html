@@ -4,14 +4,15 @@
   reading, chapter) can share one app shell.
 
   Resolves data via page frontmatter:
-    page.page_kind   → 'home' | 'reading' | 'chapter' | 'static'  (default 'static')
-    page.page_id     → key for prose / scrolly lookups            (default page_kind)
-    page.scrolly_key → override scrolly file key                  (default page_id)
-    page.prose_key   → override prose file key                    (default page_id)
-    page.highlight_era → era id pinned in the stepper (chapter pages)
+    page.page_kind     → 'home' | 'reading' | 'chapter' | 'static'  (default 'static')
+    page.page_id       → key for prose / scrolly lookups            (default page_kind)
+    page.scrolly_key   → override scrolly file key                  (default page_id)
+    page.prose_key     → override prose file key                    (default page_id)
+    page.highlight_part → part id pinned in the stepper (chapter pages)
 
-  Steps merge the per-page nodes/focus with eras.yml metadata (title, num, etc.).
-  A scrolly file may set `steps_inherit: <other_key>` to reuse another page's steps.
+  Steps merge the per-page nodes/focus with parts.yml metadata (title, num,
+  start/end). A scrolly file may set `steps_inherit: <other_key>` to reuse
+  another page's steps.
 
   Must run AFTER site-data.html (so window.GS_DATA is set) and BEFORE any .jsx.
 {%- endcomment -%}
@@ -37,27 +38,50 @@
 
 <script>
 (function () {
-  var ERAS = (window.GS_DATA && window.GS_DATA.eras) || [];
-  var ERA_BY_ID = {};
-  ERAS.forEach(function (e) { ERA_BY_ID[e.id] = e; });
+  // Decorate every part from _data/parts.yml with a derived year-range
+  // subtitle and reasonable defaults. Two `kind` values flow through:
+  //   step    — chapter-level part; feeds the scrolly figure prose
+  //   bracket — flanking marker (QC, EFI); navbar-only stop
+  var rawParts = (window.GS_DATA && window.GS_DATA.parts) || [];
+  var parts = rawParts.map(function (p) {
+    var subtitle = (p.start && p.end)
+      ? (p.start + ' – ' + p.end)
+      : (p.subtitle || '');
+    return {
+      id: p.id,
+      kind: p.kind || 'step',
+      title: p.title || p.label || p.id,
+      label: p.label || p.title || p.id,
+      shortLabel: p.short_label || p.label || p.title || p.id,
+      subtitle: subtitle,
+      start: p.start || null,
+      end: p.end || null,
+      num: p.num || null,
+      kicker: p.kicker || '',
+      blurb: p.blurb || '',
+      chapterSlug: p.chapter_slug || null,
+      color: p.color || null,
+      bracketLine: p.bracket_line === true,
+      underlineActive: p.underline_active !== false,   // default true
+      target: p.target || p.id
+    };
+  });
+  var PART_BY_ID = {};
+  parts.forEach(function (p) { PART_BY_ID[p.id] = p; });
 
+  // Scrolly steps are part ids (kind=step). The merge brings nodes/focus
+  // from the per-page scrolly file together with the part metadata.
   var stepSpecs = {{ step_specs | default: empty | jsonify }} || [];
   var steps = stepSpecs.map(function (spec, i) {
-    var era = ERA_BY_ID[spec.id] || {};
-    // Subtitle is derived from start + end (en dash with spaces) so the year
-    // range is the single source of truth on each era. Falls back to authored
-    // `subtitle` if start/end aren't both present.
-    var subtitle = (era.start && era.end)
-      ? (era.start + ' – ' + era.end)
-      : (era.subtitle || '');
+    var part = PART_BY_ID[spec.id] || {};
     return {
       id: spec.id,
-      title: era.title || spec.id,
-      subtitle: subtitle,
-      start: era.start || null,
-      end: era.end || null,
-      num: era.num || String(i).padStart(2, '0'),
-      kicker: era.kicker || '',
+      title: part.title || spec.id,
+      subtitle: part.subtitle || '',
+      start: part.start,
+      end: part.end,
+      num: part.num || String(i).padStart(2, '0'),
+      kicker: part.kicker || '',
       nodes: spec.nodes || [],
       focus: spec.focus || []
     };
@@ -77,14 +101,13 @@
     kicker: pageHero.kicker || ''
   };
 
-  // Stepper config: chapter pages pin a highlighted era; home/reading scroll-drive it.
-  // `highlight_era` may be set in page frontmatter OR in _data/scrolly/<key>.yml.
-  var highlightEraId = {{ page.highlight_era | default: raw_scrolly_data.highlight_era | jsonify }} || null;
+  // Stepper config: chapter pages pin a highlighted part; home/reading
+  // scroll-drive the active state across every stop (parts + brackets).
+  // `highlight_part` may be set in page frontmatter OR in _data/scrolly/<key>.yml.
+  var highlightPartId = {{ page.highlight_part | default: raw_scrolly_data.highlight_part | jsonify }} || null;
   var stepper = {
-    show: steps.length > 0,
-    leftBracket:  { label: 'Quantitative chauvinism', href: '#quant-chauvinism' },
-    rightBracket: { label: 'Ecofascist imaginaries', href: '#ecofascist-imaginaries' },
-    highlightEraId: highlightEraId
+    show: parts.length > 0,
+    highlightPartId: highlightPartId
   };
 
   // Network: defaults on for home/reading, off for chapter pages unless overridden.
@@ -92,7 +115,7 @@
   var networkDefault = (pageKind === 'home' || pageKind === 'reading');
   var network = {
     show: networkSpec.show !== undefined ? networkSpec.show : networkDefault,
-    caption: networkSpec.caption || 'The network grows era by era.'
+    caption: networkSpec.caption || 'The network grows part by part.'
   };
 
   var registers = { show: pageKind === 'home' || pageKind === 'reading' };
@@ -112,7 +135,8 @@
     pageId: {{ page_id | jsonify }},
     hero: hero,
     stepper: stepper,
-    steps: steps,
+    parts: parts,            // every stepper stop (parts + brackets)
+    steps: steps,            // scrolly figure steps (parts only, with nodes/focus)
     prose: prose,
     network: network,
     registers: registers,    // visibility flag (chapter pages hide register def-bars)

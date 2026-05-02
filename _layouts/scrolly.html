@@ -121,18 +121,20 @@
         {%- capture brace_close -%}{% raw %}}}{% endraw %}{%- endcapture -%}
         {%- assign prose_key = page.prose_key | default: page.page_id | default: 'boulder' -%}
         {%- assign prose_data = site.data.prose[prose_key] -%}
-        {% for era in site.data.eras %}
-          {%- assign era_years = '' -%}
-          {%- if era.start and era.end -%}
-            {%- assign era_years = era.start | append: ' – ' | append: era.end -%}
-          {%- elsif era.subtitle -%}
-            {%- assign era_years = era.subtitle -%}
+        {% for part in site.data.parts %}
+          {%- assign part_kind = part.kind | default: 'step' -%}
+          {%- if part_kind != 'step' -%}{% continue %}{%- endif -%}
+          {%- assign part_years = '' -%}
+          {%- if part.start and part.end -%}
+            {%- assign part_years = part.start | append: ' – ' | append: part.end -%}
+          {%- elsif part.subtitle -%}
+            {%- assign part_years = part.subtitle -%}
           {%- endif -%}
           <hr style="border: none; border-top: 1px solid #ddd; margin: 32px 0;" />
-          <div style="font-family: monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #888;">{{ era.num }} · {{ era.kicker }}</div>
-          <h2 style="font-size: 32px; margin: 8px 0 4px;">{{ era.title }}</h2>
-          <div style="color: #999; font-family: monospace; font-size: 12px;">{{ era_years }}</div>
-          <div>{{ prose_data[era.id] | replace: doc_open, '<!--DOC:' | replace: quote_open, '<!--QUOTE:' | replace: brace_close, '-->' }}</div>
+          <div style="font-family: monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #888;">{{ part.num }} · {{ part.kicker }}</div>
+          <h2 style="font-size: 32px; margin: 8px 0 4px;">{{ part.title }}</h2>
+          <div style="color: #999; font-family: monospace; font-size: 12px;">{{ part_years }}</div>
+          <div>{{ prose_data[part.id] | replace: doc_open, '<!--DOC:' | replace: quote_open, '<!--QUOTE:' | replace: brace_close, '-->' }}</div>
         {% endfor %}
       {%- endif -%}
       <p style="margin-top: 48px;"><a href="{{ '/' | relative_url }}">← Back to the book site</a></p>
