@@ -579,6 +579,26 @@ function App() {
         </section>
       );
     }
+    if (s.kind === 'island') {
+      // Section file declares `kind: island, island: <Name>` in frontmatter;
+      // we look up window[<Name>] (set by assets/js/dist/islands.js) and
+      // render it inline. Works because the islands bundle externalizes
+      // React to window.React, so the bundled component shares this app's
+      // React instance. Optional `props` frontmatter is spread into the
+      // component.
+      const Component = s.island ? window[s.island] : null;
+      if (!Component) {
+        console.warn('[section] island', s.island, 'not on window — is the bundle loaded?');
+        return null;
+      }
+      return (
+        <section key={s.id} id={s.id} className="coda section--island">
+          {s.kicker && <div className="kicker">{s.kicker}</div>}
+          {s.title && <h2>{s.title}</h2>}
+          <Component {...(s.props || {})} />
+        </section>
+      );
+    }
     // coda (default)
     return (
       <section key={s.id} id={s.id} className="coda">

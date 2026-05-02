@@ -51,6 +51,10 @@ nav_reading:
   # field is what the user sees on the menu button — keep it as "Eras" for
   # this site, or rename to "Parts", "Chapters", "Acts", etc.
   - { label: "Eras", kind: "parts-menu" }
+  # The `#qc-efi-matrix` anchor is the QC×EFI synthesis figure (rendered as
+  # a `kind: island` section in post-scrolly). Listed BEFORE Book so the
+  # post-scrolly slot orders as [matrix, book, author].
+  - { label: "Matrix", url: "#qc-efi-matrix" }
   - { label: "Book", url: "#book" }
   - { label: "Author", url: "#author" }
   - { label: "News", url: "#news" }
