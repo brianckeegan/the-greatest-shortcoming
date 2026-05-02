@@ -6,3 +6,11 @@ Gemfile.lock
 .jekyll-cache
 .claude/
 .DS_Store
+
+# Node / esbuild — used to build assets/js/dist/islands.js from assets/js/islands/.
+# The compiled bundle (assets/js/dist/islands.js) IS committed because GitHub
+# Pages builds with the github-pages gem and never runs npm. Lockfiles, the
+# install tree, and esbuild's metafile stay local-only.
+node_modules/
+package-lock.json
+.npm/
