@@ -2,28 +2,28 @@
   name: "PLAN-Boulder"
   full: "People's League for Action Now"
   founded: 1959
-  era: [free_fall]
+  part: [free_fall]
   blurb: "Citizen coalition that successfully campaigned for the Blue Line Amendment."
   links: [bartlett, mckelvey, blue_line, open_space_program, danish_plan]
 
 - id: olmsted_brothers
   name: "Olmsted Brothers"
   full: "Brookline, MA landscape architecture firm"
-  era: [prelude]
+  part: [prelude]
   blurb: "Retained by Boulder City Improvement Association in 1908. Authored the 1910 report."
   links: [olmsted_jr, olmsted_report, bcia]
 
 - id: bcia
   name: "Boulder City Improvement Assn."
   founded: 1908
-  era: [prelude]
+  part: [prelude]
   blurb: "Civic body that retained Olmsted Brothers to survey Boulder and recommend improvements."
   links: [olmsted_brothers, olmsted_report]
 
 - id: chautauqua
   name: "Colorado Chautauqua"
   founded: 1898
-  era: [prelude]
+  part: [prelude]
   blurb: "Bounded and selective community on public land. Built in physical form the social logic the Olmsted report would extend."
   links: [olmsted_jr, olmsted_report]
 
@@ -31,30 +31,30 @@
   name: "CU Boulder"
   full: "University of Colorado, Boulder"
   founded: 1876
-  era: [free_fall, quarantine]
+  part: [free_fall, quarantine]
   blurb: "Land-grant university charged with transforming Colorado's miners and farmers into good American citizens."
   links: [bartlett, mckelvey]
 
 - id: los_alamos
   name: "Los Alamos / Manhattan Project"
-  era: [free_fall]
+  part: [free_fall]
   blurb: "Where Bartlett spent the final years of WWII measuring plutonium isotopes."
   links: [bartlett]
 
 - id: sierra_club
   name: "Sierra Club"
-  era: [free_fall, quarantine]
+  part: [free_fall, quarantine]
   blurb: "Newsletters carried Bartlett's exponential curve into broader circulation."
   links: [bartlett, exponential_curve]
 
 - id: census_bureau
   name: "U.S. Census Bureau"
-  era: [swarm]
+  part: [swarm]
   blurb: "Released the 2008 majority-minority projection that supplied visual grammar for replacement narratives."
   links: [majority_minority, politics_of_inevitability]
 
 - id: cis
   name: "Center for Immigration Studies (CIS)"
-  era: [quarantine, swarm]
+  part: [quarantine, swarm]
   blurb: "Tanton-network think tank circulating fiscal impact statements as policy expertise."
   links: [tanton, fiscal_impact]
