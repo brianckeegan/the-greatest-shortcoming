@@ -40,7 +40,7 @@ Pages will rebuild.
 5. [Customizing the network (`_data/*.yml`)](#customizing-the-network-_datayml)
 6. [Customizing the prose (`_data/prose/*.yml`)](#customizing-the-prose-_dataproseyml)
 7. [Customizing the look (`assets/css/scrolly.css`)](#customizing-the-look-assetscssscrollycss)
-8. [Customizing behavior (`assets/js/*.jsx`)](#customizing-behavior-assetsjsjsx)
+8. [Customizing behavior (`assets/js/*.jsx` and `assets/js/islands/*.tsx`)](#customizing-behavior-assetsjsjsx-and-assetsjsislandstsx)
 9. [Adding a new part](#adding-a-new-part)
 10. [Customizing the stepper](#customizing-the-stepper)
 11. [Adding a new entity](#adding-a-new-entity)
@@ -120,9 +120,19 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 │   │   ├── scrolly.css      # design ground truth (fonts, palette, base typography, top-header, news-list, …)
 │   │   └── main.scss        # static-page layout patterns; compiles to main.css (loaded by both shells)
 │   └── js/
-│       ├── app.jsx          # main React app (header, hero, stepper, prose, drawer, news coda)
-│       ├── scrolly-network.jsx  # the part-banded sketchy network SVG
-│       └── tweaks-panel.jsx     # the in-page Tweaks panel framework
+│       ├── app.jsx          # main React app (header, hero, stepper, prose, drawer, news coda) — Babel-runtime JSX
+│       ├── tweaks-panel.jsx     # the in-page Tweaks panel framework — Babel-runtime JSX
+│       ├── islands/         # NEW: TypeScript islands source (built by esbuild)
+│       │   ├── index.ts             # bundle entry: registry + window globals
+│       │   ├── mount.ts             # generic [data-island] hydrator
+│       │   ├── types.ts             # GsData / SiteData / PageContext / Step / Part
+│       │   ├── ScrollyNetwork.tsx   # network SVG (replaces former scrolly-network.jsx)
+│       │   ├── QcEfiMatrix.tsx      # the unifying matrix island (Observable Plot)
+│       │   ├── Scroller.tsx         # react-scrollama scroll-step coordinator
+│       │   ├── SmoothScrollLink.tsx # react-scroll smooth-scroll link helper
+│       │   └── charts/              # per-part chart islands (FreeFallChart real, others placeholder)
+│       └── dist/
+│           └── islands.js   # compiled bundle (committed; loaded by _layouts/scrolly.html)
 ├── index.md                 # / (page_kind: home, page_id: home → uses scrolly layout)
 ├── _chapters/               # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter from _config defaults)
 ├── _sections/               # collection: landing-page section content (book, author, register defs, news, resources, bartlett epigraphs)
@@ -404,18 +414,87 @@ rule.
 
 ---
 
-## Customizing behavior (`assets/js/*.jsx`)
+## Customizing behavior (`assets/js/*.jsx` and `assets/js/islands/*.tsx`)
 
 You shouldn't need to touch these for content edits. If you want to change
 *how* the page works:
 
+### Babel-runtime JSX (loaded directly from `assets/js/*.jsx`)
+
 - **`app.jsx`** — composition of header, hero, stepper, prose, drawer, news
   coda. Reads `window.SITE`, `window.GS_DATA`, `window.PAGE_CONTEXT`. Add
-  or remove components here.
-- **`scrolly-network.jsx`** — the SVG network drawing. STEPS now come from
-  `_data/scrolly/<key>.yml` via `PAGE_CONTEXT.steps`; this file defines only
-  the rendering logic.
-- **`tweaks-panel.jsx`** — the in-page Tweaks UI framework.
+  or remove components here. JSX is compiled at runtime by Babel-standalone
+  (loaded from CDN in `_layouts/scrolly.html`).
+- **`tweaks-panel.jsx`** — the in-page Tweaks UI framework. Same Babel-CDN
+  delivery as `app.jsx`.
+
+### TypeScript islands (compiled by esbuild → `assets/js/dist/islands.js`)
+
+The scrolly figure (formerly `scrolly-network.jsx`), the unifying matrix,
+the per-part charts, the scroll-step coordinator, and the smooth-scroll
+nav helper all live in **`assets/js/islands/`** as strict-mode TypeScript.
+They build into a single `assets/js/dist/islands.js` bundle that
+`_layouts/scrolly.html` loads with a regular `<script defer>` tag. The
+bundle:
+
+1. Sets `window.ScrollyNetwork` and `window.NodeShape` so `app.jsx`
+   continues to render the figure inline (the integration seam).
+2. Auto-mounts any `[data-island="<name>"]` element on
+   `DOMContentLoaded`, hydrating it with the matching React component.
+
+#### File map
+
+| File | Purpose |
+|---|---|
+| `islands/index.ts` | Bundle entry. Registers component names → components, sets `window.*` globals, calls `bootMount`. |
+| `islands/mount.ts` | Generic `[data-island]` hydrator. Reads `data-props` JSON, calls `createRoot().render()`. |
+| `islands/types.ts` | TypeScript types for `window.GS_DATA`, `window.SITE`, `window.PAGE_CONTEXT`, parts, steps, entities, sections. |
+| `islands/declarations.d.ts` | Module declarations for `react-scrollama` (which doesn't ship `@types`). |
+| `islands/ScrollyNetwork.tsx` | The part-banded sketchy network SVG. Faithful TS port of the legacy `scrolly-network.jsx`; same behavior, same `window.ScrollyNetwork` / `window.NodeShape` API. |
+| `islands/QcEfiMatrix.tsx` | NEW: the unifying QC × EFI matrix. Reads `window.GS_DATA.parts`, renders date-range bars per part via Observable Plot. |
+| `islands/Scroller.tsx` | NEW: scroll-step coordinator built on `react-scrollama`. CSS `position: sticky` for the sticky pane (per the [scrollytelling skill](https://github.com/doodledood/claude-code-plugins/blob/main/claude-plugins/frontend-design/skills/scrollytelling/SKILL.md)). Honors `prefers-reduced-motion` (mandatory per WCAG SC 2.3.3). |
+| `islands/SmoothScrollLink.tsx` | NEW: smooth-scroll `<Link>` helper built on `react-scroll`. Honors `prefers-reduced-motion`. |
+| `islands/charts/FreeFallChart.tsx` | NEW: real Bartlett-curve visualization via Observable Plot. Template for the other per-part charts. |
+| `islands/charts/PlaceholderCharts.tsx` | NEW: scaffolds for Boulder, Quarantine, Swarm, Portfolio, Evacuation. Render a `placeholder` badge until a real chart replaces them. |
+| `islands/charts/PartChartShell.tsx` | NEW: shared frame/typography for per-part chart islands. |
+
+#### Build pipeline
+
+```bash
+npm install              # one-time: install React, Plot, D3, Scrollama, react-scroll, esbuild, TypeScript
+npm run build            # bundle assets/js/islands/ → assets/js/dist/islands.js
+npm run build:watch      # same, but rebuilds on change
+npm run typecheck        # tsc --noEmit (strict mode)
+```
+
+The compiled `assets/js/dist/islands.js` is **committed to git** because
+GitHub Pages builds with the github-pages gem and never runs npm. Run
+`npm run build` locally before committing changes to anything under
+`assets/js/islands/`. `node_modules/` and `package-lock.json` are
+gitignored.
+
+#### Adding a new island
+
+1. Add `assets/js/islands/MyThing.tsx`:
+   ```tsx
+   export const MyThing = ({ greeting }: { greeting: string }) => (
+     <p>{greeting}</p>
+   );
+   ```
+2. Register it in `islands/index.ts`:
+   ```ts
+   import { MyThing } from './MyThing';
+   const registry: IslandRegistry = {
+     // …existing entries…
+     'my-thing': MyThing,
+   };
+   ```
+3. Mount it from any Liquid template:
+   ```html
+   <div data-island="my-thing" data-props='{"greeting":"hi"}'></div>
+   ```
+4. Run `npm run build` and commit `assets/js/dist/islands.js` along
+   with the source.
 
 ---
 
