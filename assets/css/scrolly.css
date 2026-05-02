@@ -564,8 +564,16 @@ a.news-item:hover {
  * each one. Once revealed, they stay revealed. The container intentionally
  * breaks outside the surrounding .coda measure (max 760px) so each quote can
  * carry h2-sized weight at the page's full reading width.
+ *
+ * Uses distinct `.epigraph-reveal*` class names (NOT `.epigraph`) because
+ * `main.scss` still ships a legacy `.epigraph` / `.epigraph p` rule from the
+ * old landing-site Bartlett-include design; that rule pinned font-size to
+ * 1.05rem and would silently squash the h2-sized clamp here. Outer element
+ * is a <div role="figure"> rather than <blockquote> for the same reason
+ * (and to avoid the user-agent `blockquote { margin: 1em 40px }` that
+ * visually narrowed the break-out container).
  * ============================================================================ */
-.bartlett-epigraphs {
+.epigraph-reveal {
   max-width: 1200px;
   margin: 24px auto;
   padding: 4vh 48px 4vh;
@@ -574,41 +582,41 @@ a.news-item:hover {
   flex-direction: column;
   gap: 22vh;
 }
-.bartlett-epigraphs .epigraph {
-  font-family: var(--serif);
-  font-style: italic;
-  /* h2-sized — see h2 base of 2.2rem; clamp lets it breathe on wide screens
-     without overrunning narrow ones. */
-  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
-  line-height: 1.32;
+.epigraph-reveal__card {
   margin: 0;
   padding: 28px 36px;
   border-left: 5px solid var(--tufte-red);
   background: var(--paper);
-  color: var(--ink);
   opacity: 0.18;
   transform: translateY(12px);
   transition: opacity 0.7s ease-out, transform 0.7s ease-out;
 }
-.bartlett-epigraphs .epigraph.revealed {
+.epigraph-reveal__card.revealed {
   opacity: 1;
   transform: translateY(0);
 }
-.bartlett-epigraphs .epigraph p { margin: 0; }
-.bartlett-epigraphs .epigraph cite {
+.epigraph-reveal__quote {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  /* h2-sized — see h2 base of 2.2rem. Set on the inner element so no `p`
+     selector elsewhere can override via cascade. */
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  line-height: 1.32;
+  color: var(--ink);
+}
+.epigraph-reveal__cite {
   display: block;
+  margin: 18px 0 0;
   font-style: normal;
   font-family: var(--mono);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  margin-top: 18px;
 }
 @media (max-width: 760px) {
-  .bartlett-epigraphs { padding: 3vh 24px; gap: 16vh; }
-  .bartlett-epigraphs .epigraph {
-    font-size: clamp(1.3rem, 5vw, 1.7rem);
-    padding: 20px 22px;
-  }
+  .epigraph-reveal { padding: 3vh 24px; gap: 16vh; }
+  .epigraph-reveal__card { padding: 20px 22px; }
+  .epigraph-reveal__quote { font-size: clamp(1.3rem, 5vw, 1.7rem); }
 }

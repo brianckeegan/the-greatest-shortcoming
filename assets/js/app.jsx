@@ -349,15 +349,23 @@ function BartlettEpigraphs({ id, items }) {
 
   if (!safeItems.length) return null;
 
+  // Distinct class names (epigraph-reveal__*) so the legacy `.epigraph` /
+  // `.epigraph p` rules in main.scss (from the old landing-site epigraphs
+  // include) can't squash font-size or padding via cascade. Outer element is
+  // a <div> rather than <blockquote> for the same reason — and to avoid the
+  // user-agent default `blockquote { margin: 1em 40px }` that visually
+  // narrowed the break-out container.
   return (
-    <div id={id} className="bartlett-epigraphs" aria-label="Epigraphs">
+    <div id={id} className="epigraph-reveal" aria-label="Epigraphs">
       {safeItems.map((item, i) => (
-        <blockquote key={i}
-                    ref={el => { refs.current[i] = el; }}
-                    className={'epigraph' + (revealed[i] ? ' revealed' : '')}>
-          <p>&ldquo;{item.quote}&rdquo;</p>
-          {item.cite && <cite>&mdash; {item.cite}</cite>}
-        </blockquote>
+        <div key={i}
+             ref={el => { refs.current[i] = el; }}
+             className={'epigraph-reveal__card' + (revealed[i] ? ' revealed' : '')}
+             role="figure"
+             aria-label={item.cite ? `Epigraph by ${item.cite}` : 'Epigraph'}>
+          <p className="epigraph-reveal__quote">&ldquo;{item.quote}&rdquo;</p>
+          {item.cite && <p className="epigraph-reveal__cite">&mdash; {item.cite}</p>}
+        </div>
       ))}
     </div>
   );
