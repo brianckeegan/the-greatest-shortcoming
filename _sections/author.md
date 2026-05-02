@@ -1,6 +1,6 @@
 ---
 kind: coda
-slot: pre-scrolly
+slot: post-scrolly
 kicker: "about"
 title: "The Author"
 ---
