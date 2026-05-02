@@ -5,3 +5,4 @@ Gemfile.lock
 *.gem
 .jekyll-cache
 .claude/
+.DS_Store
