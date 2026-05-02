@@ -51,8 +51,6 @@ nav_reading:
   - { label: "Book", url: "#book" }
   - { label: "Author", url: "#author" }
   - { label: "News", url: "#news" }
-  - { label: "Resources", url: "#resources" }
-  - { label: "← Site", url: "/" }
 
 # ---- Unified sections list -------------------------------------------------
 # One list, in render order within each `slot`. `kind` selects the renderer:
