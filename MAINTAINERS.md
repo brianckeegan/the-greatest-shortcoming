@@ -13,8 +13,8 @@ idiom is end-to-end.
 
 | Path | What it is | Layout | JS? |
 |------|------------|--------|-----|
-| `/` | Book-summary scrollytelling — hero, QC \| 6 era buttons \| EFI navbar, register def-bars, scrolly figure + book-summary prose, coda (Book / Author / News / Resources). | `scrolly` (mounts React) | Yes |
-| `/chapters/<slug>/` (preface + 8 chapters) | Chapter abstract above the stepper, chapter excerpt below. The stepper pins the chapter's mapped era and lets readers jump cross-chapter. All chapters are treated identically. | `scrolly` (mounts React; chapter intro/outro captured via Liquid in `_layouts/scrolly.html`) | Yes |
+| `/` | Book-summary scrollytelling — hero, QC \| 6 part buttons \| EFI navbar, register def-bars, scrolly figure + book-summary prose, coda (Book / Author / News / Resources). | `scrolly` (mounts React) | Yes |
+| `/chapters/<slug>/` (preface + 8 chapters) | Chapter abstract above the stepper, chapter excerpt below. The stepper pins the chapter's mapped part and lets readers jump cross-chapter. All chapters are treated identically. | `scrolly` (mounts React; chapter intro/outro captured via Liquid in `_layouts/scrolly.html`) | Yes |
 | `/about/`, `/contents/`, `/bibliography/`, `/news/`, `/draft-status/` | Static pages. Same `.top-header` chrome as React surface, rendered as plain HTML. | `default` → `page` | Bibliography filter + dark-mode toggle only. |
 
 The React app reads its content from per-page Jekyll data: the homepage
@@ -146,10 +146,11 @@ the manuscript-like feel.
 ### Why every chapter is treated identically
 
 Every chapter renders through the same React shell with the same chrome.
-The stepper pins the chapter's mapped era (`_data/scrolly/<slug>.yml`'s
-`highlight_part`) and the era buttons let readers jump cross-chapter; the
-chapter abstract sits above the stepper, the excerpt below. There is no
-"deep dive" variant for any one chapter — uniformity is the design.
+The stepper pins the chapter's mapped part (`_data/scrolly/<slug>.yml`'s
+`highlight_part`, an id from `_data/parts.yml`) and the part stops let
+readers jump cross-chapter; the chapter abstract sits above the stepper,
+the excerpt below. There is no "deep dive" variant for any one chapter —
+uniformity is the design.
 
 If a future chapter needs an immersive scrollytelling pass with its own
 network/prose (the kind chapter 1 had at `/reading/boulder/` in earlier
@@ -157,6 +158,31 @@ drafts), the path is to author per-chapter `_data/prose/<slug>.yml` and
 populate `_data/scrolly/<slug>.yml`'s `steps` (instead of inheriting from
 `home`). Then enable the network on that chapter via
 `network: { show: true }`. The shell already handles it.
+
+### Why the stepper is one element type
+
+The navbar at the top — Quantitative Chauvinism on the left, six numbered
+parts in the middle, Ecofascist Imaginaries on the right — used to render
+through two separate components (`stepper-bracket` + `stepper-eras`). Each
+had its own DOM shape, click handler, and CSS rules. That made it
+impossible to express things like "QC should also get the active
+underline when the reader scrolls past it" without forking both code
+paths.
+
+The current model has ONE `<Stepper>` component and ONE `.stepper__stop`
+DOM element. Every stop — chapter parts AND brackets — flows through the
+same renderer; visual differences are data-driven from per-stop fields in
+`_data/parts.yml`:
+
+- `kind: step | bracket` — picks the visual variant
+- `color: <CSS-token-name>` — sets the stop's accent via `--stop-color`
+- `bracket_line: true` — render the small connecting-line ornament
+- `underline_active: true|false` — opt in / out of the active underline
+  per stop
+
+The sketcher's intent is that a future maintainer can recolor any stop,
+add a third bracket, or reposition QC into the middle of the parts,
+without touching the React tree.
 
 ## Design language ground truth
 
@@ -246,7 +272,7 @@ To change the reading measure: edit `$measure` and `$measure-narrow` in
 | Hero kicker line ("forthcoming · …") | `.hero--home .kicker` | inherits scrolly.css `.kicker`; copy edit in `_layouts/home.html` |
 | Bartlett epigraphs | `.epigraphs`, `.epigraph`, `.epigraph__cite` | `main.scss`; markup in `_includes/epigraph.html` |
 | Argument block | `.argument`, `.argument__body` | `main.scss`; copy in `_layouts/home.html` |
-| Definition cards (Quant. Chauv. / Ecofascist Imag.) | `.registers`, `.register`, `.register__title` | `main.scss`; copy in `_config.yml` `registers:` block |
+| Definition cards (Quant. Chauv. / Ecofascist Imag.) | `.registers`, `.register`, `.register__title` | `main.scss`; copy in `_config.yml` `sections:` list (kind: register) |
 | Author block | `.author` | `main.scss`; copy in `_layouts/home.html` |
 | Action cards (TOC / Preface / Reading) | `.actions`, `.action-card`, `.action-card__*` | `main.scss`; markup in `_layouts/home.html` |
 
@@ -350,7 +376,7 @@ To remove a draft tag once content is approved: delete the
   `_layouts/home.html`. If it needs a heading, use `<h2 class="section-rule">`
   for consistency.
 - **Add a new register card** (next to Quantitative Chauvinism / Ecofascist
-  Imaginaries). Append an entry to `_config.yml` under `registers:`. The
+  Imaginaries). Append an entry to `_config.yml` under `sections:` with `kind: register`. The
   home page renders all of them.
 - **Change the home hero copy.** Edit `_layouts/home.html` directly.
 - **Change the page nav.** Edit `_config.yml` `nav:` (top-level).
@@ -406,15 +432,15 @@ If you change tokens, update **both** the light tokens (in scrolly.css's
    <!-- 200–400 word verbatim excerpt as Markdown. -->
    ```
 3. Create `_data/scrolly/09-some-slug.yml` so the React shell knows what to
-   pin in the era stepper:
+   pin in the stepper:
    ```yaml
-   highlight_part: portfolio   # the era this chapter maps to (or omit if none)
+   highlight_part: portfolio   # the part this chapter maps to (or omit if none)
    network: { show: false }
    steps_inherit: home        # reuse the homepage stepper
    ```
-4. (Optional) Add `chapter_slug: 09-some-slug` to the matching era in
+4. (Optional) Add `chapter_slug: 09-some-slug` to the matching part in
    `_data/parts.yml` so cross-chapter navigation lands on this chapter when
-   readers click that era from another chapter's stepper.
+   readers click that part from another chapter's stepper.
 5. The chapter renders at `/chapters/09-some-slug/`. The TOC and the
    prev/next nav update automatically — they iterate `_data/chapters.yml`.
 
@@ -531,14 +557,14 @@ After a build succeeds, the deploy job prints a URL like
 `https://brianckeegan.github.io/the-greatest-shortcoming/`. Visit it and
 walk:
 
-1. The home page loads. The hero renders, the QC | 6 era buttons | EFI
+1. The home page loads. The hero renders, the QC | 6 part buttons | EFI
    stepper appears, the network SVG draws, the prose advances on scroll,
    the coda shows Book / Author / News / Resources, the Tweaks panel opens,
    the dark-mode toggle works.
 2. `/contents/` lists eight chapters and the preface.
 3. `/chapters/preface/` and a couple of `/chapters/<slug>/` pages render
    the chapter abstract above the stepper, content below, with the mapped
-   era pinned in the stepper.
+   part pinned in the stepper.
 4. `/about/`, `/news/`, `/bibliography/` render with the same `.top-header`
    chrome as the React surface (single-row brand + nav, no double row).
 5. `/news/` lists every item from `_data/news.yml`, newest first; the
@@ -792,7 +818,7 @@ If the Pages build itself is failing (Action red across multiple commits):
 - `assets/js/*.jsx` — the React scrollytelling code. Edits here change the
   homepage and every chapter page's behavior. Edit only with intent and only
   if you know React + the in-page Babel compilation flow.
-- `_data/{people,orgs,instruments,themes,documents,eras}.yml` and
+- `_data/{people,orgs,instruments,themes,documents,parts}.yml` and
   `_data/prose/*.yml`, `_data/scrolly/*.yml` — the entity graph and per-page
   prose/step configs that drive the React surface. Edits here change the
   homepage and chapter content.
@@ -826,18 +852,18 @@ three moments. Future sessions should respect these:
 ├── _data/
 │   ├── chapters.yml        # drives TOC, chapter cards, prev/next nav
 │   ├── bibliography.yml    # generated by scripts/bib_to_yaml.rb
-│   ├── eras.yml            # the 6 eras + chapter_slug mapping (era → chapter URL)
+│   ├── parts.yml            # 6 parts (kind: step) + QC and EFI brackets (kind: bracket) + chapter_slug mapping (part → chapter URL)
 │   ├── people.yml          # entity graph
 │   ├── orgs.yml            # entity graph
 │   ├── themes.yml          # entity graph (incl. QC, EFI)
 │   ├── instruments.yml     # entity graph
 │   ├── documents.yml       # entity graph
 │   ├── news.yml            # news/event items (latest 3 in homepage Coda; full list at /news/)
-│   ├── prose/              # per-page era prose
+│   ├── prose/              # per-page part-keyed prose
 │   │   └── home.yml        # book-summary (homepage)
 │   └── scrolly/            # per-page step (nodes/focus) configs
 │       ├── home.yml        # homepage book-summary (was hard-coded in scrolly-network.jsx)
-│       ├── preface.yml     # chapter stub (no era pinned)
+│       ├── preface.yml     # chapter stub (no part pinned)
 │       ├── 01-boulder.yml  # chapter stubs — `steps_inherit: home` reuses home steps
 │       ├── 02-the-free-fall.yml
 │       └── …

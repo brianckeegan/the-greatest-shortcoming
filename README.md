@@ -2,10 +2,24 @@
 
 A book site built around a single React-driven scrollytelling experience. The
 homepage is a book-summary scrollytelling. Every chapter page mounts the same
-React shell, with the chapter's mapped era pinned in a shared QC | eras | EFI
-navbar — all chapters are treated identically. Static pages (about, news,
-bibliography, contents, draft-status) share the same chrome rendered as plain
-HTML.
+React shell, with the chapter's mapped *part* pinned in a shared QC | parts
+| EFI navbar — all chapters are treated identically. Static pages (about,
+news, bibliography, contents, draft-status) share the same chrome rendered
+as plain HTML.
+
+The site uses three layered abstractions that are worth getting straight:
+
+- **Parts** (`_data/parts.yml`) — the chapter-level structural divisions of
+  the book (Boulder, Free Fall, …). Each is a stop in the navbar stepper.
+  The file also holds *bracket*-kind stops (Quantitative Chauvinism,
+  Ecofascist Imaginaries) that flank the parts.
+- **Sections** (`_config.yml` `sections:`) — every block of homepage
+  content (Book, Author, register definition bars, News, Resources,
+  Bartlett epigraphs). Each declares a `kind` (renderer) and a `slot`
+  (where in the page flow it lands).
+- **Steps** (`_data/scrolly/<key>.yml`) — per-page node sets for the
+  scrolly figure. Reference part ids; carry the entity ids that appear in
+  the network at each step.
 
 This page is the high-level reference; for operations and edit recipes see
 [MAINTAINERS.md](MAINTAINERS.md).
@@ -27,11 +41,12 @@ Pages will rebuild.
 6. [Customizing the prose (`_data/prose/*.yml`)](#customizing-the-prose-_dataproseyml)
 7. [Customizing the look (`assets/css/scrolly.css`)](#customizing-the-look-assetscssscrollycss)
 8. [Customizing behavior (`assets/js/*.jsx`)](#customizing-behavior-assetsjsjsx)
-9. [Adding a new era](#adding-a-new-era)
-10. [Adding a new entity](#adding-a-new-entity)
-11. [Adding a news item](#adding-a-news-item)
-12. [Adding a new page](#adding-a-new-page)
-13. [Troubleshooting](#troubleshooting)
+9. [Adding a new part](#adding-a-new-part)
+10. [Customizing the stepper](#customizing-the-stepper)
+11. [Adding a new entity](#adding-a-new-entity)
+12. [Adding a news item](#adding-a-news-item)
+13. [Adding a new page](#adding-a-new-page)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -64,7 +79,7 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 
 ```
 .
-├── _config.yml              # site identity, hero, nav, registers, coda, theme defaults, defaults
+├── _config.yml              # site identity, hero, nav, sections (unified registers + coda + news + epigraphs), theme defaults, defaults
 ├── _data/
 │   ├── parts.yml            # the 6 parts (chapter-level) + bracket stops — drives stepper, network, chapter mapping (chapter_slug)
 │   ├── people.yml           # individuals in the network
@@ -158,20 +173,31 @@ hero:
 
 `nav` is the static-page top nav (links to /contents/, /about/, etc.).
 `nav_reading` is the in-app nav rendered by the React `<Header>` on home and
-chapter pages — items are either anchor links (`url: "#book"`) or the
-special `{ kind: "parts-menu" }` (renders the dropdown of all step-kind parts (chapter parts; brackets are excluded)).
+chapter pages — items are either anchor links (`url: "#book"`), external
+URLs, or the special `{ kind: "parts-menu" }` which renders a dropdown of
+every step-kind part. The dropdown's button label is whatever you set on
+`label:` — keep it as `"Eras"` for this site, or rename to `"Parts"`,
+`"Acts"`, `"Chapters"`, etc.
 
-### `registers`
+### `sections`
 
-The two definition bars (Quantitative Chauvinism, Ecofascist Imaginaries)
-beneath the hero. Each has `id`, `kicker`, `title`, and HTML `body`. The
-Stepper brackets link to these by `id`.
+One unified list for every block of homepage content. Each entry carries:
 
-### `coda`
+```yaml
+- id: <unique-anchor>
+  kind: register | coda | news | epigraphs   # selects renderer
+  slot: pre-stepper | pre-scrolly | post-scrolly | post-coda  # placement
+  title: "..."           # register, coda, news
+  kicker: "..."          # register, coda, news
+  body: "..."            # register, coda
+  items: [...]           # epigraphs (each: { quote, cite })
+```
 
-Sections at the bottom of every scrollytelling page (Book / Author / News /
-Resources). The `news` entry (with empty `body`) is special-cased: app.jsx
-renders it as the latest 3 items from `_data/news.yml`.
+Slots are rendered in the order their items appear in the YAML. The
+unified schema replaced the legacy split of `registers:` + `coda:` so a
+new section type (e.g. epigraphs) can sit anywhere without bending the
+React app. Section `id` becomes a DOM anchor, so the stepper's QC and EFI
+brackets link by id (`#quant-chauvinism`, `#ecofascist-imaginaries`).
 
 ### `theme_defaults`
 
@@ -207,23 +233,58 @@ The `links` field is bidirectional in spirit but unidirectional in storage —
 list links from one side and the drawer surfaces them. List from both sides
 if you want them to show up in both drawers.
 
-### Eras (`_data/parts.yml`) and chapter mapping
+### Parts (`_data/parts.yml`)
 
-Each era has an optional `chapter_slug` field that maps it to a chapter for
-cross-navigation in the Stepper:
+Parts drive both the navbar stepper and the scrolly figure. Each entry
+takes one of two `kind` values:
+
+- `kind: step` — a chapter-level part. Carries `title`, `start`/`end`
+  (the year range, used to derive the navbar subtitle), `num`, `kicker`,
+  `blurb`, and an optional `chapter_slug` for cross-chapter navigation.
+- `kind: bracket` — a flanking marker (Quantitative Chauvinism, Ecofascist
+  Imaginaries). Carries `label`, `short_label`, and the visual flags below.
+
+Per-stop visual customization (works on both kinds; all optional):
+
+```yaml
+color: tufte-red          # CSS color token (no `--` prefix); becomes
+                          # the stop's accent. Default: ink for step,
+                          # tufte-red for bracket.
+bracket_line: true        # render the small connecting line ornament.
+underline_active: true    # underline the label when the stop is the
+                          # active scroll position. Default: true.
+```
+
+Step-kind example:
 
 ```yaml
 - id: free_fall
+  kind: step
   title: "Free Fall"
-  subtitle: "1968 — 1994"
+  start: 1968
+  end: 1994                          # subtitle "1968 – 1994" derived from these
   num: "01"
   kicker: "The Will to Simplify"
   blurb: "..."
-  chapter_slug: 02-the-free-fall   # → /chapters/02-the-free-fall/
+  chapter_slug: 02-the-free-fall    # → /chapters/02-the-free-fall/
+  underline_active: true
 ```
 
-When a reader is on a chapter page, era buttons in the stepper become `<a>`
-tags pointing to the mapped chapter's URL.
+Bracket-kind example:
+
+```yaml
+- id: quant-chauvinism
+  kind: bracket
+  label: "Quantitative chauvinism"
+  short_label: "QC"
+  color: tufte-red
+  bracket_line: true
+  underline_active: true
+```
+
+When a reader is on a chapter page, step-kind stops in the stepper become
+`<a>` tags pointing to the mapped chapter's URL. Brackets link to
+`/#<id>` on the homepage where the matching register def-bar lives.
 
 ---
 
@@ -319,17 +380,20 @@ You shouldn't need to touch these for content edits. If you want to change
 
 ---
 
-## Adding a new era
+## Adding a new part
 
-1. Add an entry to `_data/parts.yml`:
+1. Add an entry to `_data/parts.yml` with `kind: step`:
    ```yaml
    - id: aftermath
+     kind: step
      title: "Aftermath"
-     subtitle: "2069 — 2090"
+     start: 2069
+     end: 2090
      num: "06"
      kicker: "Ledger"
      blurb: "The accounting that follows."
      chapter_slug: 09-aftermath   # optional — only if there's a chapter for it
+     underline_active: true
    ```
 2. Add a matching key to `_data/prose/home.yml` (and any other scrollytelling
    target's prose file you may have added):
@@ -338,15 +402,55 @@ You shouldn't need to touch these for content edits. If you want to change
      <p class="dropcap">…</p>
    ```
 3. Add a matching `id` entry to `_data/scrolly/home.yml` with the entity ids
-   that should appear in this era's network slice:
+   that should appear in this part's network slice:
    ```yaml
    - id: aftermath
      nodes: ['…ids of entities to introduce…']
      focus: ['…ids to highlight…']
    ```
 
-That's it — the Stepper, network, prose column, and (if `chapter_slug`
-is set) cross-chapter navigation all rebuild from the data.
+That's it — the stepper navbar, network, prose column, and (if
+`chapter_slug` is set) cross-chapter navigation all rebuild from the data.
+
+---
+
+## Customizing the stepper
+
+The stepper navbar is rendered by one component and one DOM element
+pattern (`.stepper__stop`). Every visual difference between stops — color,
+underline-on-active, the connecting bracket line — is data-driven from
+`_data/parts.yml`.
+
+To add a new bracket-kind stop (e.g. an analytical lens between QC and
+the parts), insert an entry with `kind: bracket` at the right position
+in the YAML:
+
+```yaml
+- id: my-lens
+  kind: bracket
+  label: "My new lens"
+  short_label: "ML"
+  color: tufte-red       # or any other CSS color token
+  bracket_line: true
+  underline_active: true
+```
+
+To suppress the active-underline on a particular stop, set
+`underline_active: false`. To recolor a step-kind part (e.g. tint the
+prelude red to match QC), add `color: tufte-red` to that part. The
+`--stop-color` CSS custom property carries the value through hover and
+active states.
+
+To rename the dropdown menu button (currently labeled "Eras" for this
+site), edit `nav_reading` in `_config.yml`:
+
+```yaml
+nav_reading:
+  - { label: "Parts", kind: "parts-menu" }   # was "Eras"
+```
+
+The `kind: parts-menu` plumbing is what populates the dropdown; the
+`label` is just the visible button text.
 
 ---
 
@@ -355,7 +459,7 @@ is set) cross-chapter navigation all rebuild from the data.
 1. Add it to the appropriate `_data/*.yml` file with a unique `id`.
 2. Reference it from prose with `<span class="ent" data-ent="my_id">label</span>`.
 3. List it under `links:` from any related entity.
-4. Add the id to the `nodes` array of one or more eras in
+4. Add the id to the `nodes` array of one or more parts in
    `_data/scrolly/<key>.yml` (whichever scrollytelling targets you want it
    to appear on).
 
@@ -414,7 +518,7 @@ nav:
 Bump locally with `bundle update github-pages` and re-test.
 
 **A new entity isn't showing on the network diagram.**
-You need to add its id to the appropriate era's `nodes` array in
+You need to add its id to the appropriate part's `nodes` array in
 `_data/scrolly/<key>.yml` (one per scrollytelling page). The graph is
 intentionally curated, not auto-generated from the data files.
 
