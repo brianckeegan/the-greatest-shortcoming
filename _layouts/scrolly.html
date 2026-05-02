@@ -97,7 +97,13 @@
   {%- endif -%}
 
   <script type="text/babel" src="{{ '/assets/js/tweaks-panel.jsx' | relative_url }}"></script>
-  <script type="text/babel" src="{{ '/assets/js/scrolly-network.jsx' | relative_url }}"></script>
+
+  <!-- Islands bundle (built from assets/js/islands/ via esbuild). Defines
+       window.ScrollyNetwork + window.NodeShape (which app.jsx mounts inline)
+       AND auto-hydrates [data-island] elements such as the QC × EFI matrix
+       and the per-part chart placeholders below. The legacy
+       assets/js/scrolly-network.jsx file has been replaced by this bundle. -->
+  <script src="{{ '/assets/js/dist/islands.js' | relative_url }}" defer></script>
 
   {% include head-extra.html %}
 </head>
