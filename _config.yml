@@ -88,7 +88,7 @@ sections:
 
   - id: "quant-chauvinism"
     kind: coda
-    slot: pre-stepper
+    slot: pre-scrolly
     kicker: "epistemic register · i"
     title: "Quantitative Chauvinism"
     body: >-
@@ -104,7 +104,7 @@ sections:
 
   - id: "ecofascist-imaginaries"
     kind: coda
-    slot: pre-stepper
+    slot: post-scrolly
     kicker: "political register · ii"
     title: "Ecofascist Imaginaries"
     body: >-
