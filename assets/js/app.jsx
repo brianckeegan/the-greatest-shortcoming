@@ -466,11 +466,13 @@ function App() {
   const showNetwork = networkCfg.show !== false && STEPS.length > 0;
   const hasProse = STEPS.length > 0 && STEPS.some(s => PROSE[s.id]);
 
-  // Unified sections list (replaces SITE.registers + SITE.coda). Group by
-  // slot for placement, then render via kind-aware switch. Per-page coda
-  // override (PAGE.coda) is honored as a full sections list when present.
-  const allSections = (PAGE.sections && PAGE.sections.length ? PAGE.sections : (SITE.sections || []));
-  const registers = allSections.filter(s => s.kind === 'register');
+  // Landing items (formerly "sections") sorted by `sort_order` from each
+  // `_landing/<id>.md` file's frontmatter. Order is determined entirely by
+  // sort_order — there is no other ordering input. Structural elements
+  // (the eras stepper, the scrolly figure) interleave at reserved
+  // sort_order constants below.
+  const allLanding = (PAGE.landing && PAGE.landing.length ? PAGE.landing : (SITE.landing || []));
+  const registers = allLanding.filter(s => s.kind === 'register');
 
   useEffect(() => {
     document.documentElement.dataset.theme = tweaks.theme;
@@ -611,19 +613,48 @@ function App() {
     );
   };
 
-  // Group sections by slot. On chapter pages, registers don't render (the page
-  // is about chapter content, not the analytical apparatus); other slots still
-  // render so Book / Author / News / Resources appear in the same flow.
+  // Reserved sort_order values that pin the structural elements in the
+  // page flow. Landing items render in sort_order ascending; the stepper
+  // and scrolly figure interleave at these positions. Documented in
+  // _config.yml and README.md so authors can choose sort_order numbers
+  // for new landing items relative to them.
+  const STEPPER_SORT_ORDER = 200;
+  const FIGURE_SORT_ORDER = 300;
+
+  // Apply per-page filters: home_only items skip on chapter pages.
   const isHome = PAGE.kind === 'home' || PAGE.kind === 'reading';
-  const slotFilter = (slotName) => allSections.filter(s => {
-    if (s.slot !== slotName) return false;
-    if (!isHome && s.kind === 'register') return false;
-    return true;
-  });
-  const preStepperSections = slotFilter('pre-stepper');
-  const preScrollySections = slotFilter('pre-scrolly');
-  const postScrollySections = slotFilter('post-scrolly');
-  const postCodaSections = slotFilter('post-coda');
+  const visibleLanding = allLanding.filter(s => isHome || !s.home_only);
+
+  // Render-ready array of items in document order: landing items sorted by
+  // sort_order, with the stepper inserted at STEPPER_SORT_ORDER and the
+  // scrolly figure at FIGURE_SORT_ORDER. Both structural elements are
+  // omitted when their visibility flags say so (chapter-only network, etc.).
+  const flow = (() => {
+    const sorted = [...visibleLanding].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    const out = [];
+    let stepperEmitted = false;
+    let figureEmitted = false;
+    const emitStepper = () => {
+      if (stepperEmitted || !showStepper) return;
+      out.push({ kind: '__stepper' });
+      stepperEmitted = true;
+    };
+    const emitFigure = () => {
+      if (figureEmitted || !(showNetwork && hasProse)) return;
+      out.push({ kind: '__figure' });
+      figureEmitted = true;
+    };
+    for (const item of sorted) {
+      const so = item.sort_order || 0;
+      if (so >= STEPPER_SORT_ORDER) emitStepper();
+      if (so >= FIGURE_SORT_ORDER) emitFigure();
+      out.push(item);
+    }
+    // Trailing emits in case all landing items have sort_order < threshold.
+    emitStepper();
+    emitFigure();
+    return out;
+  })();
 
   return (
     <>
@@ -653,59 +684,58 @@ function App() {
 
       {intro && <section className="page-intro"><RawHtml html={intro.html} onEnt={onEnt} /></section>}
 
-      {/* Pre-stepper slot: Book + Bartlett epigraphs + Author (in YAML order) */}
-      {preStepperSections.map(renderSection)}
-
-      {showStepper && <Stepper activeStop={activeStop} onJumpStop={jumpToStop} />}
-
-      {/* Pre-scrolly slot: QC frames the parts */}
-      {showRegisters && preScrollySections.map(renderSection)}
-
-      {showNetwork && hasProse && (
-        <div className="scrolly">
-          <div className="sticky-figure">
-            <div className="figure-frame">
-              <div className="figure-caption">
-                <span><b>Figure 1.</b> {networkCfg.caption || 'The network grows part by part.'}</span>
-                <span>step {String(currentStepIdx + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')} · {STEPS[currentStepIdx] ? STEPS[currentStepIdx].title : ''}</span>
+      {/* Landing items + structural elements (stepper, scrolly figure)
+          interleaved in sort_order. The `flow` array was computed above
+          from `visibleLanding` sorted by sort_order, with sentinel entries
+          (`__stepper`, `__figure`) at the reserved slots. */}
+      {flow.map((item, i) => {
+        if (item.kind === '__stepper') {
+          return <Stepper key="__stepper" activeStop={activeStop} onJumpStop={jumpToStop} />;
+        }
+        if (item.kind === '__figure') {
+          return (
+            <div key="__figure" className="scrolly">
+              <div className="sticky-figure">
+                <div className="figure-frame">
+                  <div className="figure-caption">
+                    <span><b>Figure 1.</b> {networkCfg.caption || 'The network grows part by part.'}</span>
+                    <span>step {String(currentStepIdx + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')} · {STEPS[currentStepIdx] ? STEPS[currentStepIdx].title : ''}</span>
+                  </div>
+                  <div className="figure-svg-wrap">
+                    <window.ScrollyNetwork
+                      stepIndex={currentStepIdx}
+                      activeId={drawerId}
+                      hoveredId={hoveredId}
+                      setHoveredId={setHoveredId}
+                      onNodeClick={(id) => setDrawerId(id)} />
+                  </div>
+                  <div className="figure-legend">
+                    <span><i className="person" />person</span>
+                    <span><i className="org" />organization</span>
+                    <span><i className="theme" />theme</span>
+                    <span><i className="instrument" />instrument</span>
+                    <span><i className="doc" />document</span>
+                  </div>
+                </div>
               </div>
-              <div className="figure-svg-wrap">
-                <window.ScrollyNetwork
-                  stepIndex={currentStepIdx}
-                  activeId={drawerId}
-                  hoveredId={hoveredId}
-                  setHoveredId={setHoveredId}
-                  onNodeClick={(id) => setDrawerId(id)} />
-              </div>
-              <div className="figure-legend">
-                <span><i className="person" />person</span>
-                <span><i className="org" />organization</span>
-                <span><i className="theme" />theme</span>
-                <span><i className="instrument" />instrument</span>
-                <span><i className="doc" />document</span>
+
+              <div className="prose">
+                {STEPS.map((s, i) => {
+                  const part = (D.parts || []).find(p => p.id === s.id) || s;
+                  // Merge per-step `subtitle` (year range computed in page-context)
+                  // onto the part record so PartStep can show the dates line.
+                  const merged = { ...part, subtitle: s.subtitle || part.subtitle, num: s.num || part.num };
+                  return <PartStep key={merged.id} part={merged} idx={i} onEnt={onEnt} />;
+                })}
               </div>
             </div>
-          </div>
-
-          <div className="prose">
-            {STEPS.map((s, i) => {
-              const part = (D.parts || []).find(p => p.id === s.id) || s;
-              // Merge per-step `subtitle` (year range computed in page-context)
-              // onto the part record so PartStep can show the dates line.
-              const merged = { ...part, subtitle: s.subtitle || part.subtitle, num: s.num || part.num };
-              return <PartStep key={merged.id} part={merged} idx={i} onEnt={onEnt} />;
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Post-scrolly slot: EFI closes the part arc */}
-      {showRegisters && postScrollySections.map(renderSection)}
+          );
+        }
+        // Default: render as a landing item via the kind-aware renderer.
+        return renderSection(item);
+      })}
 
       {outro && <section className="page-outro"><RawHtml html={outro.html} onEnt={onEnt} /></section>}
-
-      {/* Post-coda slot: News, Resources */}
-      {postCodaSections.map(renderSection)}
 
       <EntDrawer id={drawerId} onClose={() => setDrawerId(null)} onNavigate={setDrawerId} />
 

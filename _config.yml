@@ -46,40 +46,46 @@ nav:
   - { label: "News",         url: "/news/" }
 
 # ---- Scrollytelling navigation (used by the React app on home + chapters) --
+# This list is NAVIGATION ONLY. It does not determine the order in which
+# landing-page items render — that is controlled exclusively by `sort_order`
+# in each `_landing/<id>.md` file. Anchor entries here flagged `nav_only: true`
+# are pure jump-to-id menu links; they have zero effect on page-flow ordering.
 nav_reading:
   # `kind: parts-menu` renders the navbar dropdown of every part. The `label`
   # field is what the user sees on the menu button — keep it as "Eras" for
   # this site, or rename to "Parts", "Chapters", "Acts", etc.
   - { label: "Eras", kind: "parts-menu" }
-  # The `#qc-efi-matrix` anchor is the QC×EFI synthesis figure (rendered as
-  # a `kind: island` section in post-scrolly). Listed BEFORE Book so the
-  # post-scrolly slot orders as [matrix, book, author].
-  - { label: "Matrix", url: "#qc-efi-matrix" }
-  - { label: "Book", url: "#book" }
-  - { label: "Author", url: "#author" }
-  - { label: "News", url: "#news" }
+  - { label: "Matrix", url: "#qc-efi-matrix", nav_only: true }
+  - { label: "Book",   url: "#book",          nav_only: true }
+  - { label: "Author", url: "#author",        nav_only: true }
+  - { label: "News",   url: "#news",          nav_only: true }
 
-# ---- Landing-page sections -------------------------------------------------
-# Section content lives in `_sections/<id>.md` as Markdown + YAML frontmatter,
-# not inline here. Each section file's frontmatter declares:
+# ---- Landing-page items ----------------------------------------------------
+# Item content lives in `_landing/<id>.md` as Markdown + YAML frontmatter,
+# not inline here. Each file's frontmatter declares:
 #
-#   kind     — register | coda | news | epigraphs   (selects the React renderer)
-#   slot     — pre-stepper | pre-scrolly | post-scrolly | post-coda  (placement)
-#   kicker   — small overline above the title (optional)
-#   title    — section heading (optional for `news`/`epigraphs`)
-#   items    — for `kind: epigraphs`, a list of {quote, cite}
+#   kind        — coda | register | news | epigraphs | island   (renderer)
+#   sort_order  — integer; lower numbers render first.   THE ONLY ORDER SOURCE.
+#   home_only   — optional bool; when true, item is hidden on chapter pages.
+#   kicker      — small overline above the title (optional)
+#   title       — heading (optional for `news`/`epigraphs`)
+#   items       — for `kind: epigraphs`, a list of {quote, cite}
+#   island      — for `kind: island`, the window global to render
 #
-# The section's body is the Markdown (or HTML) under the frontmatter.
+# Reserved sort_order values (defined in assets/js/app.jsx; the React app
+# interleaves these structural elements between landing items by sort_order):
 #
-# WITHIN each slot, render order is driven by `nav_reading` below: any
-# `nav_reading` entry of the form `{ url: "#some-id" }` puts the section
-# whose filename matches `some-id` at that position. Sections not referenced
-# in `nav_reading` render after the named ones, in collection natural order
-# (alphabetical by filename).
+#   200 — eras stepper (the QC | parts | EFI navbar stepper)
+#   300 — scrolly figure (the network SVG)
 #
-# To add a new section:  drop a file in `_sections/`, set frontmatter, and
-# (optionally) add an entry to `nav_reading` to control where it lands within
-# its slot.
+# So an item with sort_order < 200 renders before the stepper; sort_order
+# 201–299 renders between stepper and figure; sort_order 301+ renders below
+# the figure. Conventional spacing: number items in steps of 10 or 50 so new
+# items can slot in without renumbering.
+#
+# To add a new landing item:  drop a file in `_landing/`, set `sort_order:`,
+# and (optionally) add a `nav_reading` jump-link entry above with
+# `nav_only: true`.
 
 # ---- Theme tokens (overridable knobs) --------------------------------------
 theme_defaults:
@@ -102,19 +108,20 @@ permalink: pretty
 
 # ---- Collections -----------------------------------------------------------
 # `chapters`: drafted chapters and the preface at /chapters/<slug>/
-# `sections`: landing-page section content (book / author / register defs /
-#             news / resources / epigraphs). Not output as standalone pages —
-#             rendered into the React shell via _includes/site-data.html.
+# `landing`:  landing-page item content (book / author / register defs /
+#             news / resources / epigraphs / matrix). Not output as
+#             standalone pages — rendered into the React shell via
+#             _includes/site-data.html in `sort_order` order.
 collections:
   chapters:
     output: true
     permalink: /chapters/:path/
-  sections:
+  landing:
     output: false
 
 # Default layouts per scope. Pages at the root pick up `default`; chapter
-# collection items mount the React scrollytelling shell. Sections inherit
-# nothing — they are read as data, not rendered as pages.
+# collection items mount the React scrollytelling shell. Landing items
+# inherit nothing — they are read as data, not rendered as pages.
 defaults:
   - scope: { path: "" }
     values:

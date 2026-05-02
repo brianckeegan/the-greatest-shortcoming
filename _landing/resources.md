@@ -1,6 +1,6 @@
 ---
 kind: coda
-slot: post-coda
+sort_order: 410
 kicker: "further"
 title: "Resources"
 ---

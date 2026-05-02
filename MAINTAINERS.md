@@ -30,7 +30,7 @@ The shared design language is a contract; do not break it.
 1. **Do not break the React scrollytelling shell.** It drives every chapter
    page and the homepage. Driven by
    `_data/{parts,people,orgs,instruments,themes,documents,news}.yml`,
-   `_sections/*.md` (landing-page section content),
+   `_landing/*.md` (landing-page item content, ordered by `sort_order`),
    `_data/prose/*.yml`, `_data/scrolly/*.yml`,
    `assets/js/{app,tweaks-panel}.jsx` (Babel-runtime JSX, the chrome shell), and
    `assets/js/islands/**/*.{ts,tsx}` (esbuild-bundled TypeScript islands —
@@ -284,7 +284,7 @@ To change the reading measure: edit `$measure` and `$measure-narrow` in
 | Hero kicker line ("forthcoming · …") | `.hero--home .kicker` | inherits scrolly.css `.kicker`; copy edit in `_layouts/home.html` |
 | Bartlett epigraphs | `.epigraphs`, `.epigraph`, `.epigraph__cite` | `main.scss`; markup in `_includes/epigraph.html` |
 | Argument block | `.argument`, `.argument__body` | `main.scss`; copy in `_layouts/home.html` |
-| Definition cards (Quant. Chauv. / Ecofascist Imag.) | `.registers`, `.register`, `.register__title` | `main.scss`; copy in `_config.yml` `sections:` list (kind: register) |
+| Definition cards (Quant. Chauv. / Ecofascist Imag.) | `.def-bar`, `.def-inner`, `.section-body` | `assets/css/scrolly.css`; copy in `_landing/quant-chauvinism.md` and `_landing/ecofascist-imaginaries.md` (kind: coda, home_only: true) |
 | Author block | `.author` | `main.scss`; copy in `_layouts/home.html` |
 | Action cards (TOC / Preface / Reading) | `.actions`, `.action-card`, `.action-card__*` | `main.scss`; markup in `_layouts/home.html` |
 
@@ -387,9 +387,13 @@ To remove a draft tag once content is approved: delete the
 - **Add a new section to the home page.** Append a `<section>` block to
   `_layouts/home.html`. If it needs a heading, use `<h2 class="section-rule">`
   for consistency.
-- **Add a new register card** (next to Quantitative Chauvinism / Ecofascist
-  Imaginaries). Append an entry to `_config.yml` under `sections:` with `kind: register`. The
-  home page renders all of them.
+- **Add a new landing item** (def-bar, coda block, news, epigraphs, or
+  matrix-style island). Drop a file in `_landing/` with `kind:` and a
+  `sort_order:` integer. The page flow re-sorts; pick a number that
+  positions the new item where you want it relative to the eras stepper
+  (sort_order 200) and the scrolly figure (sort_order 300). See README's
+  "Landing-page items" and "Adding or reordering" sections for the
+  current sort_order map and the full recipe.
 - **Change the home hero copy.** Edit `_layouts/home.html` directly.
 - **Change the page nav.** Edit `_config.yml` `nav:` (top-level).
 - **Make the dark mode default for everyone.** Edit
@@ -942,10 +946,10 @@ If the Pages build itself is failing (Action red across multiple commits):
 - `assets/js/dist/islands.js` — generated bundle. Never hand-edit; rebuild
   from source and re-commit.
 - `_data/{people,orgs,instruments,themes,documents,parts}.yml`,
-  `_sections/*.md`, `_data/prose/*.yml`, `_data/scrolly/*.yml` — the
-  entity graph, landing-page section content, and per-page prose/step
-  configs that drive the React surface. Edits here change the homepage
-  and chapter content.
+  `_landing/*.md`, `_data/prose/*.yml`, `_data/scrolly/*.yml` — the
+  entity graph, landing-page item content (ordered by `sort_order`), and
+  per-page prose/step configs that drive the React surface. Edits here
+  change the homepage and chapter content.
 - `assets/css/scrolly.css` — the design language. Edit deliberately, since
   the landing site inherits from it.
 - `bibliography.bib` (in `uploads/`) — manuscript artifact. Source of truth
@@ -967,8 +971,13 @@ three moments. Future sessions should respect these:
 
 ```
 .
-├── _config.yml             # site identity, nav, nav_reading, registers, coda (with News),
-│                           #   theme defaults, collections, defaults (chapters → scrolly + page_kind: chapter)
+├── _config.yml             # site identity, nav, nav_reading (navigation-only),
+│                           #   theme defaults, collections (chapters + landing),
+│                           #   defaults (chapters → scrolly + page_kind: chapter)
+├── _landing/               # landing-page items (book, author, register defs, news,
+│                           #   resources, bartlett epigraphs, qc-efi-matrix). Each
+│                           #   file's `sort_order:` is the SOLE order source. The
+│                           #   eras stepper is at sort_order 200, scrolly figure 300.
 ├── Gemfile                 # github-pages gem
 ├── README.md               # high-level reference (run, deploy, customize, troubleshoot)
 ├── MAINTAINERS.md          # this file

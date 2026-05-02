@@ -1,6 +1,7 @@
 ---
 kind: coda
-slot: pre-stepper
+sort_order: 150
+home_only: true
 kicker: "epistemic register · i"
 title: "Quantitative Chauvinism"
 ---
