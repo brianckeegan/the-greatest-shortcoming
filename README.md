@@ -46,7 +46,8 @@ Pages will rebuild.
 11. [Adding a new entity](#adding-a-new-entity)
 12. [Adding a news item](#adding-a-news-item)
 13. [Adding a new page](#adding-a-new-page)
-14. [Troubleshooting](#troubleshooting)
+14. [Adding or reordering a landing-page section](#adding-or-reordering-a-landing-page-section)
+15. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -124,15 +125,16 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 │       └── tweaks-panel.jsx     # the in-page Tweaks panel framework
 ├── index.md                 # / (page_kind: home, page_id: home → uses scrolly layout)
 ├── _chapters/               # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter from _config defaults)
+├── _sections/               # collection: landing-page section content (book, author, register defs, news, resources, bartlett epigraphs)
 ├── pages/                   # static pages: about, contents, bibliography, news, draft-status
 └── .github/workflows/github-pages.yml
 ```
 
 The pipeline:
 
-1. Jekyll reads `_config.yml` and every `_data/*.yml` file (including `_data/prose/*.yml` and `_data/scrolly/*.yml`).
+1. Jekyll reads `_config.yml`, every `_data/*.yml` file (including `_data/prose/*.yml` and `_data/scrolly/*.yml`), and every section in `_sections/*.md`.
 2. `_layouts/scrolly.html` includes:
-   - `_includes/site-data.html` — emits `window.SITE` (config) and `window.GS_DATA` (entities + news), page-invariant.
+   - `_includes/site-data.html` — emits `window.SITE` (config + ordered sections from `_sections/`) and `window.GS_DATA` (entities + news), page-invariant. Section ordering within each slot follows `nav_reading` anchor entries.
    - `_includes/page-context.html` — emits `window.PAGE_CONTEXT` for the current page (steps, prose, hero, stepper config, network/registers visibility, coda, intro, outro), looking up `_data/scrolly/{key}.yml` and `_data/prose/{key}.yml` keyed off `page.page_id`.
    - For chapter pages: a Liquid block that captures the chapter header/abstract (intro) and excerpt + prev/next nav (outro) and grafts them onto `window.PAGE_CONTEXT` as HTML strings.
 3. `assets/js/app.jsx` reads those globals and renders the page with React.
@@ -185,25 +187,56 @@ every step-kind part. The dropdown's button label is whatever you set on
 `label:` — keep it as `"Eras"` for this site, or rename to `"Parts"`,
 `"Acts"`, `"Chapters"`, etc.
 
-### `sections`
+### Landing-page sections
 
-One unified list for every block of homepage content. Each entry carries:
+Section content (Book, Author, register definitions, News, Resources,
+Bartlett epigraphs) lives in **`_sections/<id>.md`**, one Markdown file
+per section. The filename slug is the section id and the DOM anchor —
+so `_sections/book.md` becomes `#book`, addressable from `nav_reading`
+or any other anchor link. Each file's frontmatter declares:
 
 ```yaml
-- id: <unique-anchor>
-  kind: register | coda | news | epigraphs   # selects renderer
-  slot: pre-stepper | pre-scrolly | post-scrolly | post-coda  # placement
-  title: "..."           # register, coda, news
-  kicker: "..."          # register, coda, news
-  body: "..."            # register, coda
-  items: [...]           # epigraphs (each: { quote, cite })
+---
+kind: register | coda | news | epigraphs   # selects the React renderer
+slot: pre-stepper | pre-scrolly | post-scrolly | post-coda  # placement
+kicker: "..."           # small overline (optional; coda/register/news)
+title: "..."            # heading (optional for news/epigraphs)
+items:                  # epigraphs only — list of { quote, cite }
+  - quote: "..."
+    cite: "..."
+---
+Markdown body goes here. HTML is allowed (Kramdown passes through inline
+tags). For multi-paragraph bodies, separate with blank lines and they'll
+render as proper `<p>` elements.
 ```
 
-Slots are rendered in the order their items appear in the YAML. The
-unified schema replaced the legacy split of `registers:` + `coda:` so a
-new section type (e.g. epigraphs) can sit anywhere without bending the
-React app. Section `id` becomes a DOM anchor, so the stepper's QC and EFI
-brackets link by id (`#quant-chauvinism`, `#ecofascist-imaginaries`).
+**Render order** within each slot is driven by `nav_reading`. Any entry
+in `nav_reading` of the form `{ url: "#some-id" }` puts the section
+whose filename matches `some-id` at that position. Sections not
+referenced in `nav_reading` are appended after the named ones in
+collection natural order (alphabetical by filename).
+
+So with this `nav_reading`:
+
+```yaml
+nav_reading:
+  - { label: "Eras", kind: "parts-menu" }
+  - { label: "Book", url: "#book" }
+  - { label: "Author", url: "#author" }
+  - { label: "News", url: "#news" }
+```
+
+…the `pre-scrolly` slot renders `book` then `author` (because they're
+referenced in that order in `nav_reading`) then any other `pre-scrolly`
+sections (e.g. `quant-chauvinism`) afterwards. The `post-coda` slot
+renders `news` first (referenced) then `resources` (not referenced) —
+matching what shipped before the refactor.
+
+The collection is composed into the same JSON shape `app.jsx` already
+consumes (`{id, kind, slot, kicker, title, body, items}`); the
+composition lives in `_includes/site-data.html`. Body is rendered
+Markdown HTML, wrapped by app.jsx in a `<div class="section-body">` so
+multi-paragraph bodies don't produce invalid nested `<p>` tags.
 
 ### `theme_defaults`
 
@@ -523,6 +556,44 @@ Link it from `_config.yml`:
 nav:
   - { label: "About", url: "/about/" }
 ```
+
+---
+
+## Adding or reordering a landing-page section
+
+To **add a new section** (e.g. a "Press" coda block):
+
+1. Drop a file in `_sections/`, e.g. `_sections/press.md`:
+   ```markdown
+   ---
+   kind: coda                  # register | coda | news | epigraphs
+   slot: post-coda             # pre-stepper | pre-scrolly | post-scrolly | post-coda
+   kicker: "in the news"
+   title: "Press"
+   ---
+   Markdown body. HTML allowed.
+   ```
+2. (Optional) Add an entry to `nav_reading` in `_config.yml` to control
+   where it lands within its slot:
+   ```yaml
+   nav_reading:
+     - { label: "Press", url: "#press" }
+   ```
+   The filename slug (`press`) is the anchor id. Without a `nav_reading`
+   entry, the section renders after every `nav_reading`-referenced
+   section in its slot, in alphabetical order.
+
+To **reorder existing sections**, change their order in `nav_reading`.
+Within each slot, sections render in the order their `#anchor` appears
+in `nav_reading`; sections not referenced render after.
+
+To **move a section between slots**, edit `slot:` in its frontmatter.
+The four slots, in page order, are:
+
+- `pre-stepper`  — between the hero and the parts stepper
+- `pre-scrolly`  — between the stepper and the scrolly figure
+- `post-scrolly` — between the scrolly figure and the bottom block
+- `post-coda`    — at the bottom of the page
 
 ---
 
