@@ -30,8 +30,12 @@ The shared design language is a contract; do not break it.
 1. **Do not break the React scrollytelling shell.** It drives every chapter
    page and the homepage. Driven by
    `_data/{parts,people,orgs,instruments,themes,documents,news}.yml`,
-   `_data/prose/*.yml`, `_data/scrolly/*.yml`, and
-   `assets/js/{app,scrolly-network,tweaks-panel}.jsx`. Preserve it.
+   `_sections/*.md` (landing-page section content),
+   `_data/prose/*.yml`, `_data/scrolly/*.yml`,
+   `assets/js/{app,tweaks-panel}.jsx` (Babel-runtime JSX, the chrome shell), and
+   `assets/js/islands/**/*.{ts,tsx}` (esbuild-bundled TypeScript islands —
+   the figure / matrix / per-part charts / scroll primitives).
+   Preserve all of them.
 2. **The preface and chapter excerpts are a contract.** Only the preface and
    curated 200–400 word excerpts may appear as body text on the site. Never
    publish more chapter prose than that, even if the manuscript is right
@@ -46,8 +50,16 @@ The shared design language is a contract; do not break it.
    `.github/workflows/github-pages.yml` builds with `jekyll-build-pages`. No
    plugin outside the [Pages allowlist](https://pages.github.com/versions/).
    Currently in use: `jekyll-seo-tag`, `jekyll-sitemap`. Both allowlisted.
-6. **No new JS framework.** Vanilla JS only on the landing site. The
-   bibliography filter and the dark-mode toggle are the upper bound.
+6. **No new JS framework on the static landing site.** Vanilla JS only on
+   `/about/`, `/contents/`, `/bibliography/`, `/news/`, `/draft-status/`.
+   The bibliography filter and the dark-mode toggle are the upper bound.
+   The scrolly shell (homepage + chapter pages) is React 18 + a TypeScript
+   islands bundle (esbuild → `assets/js/dist/islands.js`) — adding
+   libraries to the bundle is fine; ripping it out is not. Track design
+   decisions for new scroll-driven UI against the
+   [scrollytelling skill](https://github.com/doodledood/claude-code-plugins/blob/main/claude-plugins/frontend-design/skills/scrollytelling/SKILL.md);
+   in particular, prefer CSS `position: sticky` over JS scroll listeners,
+   and always honor `prefers-reduced-motion` (WCAG SC 2.3.3).
 
 ## Design rationale
 
@@ -517,6 +529,103 @@ bundle exec jekyll serve --livereload
 # → http://localhost:4000
 ```
 
+If you also need to **rebuild the TypeScript islands bundle** (anything
+under `assets/js/islands/**`), see the next section. Editors who only
+touch Markdown / YAML / Liquid / `.jsx` / `.css` do not need npm.
+
+## Islands bundle (TypeScript + esbuild)
+
+The scrolly figure, the unifying QC × EFI matrix, the per-part chart
+islands, and the new scroll primitives (`Scroller`, `SmoothScrollLink`)
+all live in `assets/js/islands/` as strict-mode TypeScript. They build
+into a single `assets/js/dist/islands.js` bundle that
+`_layouts/scrolly.html` loads with a regular `<script defer>`. Source
+shape:
+
+```
+assets/js/islands/
+├── index.ts              # bundle entry: registry of [data-island] names → components
+├── mount.ts              # generic [data-island] hydrator (createRoot per node)
+├── types.ts              # window.GS_DATA / window.SITE / window.PAGE_CONTEXT types
+├── declarations.d.ts     # local @types for react-scrollama (no published types)
+├── ScrollyNetwork.tsx    # part-banded sketchy network SVG (replaces former scrolly-network.jsx)
+├── QcEfiMatrix.tsx       # the unifying matrix island (Observable Plot)
+├── Scroller.tsx          # react-scrollama scroll-step coordinator with prefers-reduced-motion fallback
+├── SmoothScrollLink.tsx  # react-scroll smooth-scroll link helper with prefers-reduced-motion fallback
+└── charts/
+    ├── PartChartShell.tsx
+    ├── FreeFallChart.tsx       # REAL: Bartlett doubling-time curve (Plot)
+    └── PlaceholderCharts.tsx   # 5 honest placeholder cards (Boulder, Quarantine, Swarm, Portfolio, Evacuation)
+```
+
+### Build commands
+
+```bash
+# One-time: install dependencies
+npm install
+
+# Production build → assets/js/dist/islands.js (committed to git)
+npm run build
+
+# Watch mode (rebuilds on change)
+npm run build:watch
+
+# Strict TypeScript typecheck (esbuild does NOT typecheck)
+npm run typecheck
+```
+
+The compiled `assets/js/dist/islands.js` IS committed to the repo because
+GitHub Pages runs only the `github-pages` Jekyll build — it never runs
+npm. Always run `npm run build` and commit `assets/js/dist/islands.js`
+together with any source changes under `assets/js/islands/`.
+
+### Adding an island
+
+1. Add a `.tsx` file in `assets/js/islands/`:
+   ```tsx
+   export const MyThing = ({ greeting }: { greeting: string }) => (
+     <p>{greeting}</p>
+   );
+   ```
+2. Register it in `assets/js/islands/index.ts`:
+   ```ts
+   import { MyThing } from './MyThing';
+   const registry: IslandRegistry = {
+     // …existing entries…
+     'my-thing': MyThing,
+   };
+   ```
+3. Mount it from any Liquid template:
+   ```html
+   <div data-island="my-thing" data-props='{"greeting":"hi"}'></div>
+   ```
+4. `npm run build` and commit `assets/js/dist/islands.js` along with
+   the source.
+
+### Where the islands integrate with the existing app.jsx shell
+
+`app.jsx` is loaded via Babel-CDN (separate from the islands bundle) and
+renders the page chrome (header, hero, sections, footer) plus the
+scrolly section. The seam between the two is two `window` globals the
+bundle exports for app.jsx to consume inline:
+
+- `window.ScrollyNetwork` — the React component for the network SVG.
+  app.jsx uses `<window.ScrollyNetwork ... />` inside its render tree.
+  Replacing this surface in the bundle is what made it possible to
+  delete the legacy `assets/js/scrolly-network.jsx`.
+- `window.NodeShape` — the per-entity shape primitive (used inside the
+  network and exposable for legend rendering).
+- `window.Scroller` and `window.SmoothScrollLink` — exposed as escape
+  hatches for app.jsx to start adopting the new scroll primitives
+  incrementally without touching the islands bundle.
+
+For new scroll-driven UI, prefer the islands path (a `.tsx` file in
+`assets/js/islands/` plus a `[data-island]` mount) over editing app.jsx.
+The islands path is strict-typed, npm-managed, and matches the
+[scrollytelling skill](https://github.com/doodledood/claude-code-plugins/blob/main/claude-plugins/frontend-design/skills/scrollytelling/SKILL.md)'s
+preferred patterns (CSS sticky for pinning, IntersectionObserver via
+react-scrollama for step detection, mandatory `prefers-reduced-motion`).
+
 Requires Ruby ≥ 3.0 (the `github-pages` gem won't install on older Rubies).
 On macOS, `brew install ruby` and put `/opt/homebrew/opt/ruby/bin` ahead of
 `/usr/bin/ruby` in `PATH`. The system Ruby that ships with macOS (`/usr/bin/ruby`)
@@ -657,6 +766,13 @@ Open the browser console.
   isn't set. Confirm `_includes/page-context.html` runs after
   `site-data.html` and before any `.jsx` script tag in
   `_layouts/scrolly.html`.
+- `ReferenceError: ScrollyNetwork is not defined` (or the figure renders
+  blank where it used to draw) — the islands bundle didn't load. Check
+  that `_layouts/scrolly.html` includes
+  `<script src="/assets/js/dist/islands.js" defer>` and that
+  `assets/js/dist/islands.js` exists in the repo. If you edited anything
+  under `assets/js/islands/` and forgot to re-bundle, run
+  `npm run build` and commit the rebuilt `assets/js/dist/islands.js`.
 - The `<noscript>` fallback shows but the React render doesn't — JavaScript
   is disabled or blocked by a content blocker. Not a site bug.
 
@@ -815,13 +931,21 @@ If the Pages build itself is failing (Action red across multiple commits):
 
 ## Files NOT to touch
 
-- `assets/js/*.jsx` — the React scrollytelling code. Edits here change the
-  homepage and every chapter page's behavior. Edit only with intent and only
-  if you know React + the in-page Babel compilation flow.
-- `_data/{people,orgs,instruments,themes,documents,parts}.yml` and
-  `_data/prose/*.yml`, `_data/scrolly/*.yml` — the entity graph and per-page
-  prose/step configs that drive the React surface. Edits here change the
-  homepage and chapter content.
+- `assets/js/*.jsx` — the React chrome (`app.jsx`, `tweaks-panel.jsx`).
+  Loaded via Babel-CDN at runtime. Edits here change the homepage and
+  every chapter page's behavior. Edit only with intent and only if you
+  know React + the in-page Babel compilation flow.
+- `assets/js/islands/**/*.{ts,tsx}` — the TypeScript islands source
+  (scrolly figure, QC × EFI matrix, per-part charts, scroll primitives).
+  Edits require running `npm run build` to regenerate
+  `assets/js/dist/islands.js`. Commit source + bundle together.
+- `assets/js/dist/islands.js` — generated bundle. Never hand-edit; rebuild
+  from source and re-commit.
+- `_data/{people,orgs,instruments,themes,documents,parts}.yml`,
+  `_sections/*.md`, `_data/prose/*.yml`, `_data/scrolly/*.yml` — the
+  entity graph, landing-page section content, and per-page prose/step
+  configs that drive the React surface. Edits here change the homepage
+  and chapter content.
 - `assets/css/scrolly.css` — the design language. Edit deliberately, since
   the landing site inherits from it.
 - `bibliography.bib` (in `uploads/`) — manuscript artifact. Source of truth
@@ -887,9 +1011,19 @@ three moments. Future sessions should respect these:
 │   │   │                   #   stepper, news-list, page-intro/outro, register def-bars, …)
 │   │   └── main.scss       # layout patterns shared by both shells; compiles to main.css
 │   ├── js/
-│   │   ├── app.jsx                  # main React app — reads window.PAGE_CONTEXT
-│   │   ├── scrolly-network.jsx      # network SVG — reads STEPS from PAGE_CONTEXT.steps
-│   │   └── tweaks-panel.jsx         # in-page Tweaks UI
+│   │   ├── app.jsx                  # main React app — reads window.PAGE_CONTEXT (Babel-CDN JSX)
+│   │   ├── tweaks-panel.jsx         # in-page Tweaks UI (Babel-CDN JSX)
+│   │   ├── islands/                 # TypeScript islands (built by esbuild)
+│   │   │   ├── index.ts             #   bundle entry: registry + window globals
+│   │   │   ├── mount.ts             #   generic [data-island] hydrator
+│   │   │   ├── types.ts             #   GsData / SiteData / PageContext types
+│   │   │   ├── ScrollyNetwork.tsx   #   network SVG (replaces former scrolly-network.jsx)
+│   │   │   ├── QcEfiMatrix.tsx      #   unifying matrix (Observable Plot)
+│   │   │   ├── Scroller.tsx         #   react-scrollama scroll-step coordinator
+│   │   │   ├── SmoothScrollLink.tsx #   react-scroll smooth-scroll link helper
+│   │   │   └── charts/              #   per-part chart islands (FreeFallChart real, others placeholder)
+│   │   └── dist/
+│   │       └── islands.js           # compiled bundle (committed; loaded by _layouts/scrolly.html)
 │   └── img/                # optional cover art / social cards
 ├── _chapters/              # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter via _config defaults)
 ├── pages/                  # static pages: about, contents, bibliography, news, draft-status
