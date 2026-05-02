@@ -11,7 +11,7 @@ will be removed when the manuscript is finalized.
 
 ## Era date ranges
 
-The era stepper on the homepage uses date ranges from `_data/eras.yml` that
+The era stepper on the homepage uses date ranges from `_data/parts.yml` that
 diverge slightly from the dates in `main.tex`. Reconcile when convenient if
 the scrollytelling and the manuscript should agree.
 
