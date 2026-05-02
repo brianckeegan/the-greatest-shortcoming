@@ -1,0 +1,26 @@
+{
+  "name": "the-greatest-shortcoming-islands",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript islands bundle for the scrollytelling shell.",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "build:watch": "node esbuild.config.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@observablehq/plot": "^0.6.16",
+    "d3": "^7.9.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "scrollama": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3"
+  }
+}
