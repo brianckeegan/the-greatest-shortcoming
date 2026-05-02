@@ -41,18 +41,16 @@ const registry: IslandRegistry = {
   'part-chart-evacuation': EvacuationChart,
 };
 
-// Expose the legacy globals app.jsx still relies on. app.jsx is loaded
-// separately via Babel-CDN and reads these from `window`; setting them
-// here means assets/js/scrolly-network.jsx can be deleted while app.jsx
-// continues to work unchanged.
-window.ScrollyNetwork = ScrollyNetwork;
-window.NodeShape = NodeShape;
-
-// Also expose the new scroll primitives on window so app.jsx (or any
-// other script in the page) can use them without an import. The
-// canonical use is inside other islands; the globals are an escape
-// hatch for the existing Babel-CDN code path during the migration.
-(window as unknown as { Scroller: typeof Scroller; SmoothScrollLink: typeof SmoothScrollLink }).Scroller = Scroller;
-(window as unknown as { Scroller: typeof Scroller; SmoothScrollLink: typeof SmoothScrollLink }).SmoothScrollLink = SmoothScrollLink;
+// Expose components on window so app.jsx (loaded separately via Babel-CDN)
+// can render them inline without going through the [data-island] hydration
+// path. The pattern: a section file with `kind: island, island: <Name>` in
+// frontmatter looks up window[<Name>] in app.jsx renderSection and renders
+// `<Component {...props}/>` directly. Works because PR #20's React-externals
+// fix means the bundle and app.jsx share window.React.
+(window as unknown as Record<string, unknown>).ScrollyNetwork = ScrollyNetwork;
+(window as unknown as Record<string, unknown>).NodeShape = NodeShape;
+(window as unknown as Record<string, unknown>).QcEfiMatrix = QcEfiMatrix;
+(window as unknown as Record<string, unknown>).Scroller = Scroller;
+(window as unknown as Record<string, unknown>).SmoothScrollLink = SmoothScrollLink;
 
 bootMount(registry);

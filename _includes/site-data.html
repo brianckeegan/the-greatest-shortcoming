@@ -63,7 +63,9 @@ window.SITE = {
         "kicker": {{ s.kicker | default: "" | jsonify }},
         "title":  {{ s.title | default: "" | jsonify }},
         "body":   {{ s.content | strip | jsonify }},
-        "items":  {{ s.items | default: empty | jsonify }}
+        "items":  {{ s.items | default: empty | jsonify }},
+        "island": {{ s.island | default: "" | jsonify }},
+        "props":  {{ s.props | default: empty | jsonify }}
       }{%- unless forloop.last -%},{%- endunless -%}
     {%- endfor -%}
   ],
