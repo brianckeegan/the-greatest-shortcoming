@@ -74,20 +74,6 @@ nav_reading:
 # era stepper jumps to #quant-chauvinism). Reorder freely; the React app
 # rebuilds hero kicker links from sections of kind `register`.
 sections:
-  - id: "book"
-    kind: coda
-    slot: pre-stepper
-    kicker: "about"
-    title: "The Book"
-    body: >-
-      <i>The Greatest Shortcoming</i> traces a hundred years of American
-      demographic and environmental governance — from the Olmsted Report's
-      grammar of scarcity to climate triage as administrative routine. It
-      identifies the actors who built the instruments, the organizations that
-      circulated them, the metaphors that made them persuasive, and the
-      political projects they served. And it asks whether measurement can be
-      redirected: whether the same quantitative tools that narrowed the circle
-      of concern can be rebuilt to widen it.
 
   - id: "bartlett"
     kind: epigraphs
@@ -99,19 +85,6 @@ sections:
         cite: "Al Bartlett"
       - quote: "Anyone who thinks that you can stop population growth to save the environment without reducing immigration is innumerate."
         cite: "Al Bartlett"
-
-  - id: "author"
-    kind: coda
-    slot: pre-stepper
-    kicker: "about"
-    title: "The Author"
-    body: >-
-      Brian C. Keegan, Ph.D. is a computational social scientist and an associate
-      professor of information science at the University of Colorado Boulder.
-      He received undergraduate degrees from MIT, M.A. and Ph.D. degrees from
-      Northwestern University's School of Communication, and completed post-doctoral
-      training at Northeastern University and the Harvard Business School. He
-      currently resides in Boulder, Colorado with his wife and two sons.
 
   - id: "quant-chauvinism"
     kind: register
@@ -144,6 +117,34 @@ sections:
       rather than violence. Made durable, in Sheila Jasanoff's terms, through
       the laws, infrastructures, and administrative routines that enact them.
 
+- id: "book"
+    kind: coda
+    slot: pre-stepper
+    kicker: "about"
+    title: "The Book"
+    body: >-
+      <i>The Greatest Shortcoming</i> traces a hundred years of American
+      demographic and environmental governance — from the Olmsted Report's
+      grammar of scarcity to climate triage as administrative routine. It
+      identifies the actors who built the instruments, the organizations that
+      circulated them, the metaphors that made them persuasive, and the
+      political projects they served. And it asks whether measurement can be
+      redirected: whether the same quantitative tools that narrowed the circle
+      of concern can be rebuilt to widen it.
+      
+  - id: "author"
+    kind: coda
+    slot: pre-stepper
+    kicker: "about"
+    title: "The Author"
+    body: >-
+      Brian C. Keegan, Ph.D. is a computational social scientist and an associate
+      professor of information science at the University of Colorado Boulder.
+      He received undergraduate degrees from MIT, M.A. and Ph.D. degrees from
+      Northwestern University's School of Communication, and completed post-doctoral
+      training at Northeastern University and the Harvard Business School. He
+      currently resides in Boulder, Colorado with his wife and two sons.
+      
   - id: "news"
     kind: news
     slot: post-coda
