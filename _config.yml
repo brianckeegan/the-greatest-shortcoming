@@ -87,8 +87,8 @@ sections:
         cite: "Al Bartlett"
 
   - id: "quant-chauvinism"
-    kind: register
-    slot: pre-scrolly
+    kind: coda
+    slot: pre-stepper
     kicker: "epistemic register · i"
     title: "Quantitative Chauvinism"
     body: >-
@@ -103,8 +103,8 @@ sections:
       political choice).
 
   - id: "ecofascist-imaginaries"
-    kind: register
-    slot: post-scrolly
+    kind: coda
+    slot: pre-stepper
     kicker: "political register · ii"
     title: "Ecofascist Imaginaries"
     body: >-
