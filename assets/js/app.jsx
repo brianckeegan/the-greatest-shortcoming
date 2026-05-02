@@ -1,25 +1,29 @@
 /* ============================================================================
  * app.jsx — main React renderer for the homepage and chapter pages.
  * Reads window.SITE (page-invariant config + sections list),
- *       window.GS_DATA (entities + news),
- *       window.PAGE_CONTEXT (per-page steps, prose, intro/outro, hero/stepper
- *                             config, sections override).
+ *       window.GS_DATA (entities + news + parts),
+ *       window.PAGE_CONTEXT (per-page parts, steps, prose, intro/outro,
+ *                             hero/stepper config, sections override).
  * Mounts into #root. Section rendering is kind-aware (register / coda / news /
  * epigraphs) and slot-positioned (pre-stepper / pre-scrolly / post-scrolly /
  * post-coda).
+ * The stepper is a unified element: every stop (parts + brackets like QC/EFI)
+ * is the same React component, configured via per-stop fields (kind, color,
+ * bracket_line, underline_active).
  * ============================================================================ */
 
 const { useState, useEffect, useRef, useMemo } = React;
 const D = window.GS_DATA;
 const PAGE = window.PAGE_CONTEXT || {};
-const STEPS = PAGE.steps || [];
+const PARTS = PAGE.parts || [];          // every stepper stop (parts + brackets)
+const STEPS = PAGE.steps || [];          // scrolly figure steps (parts only)
 const SITE = window.SITE;
 const PROSE = PAGE.prose || {};
 
 const TWEAK_DEFAULTS = SITE.themeDefaults || { theme: "cool", net: "rough", fontSize: 18 };
 
 /* ---------- Prose renderer ----------
- * Era prose comes in as HTML strings with two server-side macros:
+ * Part prose comes in as HTML strings with two server-side macros:
  *   {{ DOC:doc_id }}           → inline document vignette
  *   {{ QUOTE:source | body }}  → pull quote
  * We split the string into segments, rendering macros as React components
@@ -67,22 +71,33 @@ function renderProse(html, onEnt) {
 /* ---------- Header ----------
  * On home/reading, anchor links scroll within the page. On chapter pages,
  * they navigate to the homepage anchor (e.g. /#book) so the header acts as
- * site-wide wayfinding. Era buttons inside the eras-menu navigate to the
- * mapped chapter URL when on a chapter page.
+ * site-wide wayfinding. The parts-menu dropdown shows step-kind parts only
+ * (brackets are navbar-only). On chapter pages, each part link navigates
+ * to its mapped chapter URL.
+ *
+ * `kind: "parts-menu"` (in `nav_reading`) renders the dropdown; the menu
+ * button label is whatever the user authored (e.g. "Eras", "Parts", "Acts").
  */
-function Header({ activeStep, onJumpEra, onJumpTop }) {
-  const [erasOpen, setErasOpen] = useState(false);
+function Header({ activeStop, onJumpStop, onJumpTop }) {
+  const [partsOpen, setPartsOpen] = useState(false);
   useEffect(() => {
-    if (!erasOpen) return;
+    if (!partsOpen) return;
     const close = (e) => {
-      if (!e.target.closest('.menu-wrap')) setErasOpen(false);
+      if (!e.target.closest('.menu-wrap')) setPartsOpen(false);
     };
     document.addEventListener('click', close);
     return () => document.removeEventListener('click', close);
-  }, [erasOpen]);
+  }, [partsOpen]);
 
   const isChapterPage = PAGE.kind === 'chapter';
-  const currentEra = STEPS[activeStep];
+  // Step-kind parts only — brackets (QC/EFI) aren't shown in the dropdown.
+  const stepParts = PARTS.filter(p => p.kind === 'step');
+  const stepIdxOfActiveStop = (() => {
+    const stop = PARTS[activeStop];
+    if (!stop) return -1;
+    return stepParts.findIndex(p => p.id === stop.id);
+  })();
+  const currentStep = stepIdxOfActiveStop >= 0 ? stepParts[stepIdxOfActiveStop] : null;
 
   const followHashLink = (href) => {
     const id = (href || '').replace(/^#/, '');
@@ -101,30 +116,30 @@ function Header({ activeStep, onJumpEra, onJumpTop }) {
       </div>
       <nav className="nav-main">
         {SITE.nav.map((item, i) => {
-          if (item.kind === "eras-menu") {
+          if (item.kind === "parts-menu") {
             return (
               <div className="menu-wrap" key={i}>
-                <button className={"menu-btn" + (erasOpen ? " open" : "")}
-                        onClick={(e) => { e.stopPropagation(); setErasOpen(o => !o); }}>
-                  {item.label}{currentEra && currentEra.id !== 'prelude' ? <span style={{ color: 'var(--ink-soft)', textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>· {currentEra.title}</span> : null}
+                <button className={"menu-btn" + (partsOpen ? " open" : "")}
+                        onClick={(e) => { e.stopPropagation(); setPartsOpen(o => !o); }}>
+                  {item.label}{currentStep && currentStep.id !== 'prelude' ? <span style={{ color: 'var(--ink-soft)', textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>· {currentStep.title}</span> : null}
                   <span className="caret">▼</span>
                 </button>
-                {erasOpen && (
+                {partsOpen && (
                   <div className="menu-pop">
-                    {STEPS.map((s, idx) => {
-                      const era = (D.eras || []).find(e => e.id === s.id);
-                      const slug = era && era.chapter_slug;
-                      const href = isChapterPage && slug ? `/chapters/${slug}/` : `#step-${s.id}`;
+                    {stepParts.map((p) => {
+                      const slug = p.chapterSlug;
+                      const href = isChapterPage && slug ? `/chapters/${slug}/` : `#part-${p.id}`;
                       return (
-                        <a key={s.id} href={href}
+                        <a key={p.id} href={href}
                            onClick={(e) => {
-                             setErasOpen(false);
+                             setPartsOpen(false);
                              if (isChapterPage && slug) return; // let the navigation happen
                              e.preventDefault();
-                             onJumpEra(idx);
+                             const stopIdx = PARTS.findIndex(s => s.id === p.id);
+                             if (stopIdx >= 0) onJumpStop(stopIdx);
                            }}>
-                          <span>{s.title}</span>
-                          <span className="yrs">{s.subtitle}</span>
+                          <span>{p.title}</span>
+                          <span className="yrs">{p.subtitle}</span>
                         </a>
                       );
                     })}
@@ -203,9 +218,13 @@ function EntDrawer({ id, onClose, onNavigate }) {
   );
 }
 
-/* ---------- Era step ---------- */
-function EraStep({ era, idx, onEnt }) {
-  const proseHtml = PROSE[era.id] || '';
+/* ---------- Part step ----------
+ * Renders one chapter-level part (kind=step) inside the scrolly figure's
+ * prose column. The DOM id `part-<id>` is what the stepper scroll-tracks
+ * and what hash anchors target.
+ */
+function PartStep({ part, idx, onEnt }) {
+  const proseHtml = PROSE[part.id] || '';
   const ref = useRef(null);
 
   // Wire up data-ent click handlers after render
@@ -222,80 +241,105 @@ function EraStep({ era, idx, onEnt }) {
   }, [proseHtml, onEnt]);
 
   return (
-    <section id={"step-" + era.id} className="era-step" data-step={idx}>
-      <div className="era-num"><span className="num">{era.num}</span> {era.kicker}</div>
-      <h2>{era.title}</h2>
-      <div className="era-dates">{era.subtitle}</div>
+    <section id={"part-" + part.id} className="part-step" data-step={idx}>
+      <div className="part-num"><span className="num">{part.num}</span> {part.kicker}</div>
+      <h2>{part.title}</h2>
+      <div className="part-dates">{part.subtitle}</div>
       <div ref={ref}>{renderProse(proseHtml, onEnt)}</div>
     </section>
   );
 }
 
-/* ---------- Era stepper ----------
- * Home/reading: clicking an era scrolls to the matching scrolly section; the
- * active state tracks the scroll position. Chapter pages: clicking an era
- * navigates to the mapped chapter URL; the active state pins to the
- * chapter's `highlightEraId`. QC/EFI brackets always link to register
- * sections — on chapter pages, those are on the homepage so the link form is
- * `/#quant-chauvinism`.
+/* ---------- Stepper ----------
+ * Unified stepper navbar. Every stop — chapter-level parts (kind=step) and
+ * flanking brackets like QC and EFI (kind=bracket) — is rendered by the
+ * same code path, configured per-stop via fields from `_data/parts.yml`:
+ *
+ *   kind              'step' | 'bracket'  — selects visual variant
+ *   color             CSS color token name (e.g. 'tufte-red'); becomes
+ *                     the `--stop-color` custom property on the stop
+ *   bracketLine       true → render the connecting line ornament
+ *   underlineActive   true → underline the label when this stop is active
+ *
+ * Active state: home / reading pages scroll-track every stop (parts +
+ * brackets); the underline moves through QC → prelude → … → evacuation →
+ * EFI as the reader scrolls. Chapter pages pin one part via
+ * `stepper.highlightPartId`.
+ *
+ * Step-kind stops show numbered enum + title + year-range subtitle.
+ * Bracket-kind stops show a single short label (with the optional
+ * connecting line). On chapter pages each step-kind stop becomes an `<a>`
+ * to its mapped chapter URL.
  */
-function EraStepper({ activeStep, onJump }) {
+function Stepper({ activeStop, onJumpStop }) {
   const isChapterPage = PAGE.kind === 'chapter';
   const stepperCfg = PAGE.stepper || {};
-  const pinnedEraId = stepperCfg.highlightEraId || null;
-  const pinnedIdx = pinnedEraId ? STEPS.findIndex(s => s.id === pinnedEraId) : -1;
+  const pinnedPartId = stepperCfg.highlightPartId || null;
+  const pinnedIdx = pinnedPartId ? PARTS.findIndex(p => p.id === pinnedPartId) : -1;
 
-  const left = stepperCfg.leftBracket || { label: 'Quantitative chauvinism', href: '#quant-chauvinism' };
-  const right = stepperCfg.rightBracket || { label: 'Ecofascist imaginaries', href: '#ecofascist-imaginaries' };
+  const renderStop = (p, i) => {
+    const isActive = isChapterPage ? (i === pinnedIdx) : (i === activeStop);
+    const isPassed = !isChapterPage && i < activeStop;
+    const allowUnderline = p.underlineActive !== false;
+    const cls = [
+      'stepper__stop',
+      'stepper__stop--' + (p.kind || 'step'),
+      isActive ? 'active' : '',
+      isPassed ? 'passed' : '',
+      allowUnderline ? 'has-underline' : 'no-underline',
+      p.bracketLine ? 'has-bracket-line' : ''
+    ].filter(Boolean).join(' ');
 
-  const followBracket = (href) => {
-    const id = (href || '').replace(/^#/, '');
-    if (!id) return;
-    if (isChapterPage) {
-      window.location.href = '/#' + id;
-    } else {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const style = p.color ? { '--stop-color': `var(--${p.color})` } : undefined;
+
+    // Chapter pages: navigate to the mapped chapter URL when a step-kind
+    // stop is clicked. Brackets and stops without a slug fall through to
+    // hash anchor on the homepage.
+    const slug = p.kind === 'step' ? p.chapterSlug : null;
+    if (isChapterPage && slug) {
+      return (
+        <a key={p.id} className={cls} style={style} href={`/chapters/${slug}/`}>
+          {p.bracketLine && <span className="stepper__stop-line" />}
+          <StopBody part={p} index={i} />
+        </a>
+      );
     }
+    // Brackets on chapter pages link to /#<id> (the def-bar is on the homepage)
+    if (isChapterPage && p.kind === 'bracket') {
+      return (
+        <a key={p.id} className={cls} style={style} href={`/#${p.id}`}>
+          {p.bracketLine && <span className="stepper__stop-line" />}
+          <StopBody part={p} index={i} />
+        </a>
+      );
+    }
+    return (
+      <button key={p.id} className={cls} style={style} onClick={() => onJumpStop(i)}>
+        {p.bracketLine && <span className="stepper__stop-line" />}
+        <StopBody part={p} index={i} />
+      </button>
+    );
   };
 
   return (
-    <div className="era-stepper">
-      <a className="stepper-bracket left" href={isChapterPage ? '/' + left.href : left.href}
-         onClick={(e) => { e.preventDefault(); followBracket(left.href); }}>
-        <span className="bracket-label">{left.label}</span>
-        <span className="bracket-line" />
-      </a>
-      <div className="stepper-eras">
-        {STEPS.map((s, i) => {
-          const era = (D.eras || []).find(e => e.id === s.id);
-          const slug = era && era.chapter_slug;
-          const isActive = isChapterPage ? (i === pinnedIdx) : (i === activeStep);
-          const isPassed = !isChapterPage && i < activeStep;
-          const cls = (isActive ? "active" : "") + (isPassed ? " passed" : "");
-          if (isChapterPage && slug) {
-            return (
-              <a key={s.id} className={cls} href={`/chapters/${slug}/`}>
-                <span className="enum">{String(i).padStart(2, '0')}</span>
-                <span className="ename">{s.title}</span>
-                {s.subtitle && <span className="eyears">{s.subtitle}</span>}
-              </a>
-            );
-          }
-          return (
-            <button key={s.id} className={cls} onClick={() => onJump(i)}>
-              <span className="enum">{String(i).padStart(2, '0')}</span>
-              <span className="ename">{s.title}</span>
-              {s.subtitle && <span className="eyears">{s.subtitle}</span>}
-            </button>
-          );
-        })}
+    <div className="stepper">
+      <div className="stepper__stops">
+        {PARTS.map(renderStop)}
       </div>
-      <a className="stepper-bracket right" href={isChapterPage ? '/' + right.href : right.href}
-         onClick={(e) => { e.preventDefault(); followBracket(right.href); }}>
-        <span className="bracket-line" />
-        <span className="bracket-label">{right.label}</span>
-      </a>
     </div>
+  );
+}
+
+function StopBody({ part, index }) {
+  if (part.kind === 'bracket') {
+    return <span className="stepper__stop-label">{part.shortLabel || part.label}</span>;
+  }
+  return (
+    <>
+      <span className="stepper__stop-num">{part.num != null ? part.num : String(index).padStart(2, '0')}</span>
+      <span className="stepper__stop-label">{part.shortLabel || part.title}</span>
+      {part.subtitle && <span className="stepper__stop-years">{part.subtitle}</span>}
+    </>
   );
 }
 
@@ -404,7 +448,7 @@ function NewsCoda({ limit = 3 }) {
 /* ---------- App ---------- */
 function App() {
   const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStop, setActiveStop] = useState(0);
   const [progress, setProgress] = useState(0);
   const [drawerId, setDrawerId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
@@ -417,7 +461,7 @@ function App() {
   const intro = PAGE.intro || null;
   const outro = PAGE.outro || null;
   const showHero = heroCfg.show !== false;
-  const showStepper = stepperCfg.show !== false && STEPS.length > 0;
+  const showStepper = stepperCfg.show !== false && PARTS.length > 0;
   const showRegisters = registersCfg.show !== false;
   const showNetwork = networkCfg.show !== false && STEPS.length > 0;
   const hasProse = STEPS.length > 0 && STEPS.some(s => PROSE[s.id]);
@@ -435,26 +479,40 @@ function App() {
   }, [tweaks]);
 
   useEffect(() => {
-    if (!hasProse) return; // no scroll-driven step tracking on chapter pages
-    const sections = STEPS.map(s => document.getElementById('step-' + s.id)).filter(Boolean);
+    if (!hasProse) return; // no scroll-driven tracking on chapter pages
+    // Track every stepper stop. For step-kind parts the DOM id is `part-<id>`;
+    // for bracket-kind stops (QC/EFI) it's the bare id (matches the def-bar
+    // anchor in the sections renderer). Pair each tracked element with its
+    // index in PARTS so the active state aligns with the stepper's stop list.
+    const tracked = PARTS.map((p, i) => {
+      const elId = p.kind === 'step' ? ('part-' + p.id) : p.id;
+      const el = document.getElementById(elId);
+      return el ? { el, idx: i } : null;
+    }).filter(Boolean);
+
     const onScroll = () => {
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(Math.max(0, Math.min(1, window.scrollY / docH)));
       const probe = window.innerHeight * 0.4;
       let active = 0;
-      sections.forEach((el, i) => {
+      tracked.forEach(({ el, idx }) => {
         const top = el.getBoundingClientRect().top;
-        if (top <= probe) active = i;
+        if (top <= probe) active = idx;
       });
-      setActiveStep(active);
+      setActiveStop(active);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, [hasProse]);
 
-  const jumpToEra = (i) => {
-    const el = document.getElementById('step-' + STEPS[i].id);
+  // Jump to a stepper stop (any kind). For step-kind parts the target id is
+  // `part-<id>`; for brackets it's the bare id (matches the def-bar anchor).
+  const jumpToStop = (i) => {
+    const stop = PARTS[i];
+    if (!stop) return;
+    const elId = stop.kind === 'step' ? ('part-' + stop.id) : stop.id;
+    const el = document.getElementById(elId);
     if (el) {
       const top = el.getBoundingClientRect().top + window.scrollY - 100;
       window.scrollTo({ top, behavior: 'smooth' });
@@ -462,6 +520,28 @@ function App() {
   };
   const jumpTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const onEnt = (id) => setDrawerId(id);
+
+  // Map the active stepper stop (which can be a bracket OR a step) onto an
+  // index into the STEPS array, used by the network figure caption.
+  // If the active stop is a bracket BEFORE any step, fall back to 0; if AFTER
+  // every step, snap to the last step.
+  const currentStepIdx = (() => {
+    if (!STEPS.length) return 0;
+    const activeStopObj = PARTS[activeStop];
+    if (!activeStopObj) return 0;
+    if (activeStopObj.kind === 'step') {
+      const idx = STEPS.findIndex(s => s.id === activeStopObj.id);
+      return idx >= 0 ? idx : 0;
+    }
+    // Bracket: find the nearest preceding step in PARTS
+    for (let j = activeStop - 1; j >= 0; j--) {
+      if (PARTS[j].kind === 'step') {
+        const idx = STEPS.findIndex(s => s.id === PARTS[j].id);
+        if (idx >= 0) return idx;
+      }
+    }
+    return 0;
+  })();
 
   const { TweaksPanel, TweakSection, TweakRadio, TweakSlider } = window;
   const heroTitle = heroCfg.titleLines && heroCfg.titleLines.length ? heroCfg.titleLines : (SITE.hero.title_lines || ["The Greatest", "Shortcoming"]);
@@ -525,7 +605,7 @@ function App() {
     <>
       <div className="scroll-progress"><div className="bar" style={{ width: (progress * 100) + '%' }} /></div>
 
-      <Header activeStep={activeStep} onJumpEra={jumpToEra} onJumpTop={jumpTop} />
+      <Header activeStop={activeStop} onJumpStop={jumpToStop} onJumpTop={jumpTop} />
 
       {showHero && (
         <div className="hero">
@@ -552,9 +632,9 @@ function App() {
       {/* Pre-stepper slot: Book + Bartlett epigraphs + Author (in YAML order) */}
       {preStepperSections.map(renderSection)}
 
-      {showStepper && <EraStepper activeStep={activeStep} onJump={jumpToEra} />}
+      {showStepper && <Stepper activeStop={activeStop} onJumpStop={jumpToStop} />}
 
-      {/* Pre-scrolly slot: QC frames the eras */}
+      {/* Pre-scrolly slot: QC frames the parts */}
       {showRegisters && preScrollySections.map(renderSection)}
 
       {showNetwork && hasProse && (
@@ -562,12 +642,12 @@ function App() {
           <div className="sticky-figure">
             <div className="figure-frame">
               <div className="figure-caption">
-                <span><b>Figure 1.</b> {networkCfg.caption || 'The network grows era by era.'}</span>
-                <span>step {String(activeStep + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')} · {STEPS[activeStep] ? STEPS[activeStep].title : ''}</span>
+                <span><b>Figure 1.</b> {networkCfg.caption || 'The network grows part by part.'}</span>
+                <span>step {String(currentStepIdx + 1).padStart(2, '0')} / {String(STEPS.length).padStart(2, '0')} · {STEPS[currentStepIdx] ? STEPS[currentStepIdx].title : ''}</span>
               </div>
               <div className="figure-svg-wrap">
                 <window.ScrollyNetwork
-                  stepIndex={activeStep}
+                  stepIndex={currentStepIdx}
                   activeId={drawerId}
                   hoveredId={hoveredId}
                   setHoveredId={setHoveredId}
@@ -585,14 +665,17 @@ function App() {
 
           <div className="prose">
             {STEPS.map((s, i) => {
-              const era = (D.eras || []).find(e => e.id === s.id) || s;
-              return <EraStep key={era.id} era={era} idx={i} onEnt={onEnt} />;
+              const part = (D.parts || []).find(p => p.id === s.id) || s;
+              // Merge per-step `subtitle` (year range computed in page-context)
+              // onto the part record so PartStep can show the dates line.
+              const merged = { ...part, subtitle: s.subtitle || part.subtitle, num: s.num || part.num };
+              return <PartStep key={merged.id} part={merged} idx={i} onEnt={onEnt} />;
             })}
           </div>
         </div>
       )}
 
-      {/* Post-scrolly slot: EFI closes the era arc */}
+      {/* Post-scrolly slot: EFI closes the part arc */}
       {showRegisters && postScrollySections.map(renderSection)}
 
       {outro && <section className="page-outro"><RawHtml html={outro.html} onEnt={onEnt} /></section>}

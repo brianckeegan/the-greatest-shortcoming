@@ -12,22 +12,24 @@
     </a>
   </div>
   <nav class="nav-main" aria-label="Primary">
-    <div class="menu-wrap" id="static-eras-menu">
+    <div class="menu-wrap" id="static-parts-menu">
       <button class="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
               onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'block':'none';this.setAttribute('aria-expanded', this.classList.contains('open'));event.stopPropagation();">
         Eras<span class="caret">▼</span>
       </button>
       <div class="menu-pop" style="display:none">
-        {% for era in site.data.eras %}
-          {%- assign era_years = '' -%}
-          {%- if era.start and era.end -%}
-            {%- assign era_years = era.start | append: ' – ' | append: era.end -%}
-          {%- elsif era.subtitle -%}
-            {%- assign era_years = era.subtitle -%}
+        {% for part in site.data.parts %}
+          {%- assign part_kind = part.kind | default: 'step' -%}
+          {%- if part_kind != 'step' -%}{% continue %}{%- endif -%}
+          {%- assign part_years = '' -%}
+          {%- if part.start and part.end -%}
+            {%- assign part_years = part.start | append: ' – ' | append: part.end -%}
+          {%- elsif part.subtitle -%}
+            {%- assign part_years = part.subtitle -%}
           {%- endif -%}
-          <a href="{{ '/#step-' | append: era.id | relative_url }}">
-            <span>{{ era.title }}</span>
-            <span class="yrs">{{ era_years }}</span>
+          <a href="{{ '/#part-' | append: part.id | relative_url }}">
+            <span>{{ part.title }}</span>
+            <span class="yrs">{{ part_years }}</span>
           </a>
         {% endfor %}
       </div>
@@ -44,7 +46,7 @@
 </header>
 <script>
   (function () {
-    var menu = document.getElementById('static-eras-menu');
+    var menu = document.getElementById('static-parts-menu');
     if (!menu) return;
     document.addEventListener('click', function (e) {
       if (menu.contains(e.target)) return;
