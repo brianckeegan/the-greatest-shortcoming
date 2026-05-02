@@ -1,10 +1,13 @@
 # Eras drive both the timeline and the scrollytelling steps.
 # `prelude` is treated specially (no era boundary on the network).
 # Add or reorder freely; the home page picks them up automatically.
+#
+# The displayed year-range subtitle is derived from `start` + `end` in
+# _includes/page-context.html (en dash with spaces). Don't add a `subtitle:`
+# field unless an era genuinely needs free-form text (e.g. "circa 1900").
 
 - id: prelude
   title: "Boulder"
-  subtitle: "1898 — 1959"
   start: 1898
   end: 1959
   num: "00"
@@ -14,7 +17,6 @@
 
 - id: free_fall
   title: "Free Fall"
-  subtitle: "1968 — 1994"
   start: 1968
   end: 1994
   num: "01"
@@ -24,7 +26,6 @@
 
 - id: quarantine
   title: "Quarantine"
-  subtitle: "1995 — 2008"
   start: 1995
   end: 2008
   num: "02"
@@ -34,7 +35,6 @@
 
 - id: swarm
   title: "Swarm"
-  subtitle: "2009 — 2028"
   start: 2009
   end: 2028
   num: "03"
@@ -44,7 +44,6 @@
 
 - id: portfolio
   title: "Portfolio"
-  subtitle: "2029 — 2048"
   start: 2029
   end: 2048
   num: "04"
@@ -54,7 +53,6 @@
 
 - id: evacuation
   title: "Evacuation"
-  subtitle: "2049 — 2068"
   start: 2049
   end: 2068
   num: "05"

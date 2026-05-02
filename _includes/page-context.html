@@ -44,10 +44,18 @@
   var stepSpecs = {{ step_specs | default: empty | jsonify }} || [];
   var steps = stepSpecs.map(function (spec, i) {
     var era = ERA_BY_ID[spec.id] || {};
+    // Subtitle is derived from start + end (en dash with spaces) so the year
+    // range is the single source of truth on each era. Falls back to authored
+    // `subtitle` if start/end aren't both present.
+    var subtitle = (era.start && era.end)
+      ? (era.start + ' – ' + era.end)
+      : (era.subtitle || '');
     return {
       id: spec.id,
       title: era.title || spec.id,
-      subtitle: era.subtitle || '',
+      subtitle: subtitle,
+      start: era.start || null,
+      end: era.end || null,
       num: era.num || String(i).padStart(2, '0'),
       kicker: era.kicker || '',
       nodes: spec.nodes || [],
@@ -89,9 +97,11 @@
 
   var registers = { show: pageKind === 'home' || pageKind === 'reading' };
 
-  // Coda: page can override; otherwise SITE.coda.
-  var pageCoda = {{ page.coda | default: empty | jsonify }};
-  var coda = pageCoda && pageCoda.length ? pageCoda : ((window.SITE && window.SITE.coda) || []);
+  // Sections: per-page override (rare) wins, otherwise the global SITE.sections.
+  var pageSections = {{ page.sections | default: empty | jsonify }};
+  var sections = pageSections && pageSections.length
+    ? pageSections
+    : ((window.SITE && window.SITE.sections) || []);
 
   // Intro / outro HTML — chapter pages use these for abstract above and excerpt+nav below.
   var intro = {{ page.intro_html | default: '' | jsonify }};
@@ -105,8 +115,8 @@
     steps: steps,
     prose: prose,
     network: network,
-    registers: registers,
-    coda: coda,
+    registers: registers,    // visibility flag (chapter pages hide register def-bars)
+    sections: sections,
     intro: intro ? { html: intro } : null,
     outro: outro ? { html: outro } : null
   };

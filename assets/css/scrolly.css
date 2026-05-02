@@ -28,6 +28,17 @@
   --serif: 'et-book', 'EB Garamond', Georgia, serif;
   --hand: 'Kalam', 'Caveat', cursive;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Tuning knobs for the QC / EFI definition bars. Override these on
+     <html> or a parent to shrink/grow the registers' vertical footprint
+     without touching the .def-bar selector. */
+  --def-bar-pad-y: 20px;
+  --def-bar-body-size: 1rem;
+  --def-bar-line-height: 1.5;
+
+  /* Mobile sticky-figure height. Top third of viewport, capped at ~16:9
+     of the screen width, with a 180px floor so it stays usable. */
+  --sticky-figure-mobile-height: clamp(180px, 33vh, 56vw);
 }
 
 [data-theme="cool"] { --paper: #fafbfc; --tufte-red: #2a5a8a; --highlight: #d9e8f5; }
@@ -113,7 +124,7 @@ h3 { font-size: 1.3rem; font-style: italic; }
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
   background: var(--paper-tint, var(--paper));
-  padding: 24px 28px;
+  padding: var(--def-bar-pad-y) 28px;
   margin: 0;
   /* Sticky top-header (~48px) + sticky era-stepper (~48px) cover the top
      of the viewport when an in-page anchor link scrolls a section into view.
@@ -131,8 +142,10 @@ h3 { font-size: 1.3rem; font-style: italic; }
   font-weight: 600; letter-spacing: -0.01em; grid-column: 2;
 }
 .def-inner p {
-  grid-column: 2; margin: 0; max-width: 720px; font-size: 1.05rem;
-  line-height: 1.55; color: var(--ink);
+  grid-column: 2; margin: 0; max-width: 720px;
+  font-size: var(--def-bar-body-size);
+  line-height: var(--def-bar-line-height);
+  color: var(--ink);
 }
 .def-inner .kicker { grid-column: 1; grid-row: 1 / span 99; }
 @media (max-width: 760px) {
@@ -180,7 +193,16 @@ h3 { font-size: 1.3rem; font-style: italic; }
   padding: 24px 24px 24px 0;
 }
 @media (max-width: 900px) {
-  .sticky-figure { height: 60vh; padding: 16px 0; top: 50px; background: var(--paper); border-bottom: 1px solid var(--rule); z-index: 5; }
+  .sticky-figure {
+    /* Top third of viewport, capped at ~16:9 of width. The figure shouldn't
+       eat more than a third of the screen on mobile or it obscures prose. */
+    height: var(--sticky-figure-mobile-height);
+    padding: 8px 0;
+    top: 50px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    z-index: 5;
+  }
 }
 
 .figure-frame {
@@ -325,11 +347,20 @@ h3 { font-size: 1.3rem; font-style: italic; }
   font: inherit; letter-spacing: .08em; text-transform: uppercase;
   min-width: 0;
 }
-.era-stepper button .enum {
+.era-stepper button .enum,
+.stepper-eras a .enum {
   font-size: 9px; opacity: .5; letter-spacing: .15em;
 }
-.era-stepper button .ename {
+.era-stepper button .ename,
+.stepper-eras a .ename {
   font-size: 11px; white-space: nowrap;
+}
+.era-stepper button .eyears,
+.stepper-eras a .eyears {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--ink-soft); opacity: .8;
+  letter-spacing: .04em; text-transform: none;
+  margin-top: 1px; white-space: nowrap;
 }
 .era-stepper button.active { color: var(--ink); }
 .era-stepper button.active .ename {
@@ -362,8 +393,13 @@ h3 { font-size: 1.3rem; font-style: italic; }
   .stepper-bracket { padding: 4px 8px; border: none !important; }
   .stepper-bracket .bracket-line { display: none; }
   .era-stepper .stepper-eras { flex-basis: 100%; overflow-x: auto; justify-content: flex-start; }
-  .era-stepper button .enum { display: none; }
-  .era-stepper button .ename { font-size: 10px; }
+  .era-stepper button .enum,
+  .stepper-eras a .enum { display: none; }
+  .era-stepper button .ename,
+  .stepper-eras a .ename { font-size: 10px; }
+  /* Drop the year span on mobile — the navbar is already crowded */
+  .era-stepper button .eyears,
+  .stepper-eras a .eyears { display: none; }
 }
 
 /* Sketchy network shapes */
@@ -524,27 +560,34 @@ a.news-item:hover {
 .news-item .kicker { color: var(--ink-soft); margin-bottom: 4px; }
 
 /* ============================================================================
- * Bartlett epigraphs — three quotes revealed cumulatively as the reader
- * scrolls into each one. Once revealed, they stay revealed.
+ * Epigraph reveal — quotes revealed cumulatively as the reader scrolls into
+ * each one. Once revealed, they stay revealed. The container intentionally
+ * breaks outside the surrounding .coda measure (max 760px) so each quote can
+ * carry h2-sized weight at the page's full reading width.
  * ============================================================================ */
 .bartlett-epigraphs {
-  margin: 24px 0 8px;
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 4vh 48px 4vh;
+  scroll-margin-top: 110px;
   display: flex;
   flex-direction: column;
-  gap: 18vh;
-  padding: 6vh 0 4vh;
+  gap: 22vh;
 }
 .bartlett-epigraphs .epigraph {
   font-family: var(--serif);
   font-style: italic;
-  font-size: 1.45rem;
-  line-height: 1.45;
+  /* h2-sized — see h2 base of 2.2rem; clamp lets it breathe on wide screens
+     without overrunning narrow ones. */
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  line-height: 1.32;
   margin: 0;
-  padding: 6px 0 6px 22px;
-  border-left: 3px solid var(--tufte-red);
+  padding: 28px 36px;
+  border-left: 5px solid var(--tufte-red);
+  background: var(--paper);
   color: var(--ink);
   opacity: 0.18;
-  transform: translateY(10px);
+  transform: translateY(12px);
   transition: opacity 0.7s ease-out, transform 0.7s ease-out;
 }
 .bartlett-epigraphs .epigraph.revealed {
@@ -556,13 +599,16 @@ a.news-item:hover {
   display: block;
   font-style: normal;
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  margin-top: 14px;
+  margin-top: 18px;
 }
 @media (max-width: 760px) {
-  .bartlett-epigraphs { gap: 14vh; padding: 4vh 0 3vh; }
-  .bartlett-epigraphs .epigraph { font-size: 1.2rem; padding-left: 16px; }
+  .bartlett-epigraphs { padding: 3vh 24px; gap: 16vh; }
+  .bartlett-epigraphs .epigraph {
+    font-size: clamp(1.3rem, 5vw, 1.7rem);
+    padding: 20px 22px;
+  }
 }

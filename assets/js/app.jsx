@@ -1,7 +1,12 @@
 /* ============================================================================
- * app.jsx — main React renderer for the home page.
- * Reads window.SITE (config), window.GS_DATA (entities), window.GS_PROSE (era
- * prose) injected from Jekyll _data/*.yml. Mounts into #root.
+ * app.jsx — main React renderer for the homepage and chapter pages.
+ * Reads window.SITE (page-invariant config + sections list),
+ *       window.GS_DATA (entities + news),
+ *       window.PAGE_CONTEXT (per-page steps, prose, intro/outro, hero/stepper
+ *                             config, sections override).
+ * Mounts into #root. Section rendering is kind-aware (register / coda / news /
+ * epigraphs) and slot-positioned (pre-stepper / pre-scrolly / post-scrolly /
+ * post-coda).
  * ============================================================================ */
 
 const { useState, useEffect, useRef, useMemo } = React;
@@ -272,6 +277,7 @@ function EraStepper({ activeStep, onJump }) {
               <a key={s.id} className={cls} href={`/chapters/${slug}/`}>
                 <span className="enum">{String(i).padStart(2, '0')}</span>
                 <span className="ename">{s.title}</span>
+                {s.subtitle && <span className="eyears">{s.subtitle}</span>}
               </a>
             );
           }
@@ -279,6 +285,7 @@ function EraStepper({ activeStep, onJump }) {
             <button key={s.id} className={cls} onClick={() => onJump(i)}>
               <span className="enum">{String(i).padStart(2, '0')}</span>
               <span className="ename">{s.title}</span>
+              {s.subtitle && <span className="eyears">{s.subtitle}</span>}
             </button>
           );
         })}
@@ -309,32 +316,19 @@ function RawHtml({ html, onEnt }) {
   return <div ref={ref} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-/* ---------- Bartlett epigraphs ----------
- * Three epigraphs revealed in cumulative scrolly succession: each fades from
+/* ---------- Epigraph reveal ----------
+ * Quotes revealed in cumulative scrolly succession: each fades from
  * dimmed/translated to fully present as it scrolls into view; once revealed,
- * stays revealed.
+ * stays revealed. Items are passed in via the `epigraphs` section in
+ * _config.yml (kind: epigraphs, items: [{ quote, cite }, ...]).
  */
-function BartlettEpigraphs() {
-  const items = useMemo(() => [
-    {
-      quote: 'The greatest shortcoming of the human race is our inability to understand the exponential function.',
-      cite: 'Al Bartlett, 1972'
-    },
-    {
-      quote: 'Immigration is the main driver of population growth in the U.S. … therefore any discussion of sustainability in the U.S. must address the need to reduce or eliminate immigration, both legal and illegal, into the U.S.',
-      cite: 'Al Bartlett'
-    },
-    {
-      quote: 'Anyone who thinks that you can stop population growth to save the environment without reducing immigration is innumerate.',
-      cite: 'Al Bartlett'
-    }
-  ], []);
-
+function BartlettEpigraphs({ id, items }) {
+  const safeItems = items || [];
   const refs = useRef([]);
-  const [revealed, setRevealed] = useState(items.map(() => false));
+  const [revealed, setRevealed] = useState(() => safeItems.map(() => false));
 
   useEffect(() => {
-    const observers = items.map((_, i) => {
+    const observers = safeItems.map((_, i) => {
       const el = refs.current[i];
       if (!el) return null;
       const io = new IntersectionObserver(([entry]) => {
@@ -351,11 +345,13 @@ function BartlettEpigraphs() {
       return io;
     });
     return () => observers.forEach(io => io && io.disconnect());
-  }, [items]);
+  }, [safeItems]);
+
+  if (!safeItems.length) return null;
 
   return (
-    <div className="bartlett-epigraphs" aria-label="Bartlett epigraphs">
-      {items.map((item, i) => (
+    <div id={id} className="bartlett-epigraphs" aria-label="Epigraphs">
+      {safeItems.map((item, i) => (
         <blockquote key={i}
                     ref={el => { refs.current[i] = el; }}
                     className={'epigraph' + (revealed[i] ? ' revealed' : '')}>
@@ -410,7 +406,6 @@ function App() {
   const stepperCfg = PAGE.stepper || {};
   const networkCfg = PAGE.network || {};
   const registersCfg = PAGE.registers || {};
-  const coda = (PAGE.coda && PAGE.coda.length ? PAGE.coda : (SITE.coda || []));
   const intro = PAGE.intro || null;
   const outro = PAGE.outro || null;
   const showHero = heroCfg.show !== false;
@@ -418,6 +413,12 @@ function App() {
   const showRegisters = registersCfg.show !== false;
   const showNetwork = networkCfg.show !== false && STEPS.length > 0;
   const hasProse = STEPS.length > 0 && STEPS.some(s => PROSE[s.id]);
+
+  // Unified sections list (replaces SITE.registers + SITE.coda). Group by
+  // slot for placement, then render via kind-aware switch. Per-page coda
+  // override (PAGE.coda) is honored as a full sections list when present.
+  const allSections = (PAGE.sections && PAGE.sections.length ? PAGE.sections : (SITE.sections || []));
+  const registers = allSections.filter(s => s.kind === 'register');
 
   useEffect(() => {
     document.documentElement.dataset.theme = tweaks.theme;
@@ -457,46 +458,60 @@ function App() {
   const { TweaksPanel, TweakSection, TweakRadio, TweakSlider } = window;
   const heroTitle = heroCfg.titleLines && heroCfg.titleLines.length ? heroCfg.titleLines : (SITE.hero.title_lines || ["The Greatest", "Shortcoming"]);
 
-  // Coda body: empty body + id 'news' is the signal to render the live news list.
-  const renderCodaBody = (c) => {
-    if (c.id === 'news' && (!c.body || !c.body.trim())) return <NewsCoda />;
-    return <p dangerouslySetInnerHTML={{ __html: c.body }} />;
+  // Kind-aware section renderer. Switch on `kind` to pick the wrapper:
+  //   register   → bordered .def-bar
+  //   coda       → plain .coda block
+  //   news       → .coda wrapper around <NewsCoda /> (the live items list)
+  //   epigraphs  → standalone .bartlett-epigraphs scroll-reveal
+  // Sections without a recognized kind are silently skipped.
+  const renderSection = (s) => {
+    if (!s || !s.id) return null;
+    if (s.kind === 'register') {
+      return (
+        <section key={s.id} id={s.id} className="def-bar">
+          <div className="def-inner">
+            <div className="kicker">{s.kicker}</div>
+            <h3>{s.title}</h3>
+            <p dangerouslySetInnerHTML={{ __html: s.body || '' }} />
+          </div>
+        </section>
+      );
+    }
+    if (s.kind === 'epigraphs') {
+      return <BartlettEpigraphs key={s.id} id={s.id} items={s.items} />;
+    }
+    if (s.kind === 'news') {
+      return (
+        <section key={s.id} id={s.id} className="coda">
+          {s.kicker && <div className="kicker">{s.kicker}</div>}
+          {s.title && <h2>{s.title}</h2>}
+          <NewsCoda />
+        </section>
+      );
+    }
+    // coda (default)
+    return (
+      <section key={s.id} id={s.id} className="coda">
+        {s.kicker && <div className="kicker">{s.kicker}</div>}
+        {s.title && <h2>{s.title}</h2>}
+        {s.body && <p dangerouslySetInnerHTML={{ __html: s.body }} />}
+      </section>
+    );
   };
 
-  // Render order on the homepage: Book + Author appear above the stepper, the
-  // first register (QC) frames the eras, the second (EFI) follows the eras as
-  // the closing analytical register, then News + Resources. Chapter pages keep
-  // the simpler intro → stepper → outro → coda flow.
+  // Group sections by slot. On chapter pages, registers don't render (the page
+  // is about chapter content, not the analytical apparatus); other slots still
+  // render so Book / Author / News / Resources appear in the same flow.
   const isHome = PAGE.kind === 'home' || PAGE.kind === 'reading';
-  const codaById = Object.fromEntries(coda.map(c => [c.id, c]));
-  const renderCodaSection = (c, children) => (
-    <section key={c.id} id={c.id} className="coda">
-      <div className="kicker">{c.kicker}</div>
-      <h2>{c.title}</h2>
-      {renderCodaBody(c)}
-      {children}
-    </section>
-  );
-  const homeCodaPre  = isHome ? [codaById.book, codaById.author].filter(Boolean) : [];
-  const homeCodaPost = isHome ? [codaById.news, codaById.resources].filter(Boolean) : [];
-  const codaIdsHandled = new Set(homeCodaPre.concat(homeCodaPost).map(c => c.id));
-  const remainingCoda = isHome
-    ? coda.filter(c => !codaIdsHandled.has(c.id))   // anything custom the user added
-    : coda;
-
-  const qcRegister  = (SITE.registers || [])[0] || null;
-  const efiRegister = (SITE.registers || [])[1] || null;
-  const extraRegisters = (SITE.registers || []).slice(2);
-
-  const renderDefBar = (r) => (
-    <section key={r.id} id={r.id} className="def-bar">
-      <div className="def-inner">
-        <div className="kicker">{r.kicker}</div>
-        <h3>{r.title}</h3>
-        <p dangerouslySetInnerHTML={{ __html: r.body }} />
-      </div>
-    </section>
-  );
+  const slotFilter = (slotName) => allSections.filter(s => {
+    if (s.slot !== slotName) return false;
+    if (!isHome && s.kind === 'register') return false;
+    return true;
+  });
+  const preStepperSections = slotFilter('pre-stepper');
+  const preScrollySections = slotFilter('pre-scrolly');
+  const postScrollySections = slotFilter('post-scrolly');
+  const postCodaSections = slotFilter('post-coda');
 
   return (
     <>
@@ -507,16 +522,18 @@ function App() {
       {showHero && (
         <div className="hero">
           <h1>{heroTitle.map((line, i) => <React.Fragment key={i}>{line}{i < heroTitle.length - 1 ? <br /> : null}</React.Fragment>)}</h1>
-          <div className="kicker hero-kicker">
-            {SITE.registers.map((r, i) => (
-              <React.Fragment key={r.id}>
-                {i > 0 && <span className="amp"> &amp; </span>}
-                <a href={"#" + r.id} onClick={(e) => { e.preventDefault(); document.getElementById(r.id)?.scrollIntoView({ behavior: 'smooth' }); }}>
-                  {r.title.toLowerCase()}{i === SITE.registers.length - 1 ? " →" : ""}
-                </a>
-              </React.Fragment>
-            ))}
-          </div>
+          {registers.length > 0 && (
+            <div className="kicker hero-kicker">
+              {registers.map((r, i) => (
+                <React.Fragment key={r.id}>
+                  {i > 0 && <span className="amp"> &amp; </span>}
+                  <a href={"#" + r.id} onClick={(e) => { e.preventDefault(); document.getElementById(r.id)?.scrollIntoView({ behavior: 'smooth' }); }}>
+                    {r.title.toLowerCase()}{i === registers.length - 1 ? " →" : ""}
+                  </a>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
           <p className="deck">{heroCfg.deck || SITE.hero.deck}</p>
           {(heroCfg.scrollCue || SITE.hero.scroll_cue) && <div className="scroll-cue">{heroCfg.scrollCue || SITE.hero.scroll_cue}</div>}
         </div>
@@ -524,12 +541,13 @@ function App() {
 
       {intro && <section className="page-intro"><RawHtml html={intro.html} onEnt={onEnt} /></section>}
 
-      {/* Home: Book + Author first; the Book block hosts the Bartlett epigraphs */}
-      {homeCodaPre.map(c => renderCodaSection(c, c.id === 'book' ? <BartlettEpigraphs /> : null))}
+      {/* Pre-stepper slot: Book + Bartlett epigraphs + Author (in YAML order) */}
+      {preStepperSections.map(renderSection)}
 
       {showStepper && <EraStepper activeStep={activeStep} onJump={jumpToEra} />}
 
-      {showRegisters && qcRegister && renderDefBar(qcRegister)}
+      {/* Pre-scrolly slot: QC frames the eras */}
+      {showRegisters && preScrollySections.map(renderSection)}
 
       {showNetwork && hasProse && (
         <div className="scrolly">
@@ -566,15 +584,13 @@ function App() {
         </div>
       )}
 
-      {/* EFI follows the eras as the closing analytical register */}
-      {showRegisters && efiRegister && renderDefBar(efiRegister)}
-      {showRegisters && extraRegisters.map(renderDefBar)}
+      {/* Post-scrolly slot: EFI closes the era arc */}
+      {showRegisters && postScrollySections.map(renderSection)}
 
       {outro && <section className="page-outro"><RawHtml html={outro.html} onEnt={onEnt} /></section>}
 
-      {/* Home: News + Resources after EFI. Chapter/reading: full coda here. */}
-      {homeCodaPost.map(c => renderCodaSection(c))}
-      {remainingCoda.map(c => renderCodaSection(c))}
+      {/* Post-coda slot: News, Resources */}
+      {postCodaSections.map(renderSection)}
 
       <EntDrawer id={drawerId} onClose={() => setDrawerId(null)} onNavigate={setDrawerId} />
 
