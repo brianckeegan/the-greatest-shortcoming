@@ -117,7 +117,7 @@ sections:
       rather than violence. Made durable, in Sheila Jasanoff's terms, through
       the laws, infrastructures, and administrative routines that enact them.
 
-- id: "book"
+  - id: "book"
     kind: coda
     slot: pre-stepper
     kicker: "about"
@@ -131,7 +131,7 @@ sections:
       political projects they served. And it asks whether measurement can be
       redirected: whether the same quantitative tools that narrowed the circle
       of concern can be rebuilt to widen it.
-      
+
   - id: "author"
     kind: coda
     slot: pre-stepper
@@ -144,7 +144,7 @@ sections:
       Northwestern University's School of Communication, and completed post-doctoral
       training at Northeastern University and the Harvard Business School. He
       currently resides in Boulder, Colorado with his wife and two sons.
-      
+
   - id: "news"
     kind: news
     slot: post-coda
