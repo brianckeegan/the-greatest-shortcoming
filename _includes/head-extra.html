@@ -6,14 +6,15 @@
   gets the same head additions.
 {%- endcomment -%}
 
-<!-- Favicons. Files live at the site root so /favicon.ico resolves
-     directly (legacy browser fallback) and the manifest's absolute
-     paths (/android-chrome-*.png) work without rewriting. -->
-<link rel="icon" href="{{ '/favicon.ico' | relative_url }}" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ '/favicon-32x32.png' | relative_url }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ '/favicon-16x16.png' | relative_url }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ '/apple-touch-icon.png' | relative_url }}">
-<link rel="manifest" href="{{ '/site.webmanifest' | relative_url }}">
+<!-- Favicons. Files live under /assets/favicon/ to keep the repo root tidy.
+     Modern browsers honor these <link rel="icon"> entries; only direct
+     /favicon.ico lookups (extensions, scrapers, very old browsers) will
+     404 against the moved file. -->
+<link rel="icon" href="{{ '/assets/favicon/favicon.ico' | relative_url }}" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon/favicon-32x32.png' | relative_url }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon/favicon-16x16.png' | relative_url }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/favicon/apple-touch-icon.png' | relative_url }}">
+<link rel="manifest" href="{{ '/assets/favicon/site.webmanifest' | relative_url }}">
 <meta name="theme-color" content="#fffff8">
 
 <!-- Theme mode setter — runs synchronously to avoid a flash of light/dark.
