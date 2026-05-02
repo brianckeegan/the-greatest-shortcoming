@@ -1,6 +1,6 @@
 ---
 kind: coda
-slot: post-scrolly
+sort_order: 360
 kicker: "about"
 title: "The Book"
 ---

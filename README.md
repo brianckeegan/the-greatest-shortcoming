@@ -46,7 +46,7 @@ Pages will rebuild.
 11. [Adding a new entity](#adding-a-new-entity)
 12. [Adding a news item](#adding-a-news-item)
 13. [Adding a new page](#adding-a-new-page)
-14. [Adding or reordering a landing-page section](#adding-or-reordering-a-landing-page-section)
+14. [Adding or reordering a landing-page item](#adding-or-reordering-a-landing-page-item)
 15. [Troubleshooting](#troubleshooting)
 
 ---
@@ -135,16 +135,16 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 │           └── islands.js   # compiled bundle (committed; loaded by _layouts/scrolly.html)
 ├── index.md                 # / (page_kind: home, page_id: home → uses scrolly layout)
 ├── _chapters/               # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter from _config defaults)
-├── _sections/               # collection: landing-page section content (book, author, register defs, news, resources, bartlett epigraphs)
+├── _landing/                # collection: landing-page items (book, author, register defs, news, resources, bartlett epigraphs, qc-efi-matrix). Order is set by `sort_order` in each file's frontmatter.
 ├── pages/                   # static pages: about, contents, bibliography, news, draft-status
 └── .github/workflows/github-pages.yml
 ```
 
 The pipeline:
 
-1. Jekyll reads `_config.yml`, every `_data/*.yml` file (including `_data/prose/*.yml` and `_data/scrolly/*.yml`), and every section in `_sections/*.md`.
+1. Jekyll reads `_config.yml`, every `_data/*.yml` file (including `_data/prose/*.yml` and `_data/scrolly/*.yml`), and every item in `_landing/*.md`.
 2. `_layouts/scrolly.html` includes:
-   - `_includes/site-data.html` — emits `window.SITE` (config + ordered sections from `_sections/`) and `window.GS_DATA` (entities + news), page-invariant. Section ordering within each slot follows `nav_reading` anchor entries.
+   - `_includes/site-data.html` — emits `window.SITE` (config + landing items from `_landing/`, sorted by `sort_order`) and `window.GS_DATA` (entities + news), page-invariant. The landing items render in `sort_order` ascending; `nav_reading` is navigation-only and has zero effect on order.
    - `_includes/page-context.html` — emits `window.PAGE_CONTEXT` for the current page (steps, prose, hero, stepper config, network/registers visibility, coda, intro, outro), looking up `_data/scrolly/{key}.yml` and `_data/prose/{key}.yml` keyed off `page.page_id`.
    - For chapter pages: a Liquid block that captures the chapter header/abstract (intro) and excerpt + prev/next nav (outro) and grafts them onto `window.PAGE_CONTEXT` as HTML strings.
 3. `assets/js/app.jsx` reads those globals and renders the page with React.
@@ -197,56 +197,98 @@ every step-kind part. The dropdown's button label is whatever you set on
 `label:` — keep it as `"Eras"` for this site, or rename to `"Parts"`,
 `"Acts"`, `"Chapters"`, etc.
 
-### Landing-page sections
+### Landing-page items (`_landing/`)
 
-Section content (Book, Author, register definitions, News, Resources,
-Bartlett epigraphs) lives in **`_sections/<id>.md`**, one Markdown file
-per section. The filename slug is the section id and the DOM anchor —
-so `_sections/book.md` becomes `#book`, addressable from `nav_reading`
-or any other anchor link. Each file's frontmatter declares:
+The blocks that flow down the homepage between the hero and the bottom —
+Bartlett epigraphs, the Quantitative-Chauvinism and Ecofascist-Imaginaries
+register definitions, the QC×EFI matrix, the Book/Author cards, the
+latest News, the Resources list — each live in their own Markdown file at
+**`_landing/<id>.md`**. The filename slug is the item id and the DOM
+anchor: `_landing/book.md` becomes `#book`, addressable from
+`nav_reading` or any in-page link.
+
+Each file's frontmatter:
 
 ```yaml
 ---
-kind: register | coda | news | epigraphs   # selects the React renderer
-slot: pre-stepper | pre-scrolly | post-scrolly | post-coda  # placement
-kicker: "..."           # small overline (optional; coda/register/news)
-title: "..."            # heading (optional for news/epigraphs)
-items:                  # epigraphs only — list of { quote, cite }
+kind: coda | register | news | epigraphs | island   # picks the renderer
+sort_order: 360                                     # integer; SOLE order source
+home_only: true                                     # optional; hide on chapter pages
+kicker: "about"                                     # small overline (optional)
+title: "The Book"                                   # heading (optional for news/epigraphs)
+items:                                              # epigraphs only
   - quote: "..."
-    cite: "..."
+    cite:  "..."
+island: QcEfiMatrix                                 # for kind: island, the window global to render
 ---
 Markdown body goes here. HTML is allowed (Kramdown passes through inline
-tags). For multi-paragraph bodies, separate with blank lines and they'll
-render as proper `<p>` elements.
+tags). For multi-paragraph bodies, separate with blank lines and they
+render as proper `<p>` elements wrapped in `<div class="section-body">`.
 ```
 
-**Render order** within each slot is driven by `nav_reading`. Any entry
-in `nav_reading` of the form `{ url: "#some-id" }` puts the section
-whose filename matches `some-id` at that position. Sections not
-referenced in `nav_reading` are appended after the named ones in
-collection natural order (alphabetical by filename).
+**Order is determined entirely by `sort_order`.** The integer is the only
+input. Lower numbers render first. There is no slot field, no
+nav_reading-driven fallback, no alphabetical tie-break that matters in
+practice — give every item a unique number and the page renders in that
+exact order.
 
-So with this `nav_reading`:
+#### Reserved sort_order values
 
-```yaml
-nav_reading:
-  - { label: "Eras", kind: "parts-menu" }
-  - { label: "Book", url: "#book" }
-  - { label: "Author", url: "#author" }
-  - { label: "News", url: "#news" }
-```
+The React app interleaves two structural elements between landing items:
 
-…the `pre-scrolly` slot renders `book` then `author` (because they're
-referenced in that order in `nav_reading`) then any other `pre-scrolly`
-sections (e.g. `quant-chauvinism`) afterwards. The `post-coda` slot
-renders `news` first (referenced) then `resources` (not referenced) —
-matching what shipped before the refactor.
+| Element | sort_order |
+|---|---|
+| Eras stepper (the QC \| parts \| EFI navbar) | **200** |
+| Scrolly figure (the network SVG) | **300** |
 
-The collection is composed into the same JSON shape `app.jsx` already
-consumes (`{id, kind, slot, kicker, title, body, items}`); the
-composition lives in `_includes/site-data.html`. Body is rendered
-Markdown HTML, wrapped by app.jsx in a `<div class="section-body">` so
-multi-paragraph bodies don't produce invalid nested `<p>` tags.
+Items with `sort_order < 200` render before the stepper. Items between
+201 and 299 render between the stepper and the scrolly figure. Items
+≥ 301 render below the figure.
+
+The current homepage layout uses these numbers:
+
+| Item | sort_order | Renders |
+|---|---|---|
+| `bartlett.md` | 100 | before stepper |
+| `quant-chauvinism.md` | 150 | before stepper (home_only) |
+| **STEPPER** | **200** | structural |
+| `ecofascist-imaginaries.md` | 250 | between stepper and figure (home_only) |
+| **SCROLLY FIGURE** | **300** | structural |
+| `qc-efi-matrix.md` | 350 | after figure |
+| `book.md` | 360 | after matrix |
+| `author.md` | 370 | after book |
+| `news.md` | 400 | bottom |
+| `resources.md` | 410 | bottom |
+
+Number new items in steps of 10 (or 50) so future inserts can slot in
+without renumbering existing items.
+
+#### nav_reading is navigation-only
+
+The `nav_reading` list in `_config.yml` is the navbar dropdown. Anchor
+entries (`{ label: "Book", url: "#book", nav_only: true }`) are pure
+jump-to-id links. They have **zero effect on page-flow ordering** — that
+is set entirely by `sort_order` in each `_landing/<id>.md`. The
+`nav_only: true` flag is documentation; the composer in
+`_includes/site-data.html` no longer reads `nav_reading` for ordering.
+
+#### home_only
+
+A landing item with `home_only: true` in its frontmatter is filtered out
+on chapter pages by app.jsx. Used today for the QC and EFI register
+def-bars (the analytical apparatus belongs on the home/reading view, not
+inside chapter content). Default false.
+
+#### Pipeline
+
+The collection is composed into a JSON array `window.SITE.landing` (the
+Liquid composition lives in `_includes/site-data.html`). Each item has
+the shape `{id, kind, sort_order, home_only, kicker, title, body, items,
+island, props}`. `app.jsx` reads it, applies the `home_only` filter for
+chapter pages, sorts ascending by `sort_order`, and interleaves the
+stepper at 200 + the scrolly figure at 300. Bodies are rendered Markdown
+HTML wrapped in a `<div class="section-body">` so multi-paragraph bodies
+don't create invalid nested `<p>` tags.
 
 ### `theme_defaults`
 
@@ -638,41 +680,47 @@ nav:
 
 ---
 
-## Adding or reordering a landing-page section
+## Adding or reordering a landing-page item
 
-To **add a new section** (e.g. a "Press" coda block):
+To **add a new item** (e.g. a "Press" coda block):
 
-1. Drop a file in `_sections/`, e.g. `_sections/press.md`:
+1. Drop a file in `_landing/`, e.g. `_landing/press.md`:
    ```markdown
    ---
-   kind: coda                  # register | coda | news | epigraphs
-   slot: post-coda             # pre-stepper | pre-scrolly | post-scrolly | post-coda
+   kind: coda          # coda | register | news | epigraphs | island
+   sort_order: 380     # integer; positions this item in the page flow
    kicker: "in the news"
    title: "Press"
    ---
    Markdown body. HTML allowed.
    ```
-2. (Optional) Add an entry to `nav_reading` in `_config.yml` to control
-   where it lands within its slot:
+   Pick a `sort_order` based on where you want it to land relative to the
+   structural elements (stepper at 200, scrolly figure at 300) and the
+   existing items (see the table in [Landing-page items](#landing-page-items-_landing) above).
+2. (Optional) Add a navbar jump-link entry in `_config.yml` `nav_reading`:
    ```yaml
    nav_reading:
-     - { label: "Press", url: "#press" }
+     - { label: "Press", url: "#press", nav_only: true }
    ```
-   The filename slug (`press`) is the anchor id. Without a `nav_reading`
-   entry, the section renders after every `nav_reading`-referenced
-   section in its slot, in alphabetical order.
+   This puts a "Press" entry in the dropdown menu that scrolls to the new
+   item. The `nav_only: true` flag is documentation — `nav_reading` no
+   longer affects ordering anywhere.
 
-To **reorder existing sections**, change their order in `nav_reading`.
-Within each slot, sections render in the order their `#anchor` appears
-in `nav_reading`; sections not referenced render after.
+To **reorder existing items**, change their `sort_order:` integers. The
+React app re-sorts on every render. To swap two items, swap their
+numbers (or pick any value between their neighbors').
 
-To **move a section between slots**, edit `slot:` in its frontmatter.
-The four slots, in page order, are:
+To **hide an item from chapter pages**, set `home_only: true` in its
+frontmatter. Used today for the QC and EFI register def-bars (analytical
+apparatus belongs on the home/reading view, not chapter content).
 
-- `pre-stepper`  — between the hero and the parts stepper
-- `pre-scrolly`  — between the stepper and the scrolly figure
-- `post-scrolly` — between the scrolly figure and the bottom block
-- `post-coda`    — at the bottom of the page
+There is **no slot field**. Page placement is determined by
+`sort_order` alone, with the eras stepper pinned at 200 and the scrolly
+figure pinned at 300. Conventional ranges:
+
+- `sort_order < 200` — before the eras stepper (hero block area).
+- `200 < sort_order < 300` — between the stepper and the scrolly figure.
+- `sort_order > 300` — below the scrolly figure (the page footer area).
 
 ---
 

@@ -120,11 +120,14 @@
 
   var registers = { show: pageKind === 'home' || pageKind === 'reading' };
 
-  // Sections: per-page override (rare) wins, otherwise the global SITE.sections.
-  var pageSections = {{ page.sections | default: empty | jsonify }};
-  var sections = pageSections && pageSections.length
-    ? pageSections
-    : ((window.SITE && window.SITE.sections) || []);
+  // Landing items: per-page override (`page.landing` in frontmatter) wins,
+  // otherwise the global SITE.landing. Note: `page.sections` is a different
+  // thing (the chapter outline — list of section heading strings) and is
+  // intentionally NOT consulted here.
+  var pageLanding = {{ page.landing | default: empty | jsonify }};
+  var landing = pageLanding && pageLanding.length
+    ? pageLanding
+    : ((window.SITE && window.SITE.landing) || []);
 
   // Intro / outro HTML — chapter pages use these for abstract above and excerpt+nav below.
   var intro = {{ page.intro_html | default: '' | jsonify }};
@@ -140,7 +143,7 @@
     prose: prose,
     network: network,
     registers: registers,    // visibility flag (chapter pages hide register def-bars)
-    sections: sections,
+    landing: landing,        // landing items (sorted by sort_order)
     intro: intro ? { html: intro } : null,
     outro: outro ? { html: outro } : null
   };

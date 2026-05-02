@@ -1,6 +1,6 @@
 ---
 kind: epigraphs
-slot: pre-stepper
+sort_order: 100
 items:
   - quote: "The greatest shortcoming of the human race is our inability to understand the exponential function."
     cite: "Al Bartlett, 1972"

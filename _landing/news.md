@@ -1,6 +1,6 @@
 ---
 kind: news
-slot: post-coda
+sort_order: 400
 kicker: "latest"
 title: "News"
 ---

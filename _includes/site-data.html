@@ -3,46 +3,20 @@
   Page-invariant data only. Per-page prose / steps live on window.PAGE_CONTEXT
   (emitted by _includes/page-context.html).
 
-  Sections are loaded from the `_sections/*.md` collection (frontmatter +
-  Markdown body). Order WITHIN each slot is driven by `nav_reading`: any
-  entry of the form `{ url: "#some-id" }` in nav_reading puts the section
-  whose filename matches `some-id` at that position. Sections not referenced
-  in nav_reading are appended after, in collection natural order.
+  Landing items are loaded from the `_landing/*.md` collection (frontmatter
+  + Markdown body) and sorted by the `sort_order:` integer in each file's
+  frontmatter — that is the SOLE source of order. The legacy `slot:` field
+  and any nav_reading-driven ordering have been removed; nav_reading
+  entries flagged `nav_only: true` are pure navigation links and have no
+  effect on page-flow ordering.
 {%- endcomment -%}
 
-{%- comment -%} 1. Collect ordered section ids from nav_reading anchors {%- endcomment -%}
-{%- assign ordered_ids = "" | split: "" -%}
-{%- for nav in site.nav_reading -%}
-  {%- assign nav_url = nav.url | default: "" -%}
-  {%- if nav_url contains "#" -%}
-    {%- assign anchor_id = nav_url | split: "#" | last -%}
-    {%- if anchor_id != "" -%}
-      {%- assign ordered_ids = ordered_ids | push: anchor_id -%}
-    {%- endif -%}
-  {%- endif -%}
-{%- endfor -%}
-
-{%- comment -%} 2. Build the ordered sections list:
-       a) sections referenced in nav_reading, in nav_reading order
-       b) sections NOT referenced, appended in collection natural order
+{%- comment -%}
+  Sort the landing collection by sort_order. Items missing sort_order get
+  treated as 0 by Liquid's `sort:` (acceptable; treat that as a misconfig
+  to be caught in review).
 {%- endcomment -%}
-{%- assign ordered_sections = "" | split: "" -%}
-{%- for id in ordered_ids -%}
-  {%- for s in site.sections -%}
-    {%- if s.slug == id -%}
-      {%- assign ordered_sections = ordered_sections | push: s -%}
-    {%- endif -%}
-  {%- endfor -%}
-{%- endfor -%}
-{%- for s in site.sections -%}
-  {%- assign already_included = false -%}
-  {%- for id in ordered_ids -%}
-    {%- if s.slug == id -%}{%- assign already_included = true -%}{%- endif -%}
-  {%- endfor -%}
-  {%- if already_included == false -%}
-    {%- assign ordered_sections = ordered_sections | push: s -%}
-  {%- endif -%}
-{%- endfor -%}
+{%- assign sorted_landing = site.landing | sort: 'sort_order' -%}
 
 <script>
 window.SITE = {
@@ -50,22 +24,24 @@ window.SITE = {
   subtitle: {{ site.subtitle | jsonify }},
   hero: {{ site.hero | jsonify }},
   nav: {{ site.nav_reading | default: site.nav | jsonify }},
-  // Unified sections list (renderer-flagged via `kind`, positioned via `slot`,
-  // ordered within each slot via `nav_reading`). Composed above from the
-  // `_sections/*.md` collection. The React app groups by slot and renders
-  // kind-aware.
-  sections: [
-    {%- for s in ordered_sections -%}
+  // Landing items, sorted by `sort_order` from `_landing/*.md` frontmatter.
+  // The React app interleaves these with the structural elements (the eras
+  // stepper at sort_order 200, the scrolly figure at 300) by sort_order to
+  // produce the page flow. `home_only: true` items are skipped on chapter
+  // pages by the renderer.
+  landing: [
+    {%- for s in sorted_landing -%}
       {
-        "id":     {{ s.slug | jsonify }},
-        "kind":   {{ s.kind | jsonify }},
-        "slot":   {{ s.slot | jsonify }},
-        "kicker": {{ s.kicker | default: "" | jsonify }},
-        "title":  {{ s.title | default: "" | jsonify }},
-        "body":   {{ s.content | strip | jsonify }},
-        "items":  {{ s.items | default: empty | jsonify }},
-        "island": {{ s.island | default: "" | jsonify }},
-        "props":  {{ s.props | default: empty | jsonify }}
+        "id":         {{ s.slug | jsonify }},
+        "kind":       {{ s.kind | jsonify }},
+        "sort_order": {{ s.sort_order | default: 0 | jsonify }},
+        "home_only":  {{ s.home_only | default: false | jsonify }},
+        "kicker":     {{ s.kicker | default: "" | jsonify }},
+        "title":      {{ s.title | default: "" | jsonify }},
+        "body":       {{ s.content | strip | jsonify }},
+        "items":      {{ s.items | default: empty | jsonify }},
+        "island":     {{ s.island | default: "" | jsonify }},
+        "props":      {{ s.props | default: empty | jsonify }}
       }{%- unless forloop.last -%},{%- endunless -%}
     {%- endfor -%}
   ],

@@ -1,6 +1,7 @@
 ---
 kind: coda
-slot: post-scrolly
+sort_order: 250
+home_only: true
 kicker: "political register · ii"
 title: "Ecofascist Imaginaries"
 ---
