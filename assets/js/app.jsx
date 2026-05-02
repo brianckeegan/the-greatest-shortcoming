@@ -560,7 +560,9 @@ function App() {
           <div className="def-inner">
             <div className="kicker">{s.kicker}</div>
             <h3>{s.title}</h3>
-            <p dangerouslySetInnerHTML={{ __html: s.body || '' }} />
+            {/* Body is rendered Markdown from _sections/<id>.md — may contain
+                multiple <p> tags, so wrap in a <div> rather than <p>. */}
+            <div className="section-body" dangerouslySetInnerHTML={{ __html: s.body || '' }} />
           </div>
         </section>
       );
@@ -582,7 +584,9 @@ function App() {
       <section key={s.id} id={s.id} className="coda">
         {s.kicker && <div className="kicker">{s.kicker}</div>}
         {s.title && <h2>{s.title}</h2>}
-        {s.body && <p dangerouslySetInnerHTML={{ __html: s.body }} />}
+        {/* Body is rendered Markdown from _sections/<id>.md — may contain
+            multiple <p> tags, so wrap in a <div> rather than <p>. */}
+        {s.body && <div className="section-body" dangerouslySetInnerHTML={{ __html: s.body }} />}
       </section>
     );
   };

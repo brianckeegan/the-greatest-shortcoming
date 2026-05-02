@@ -2,17 +2,71 @@
   Render YAML data + config as window globals consumed by the React app.
   Page-invariant data only. Per-page prose / steps live on window.PAGE_CONTEXT
   (emitted by _includes/page-context.html).
+
+  Sections are loaded from the `_sections/*.md` collection (frontmatter +
+  Markdown body). Order WITHIN each slot is driven by `nav_reading`: any
+  entry of the form `{ url: "#some-id" }` in nav_reading puts the section
+  whose filename matches `some-id` at that position. Sections not referenced
+  in nav_reading are appended after, in collection natural order.
 {%- endcomment -%}
+
+{%- comment -%} 1. Collect ordered section ids from nav_reading anchors {%- endcomment -%}
+{%- assign ordered_ids = "" | split: "" -%}
+{%- for nav in site.nav_reading -%}
+  {%- assign nav_url = nav.url | default: "" -%}
+  {%- if nav_url contains "#" -%}
+    {%- assign anchor_id = nav_url | split: "#" | last -%}
+    {%- if anchor_id != "" -%}
+      {%- assign ordered_ids = ordered_ids | push: anchor_id -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} 2. Build the ordered sections list:
+       a) sections referenced in nav_reading, in nav_reading order
+       b) sections NOT referenced, appended in collection natural order
+{%- endcomment -%}
+{%- assign ordered_sections = "" | split: "" -%}
+{%- for id in ordered_ids -%}
+  {%- for s in site.sections -%}
+    {%- if s.slug == id -%}
+      {%- assign ordered_sections = ordered_sections | push: s -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+{%- for s in site.sections -%}
+  {%- assign already_included = false -%}
+  {%- for id in ordered_ids -%}
+    {%- if s.slug == id -%}{%- assign already_included = true -%}{%- endif -%}
+  {%- endfor -%}
+  {%- if already_included == false -%}
+    {%- assign ordered_sections = ordered_sections | push: s -%}
+  {%- endif -%}
+{%- endfor -%}
+
 <script>
 window.SITE = {
   title: {{ site.title | jsonify }},
   subtitle: {{ site.subtitle | jsonify }},
   hero: {{ site.hero | jsonify }},
   nav: {{ site.nav_reading | default: site.nav | jsonify }},
-  // Unified sections list (renderer-flagged via `kind`, positioned via `slot`).
-  // Replaces the legacy `registers:` + `coda:` config blocks; the React app
-  // groups by slot and renders kind-aware.
-  sections: {{ site.sections | jsonify }},
+  // Unified sections list (renderer-flagged via `kind`, positioned via `slot`,
+  // ordered within each slot via `nav_reading`). Composed above from the
+  // `_sections/*.md` collection. The React app groups by slot and renders
+  // kind-aware.
+  sections: [
+    {%- for s in ordered_sections -%}
+      {
+        "id":     {{ s.slug | jsonify }},
+        "kind":   {{ s.kind | jsonify }},
+        "slot":   {{ s.slot | jsonify }},
+        "kicker": {{ s.kicker | default: "" | jsonify }},
+        "title":  {{ s.title | default: "" | jsonify }},
+        "body":   {{ s.content | strip | jsonify }},
+        "items":  {{ s.items | default: empty | jsonify }}
+      }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ],
   themeDefaults: {{ site.theme_defaults | jsonify }}
 };
 

@@ -55,128 +55,27 @@ nav_reading:
   - { label: "Author", url: "#author" }
   - { label: "News", url: "#news" }
 
-# ---- Unified sections list -------------------------------------------------
-# One list, in render order within each `slot`. `kind` selects the renderer:
+# ---- Landing-page sections -------------------------------------------------
+# Section content lives in `_sections/<id>.md` as Markdown + YAML frontmatter,
+# not inline here. Each section file's frontmatter declares:
 #
-#   register   → bordered definition bar (used for QC and EFI)
-#   coda       → standard prose section (Book, Author, Resources)
-#   news       → live news list pulled from _data/news.yml (no body needed)
-#   epigraphs  → cumulative scroll-reveal of `items` blockquotes
+#   kind     — register | coda | news | epigraphs   (selects the React renderer)
+#   slot     — pre-stepper | pre-scrolly | post-scrolly | post-coda  (placement)
+#   kicker   — small overline above the title (optional)
+#   title    — section heading (optional for `news`/`epigraphs`)
+#   items    — for `kind: epigraphs`, a list of {quote, cite}
 #
-# `slot` selects WHERE in the page flow the section renders:
+# The section's body is the Markdown (or HTML) under the frontmatter.
 #
-#   pre-stepper   → between the hero and the parts stepper
-#   pre-scrolly   → between the stepper and the scrolly figure (frames the parts)
-#   post-scrolly  → between the scrolly figure and the bottom block (closes the parts)
-#   post-coda     → at the bottom of the page
+# WITHIN each slot, render order is driven by `nav_reading` below: any
+# `nav_reading` entry of the form `{ url: "#some-id" }` puts the section
+# whose filename matches `some-id` at that position. Sections not referenced
+# in `nav_reading` render after the named ones, in collection natural order
+# (alphabetical by filename).
 #
-# Section `id` becomes the DOM anchor (e.g. clicking the QC bracket on the
-# parts stepper jumps to #quant-chauvinism). Reorder freely; the React app
-# rebuilds hero kicker links from sections of kind `register`.
-sections:
-
-  - id: "bartlett"
-    kind: epigraphs
-    slot: pre-stepper
-    items:
-      - quote: "The greatest shortcoming of the human race is our inability to understand the exponential function."
-        cite: "Al Bartlett, 1972"
-      - quote: "Immigration is the main driver of population growth in the U.S. … therefore any discussion of sustainability in the U.S. must address the need to reduce or eliminate immigration, both legal and illegal, into the U.S."
-        cite: "Al Bartlett"
-      - quote: "Anyone who thinks that you can stop population growth to save the environment without reducing immigration is innumerate."
-        cite: "Al Bartlett"
-
-  - id: "quant-chauvinism"
-    kind: coda
-    slot: pre-scrolly
-    kicker: "epistemic register · i"
-    title: "Quantitative Chauvinism"
-    body: >-
-      <em>n.</em> A political operation: the deployment of numerical
-      instruments to foreclose political deliberation by converting contested
-      claims into apparent technical necessities. It operates through three
-      reinforcing patterns — the <b>will to simplify</b> (compressing complex
-      social processes into a single governing metric), the <b>rule of
-      expertise</b> (insulating quantified claims from democratic scrutiny
-      through credentialed authority), and the <b>politics of inevitability</b>
-      (converting conditional projections into mandates that foreclose
-      political choice).
-
-  - id: "ecofascist-imaginaries"
-    kind: coda
-    slot: post-scrolly
-    kicker: "political register · ii"
-    title: "Ecofascist Imaginaries"
-    body: >-
-      <em>n.</em> Organized visions of environmental futures that naturalize
-      hierarchy and exclusion as ecological necessity.  ecofascist imaginaries 
-      become analytically recognizable through four diagnostic elements: 
-      
-      Threat objects are the entities cast as sources of ecological and social danger
-      — overpopulation, immigrants, racial minorities, fertility decline — and what 
-      unifies them is that each is rendered as a demographic category rather than a structural condition. 
-      
-      Moral warrants are the justificatory frameworks that convert coercive governance into ethical obligation, 
-      as when Bartlett's freight-train metaphor positioned collateral harm as the reluctant response of realistic 
-      stewards to a physical constraint. 
-      
-      Action repertoires are the policy instruments these imaginaries authorize, ranging from 
-      coercive fertility controls and exclusionary border regimes to family
-      separation, managed abandonment, and mass violence presented as defense. 
-      
-      Aesthetic signatures are the visual, temporal, and affective markers — 
-      countdown charts, threshold rhetoric, emergency metaphors, the tutorial register — 
-      that train audiences to read deliberation as dangerous delay.
-      
-      Made durable though imaginaries and the laws, infrastructures, and administrative routines that enact them.
-
-  - id: "book"
-    kind: coda
-    slot: pre-stepper
-    kicker: "about"
-    title: "The Book"
-    body: >-
-      <i>The Greatest Shortcoming</i> traces a hundred years of American
-      demographic and environmental governance — from the Olmsted Report's
-      grammar of scarcity to climate triage as administrative routine. It
-      identifies the actors who built the instruments, the organizations that
-      circulated them, the metaphors that made them persuasive, and the
-      political projects they served. And it asks whether measurement can be
-      redirected: whether the same quantitative tools that narrowed the circle
-      of concern can be rebuilt to widen it.
-
-  - id: "author"
-    kind: coda
-    slot: pre-stepper
-    kicker: "about"
-    title: "The Author"
-    body: >-
-      Brian C. Keegan, Ph.D. is a computational social scientist and an associate
-      professor of information science at the University of Colorado Boulder.
-      He received undergraduate degrees from MIT, M.A. and Ph.D. degrees from
-      Northwestern University's School of Communication, and completed post-doctoral
-      training at Northeastern University and the Harvard Business School. He
-      currently resides in Boulder, Colorado with his wife and two sons.
-
-  - id: "news"
-    kind: news
-    slot: post-coda
-    kicker: "latest"
-    title: "News"
-
-  - id: "resources"
-    kind: coda
-    slot: post-coda
-    kicker: "further"
-    title: "Resources"
-    body: >-
-      Selected works referenced in chapter 1: Theodore Porter, <i>Trust in
-      Numbers</i>; Alain Desrosières, <i>The Politics of Large Numbers</i>;
-      Hannah Arendt, <i>The Origins of Totalitarianism</i>; Matthew Connelly,
-      <i>Fatal Misconception</i>; Emily Klancher Merchant, <i>Building the
-      Population Bomb</i>; Betsy Hartmann, <i>Reproductive Rights and
-      Wrongs</i>; Sheila Jasanoff &amp; Sang-Hyun Kim, <i>Dreamscapes of
-      Modernity</i>; Roger Griffin on palingenetic ultranationalism.
+# To add a new section:  drop a file in `_sections/`, set frontmatter, and
+# (optionally) add an entry to `nav_reading` to control where it lands within
+# its slot.
 
 # ---- Theme tokens (overridable knobs) --------------------------------------
 theme_defaults:
@@ -199,13 +98,19 @@ permalink: pretty
 
 # ---- Collections -----------------------------------------------------------
 # `chapters`: drafted chapters and the preface at /chapters/<slug>/
+# `sections`: landing-page section content (book / author / register defs /
+#             news / resources / epigraphs). Not output as standalone pages —
+#             rendered into the React shell via _includes/site-data.html.
 collections:
   chapters:
     output: true
     permalink: /chapters/:path/
+  sections:
+    output: false
 
 # Default layouts per scope. Pages at the root pick up `default`; chapter
-# collection items mount the React scrollytelling shell.
+# collection items mount the React scrollytelling shell. Sections inherit
+# nothing — they are read as data, not rendered as pages.
 defaults:
   - scope: { path: "" }
     values:

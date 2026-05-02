@@ -147,10 +147,25 @@ h3 { font-size: 1.3rem; font-style: italic; }
   line-height: var(--def-bar-line-height);
   color: var(--ink);
 }
+/* Section bodies are rendered Markdown from _sections/<id>.md and arrive
+   wrapped in a <div class="section-body">. Place that wrapper in the same
+   grid column the legacy direct <p> used to occupy, and reapply the body
+   typography to its inner paragraphs (which now stack in document flow). */
+.def-inner .section-body {
+  grid-column: 2; max-width: 720px;
+}
+.def-inner .section-body p {
+  margin: 0;
+  font-size: var(--def-bar-body-size);
+  line-height: var(--def-bar-line-height);
+  color: var(--ink);
+}
+.def-inner .section-body p + p { margin-top: 0.8em; }
 .def-inner .kicker { grid-column: 1; grid-row: 1 / span 99; }
 @media (max-width: 760px) {
   .def-inner { grid-template-columns: 1fr; gap: 8px; }
-  .def-inner .kicker, .def-inner h3, .def-inner p { grid-column: 1; }
+  .def-inner .kicker, .def-inner h3, .def-inner p,
+  .def-inner .section-body { grid-column: 1; }
   .def-bar { padding: 28px 20px; }
 }
 .hero .deck {
@@ -461,6 +476,10 @@ h3 { font-size: 1.3rem; font-style: italic; }
 .coda + .coda { margin-top: 8px; }
 .coda h2 { font-size: 2.4rem; margin-top: 8px; }
 .coda p { font-size: 1.08rem; }
+/* Multi-paragraph section bodies need spacing between paragraphs. The
+   wrapper itself is laid out in normal flow; the rule below also covers
+   the legacy single-paragraph bodies (where it has no effect). */
+.coda .section-body p + p { margin-top: 0.8em; }
 
 .footer {
   border-top: 1px solid var(--rule); padding: 24px 28px; max-width: 1100px; margin: 0 auto;
