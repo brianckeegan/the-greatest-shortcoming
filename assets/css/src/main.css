@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300..900;1,300..900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-feature-settings: 'ss01', 'ss02';
+  }
+  ::selection {
+    @apply bg-accent text-canvas;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-accent;
+    outline-style: solid;
+  }
+}
+
+@layer components {
+  /* Editorial chrome */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:bg-ink focus:text-canvas;
+  }
+
+  /* Paper-grain background overlay — applied to <main> on the homepage */
+  .paper-texture {
+    position: relative;
+    isolation: isolate;
+  }
+  .paper-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(18, 18, 18, 0.025) 0, transparent 60%),
+      radial-gradient(circle at 80% 70%, rgba(61, 75, 64, 0.04) 0, transparent 55%);
+    pointer-events: none;
+  }
+
+  /* Ambient accent glow — drifts subtly behind the hero */
+  .ambient-drift {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .ambient-drift::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    width: 480px;
+    height: 480px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(61, 75, 64, 0.08), transparent 65%);
+    filter: blur(120px);
+    animation: drift 25s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-drift::after { animation: none; }
+  }
+
+  /* Cards */
+  .deckle-card {
+    @apply rounded-lg border border-clay/60 bg-canvas/40 p-6 backdrop-blur-sm transition;
+    box-shadow: 0 1px 0 rgba(18, 18, 18, 0.02), 0 8px 24px -16px rgba(18, 18, 18, 0.08);
+  }
+  .deckle-card:hover {
+    @apply -translate-y-0.5 border-accent/60;
+    box-shadow: 0 1px 0 rgba(18, 18, 18, 0.04), 0 16px 32px -20px rgba(18, 18, 18, 0.16);
+  }
+  .deckle-card-solid {
+    @apply rounded-lg border border-clay bg-canvas p-6 transition;
+  }
+  .skill-card-featured {
+    @apply rounded-lg border-2 p-6 transition relative overflow-hidden;
+    background-image: linear-gradient(135deg, rgba(61, 75, 64, 0.92), rgba(18, 18, 18, 0.96));
+    border-color: rgba(61, 75, 64, 0.5);
+    color: theme('colors.canvas');
+  }
+  .skill-card-featured:hover {
+    @apply -translate-y-0.5;
+    border-color: rgba(61, 75, 64, 0.9);
+  }
+
+  /* Tiny labels */
+  .kicker {
+    @apply font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-mist;
+  }
+  .hook-badge {
+    @apply inline-block rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-canvas transition hover:bg-accent;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 rounded-md border border-ink/30 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-ink transition hover:border-accent hover:text-accent;
+  }
+
+  /* Nav-link underline animation */
+  .nav-link {
+    @apply relative text-sm text-ink/80 transition hover:text-ink;
+  }
+  .nav-link::after {
+    content: '';
+    @apply absolute left-0 -bottom-1 h-px w-0 bg-accent transition-all duration-300;
+  }
+  .nav-link:hover::after,
+  .nav-link[aria-current='page']::after {
+    @apply w-full;
+  }
+
+  /* Scroll-revealed sections (progressive enhancement; no-JS visible too) */
+  .scroll-reveal {
+    @apply animate-reveal;
+  }
+}

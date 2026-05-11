@@ -1,0 +1,29 @@
+{%- comment -%}
+  Homepage hero. Fraunces title, Plus Jakarta Sans deck, two CTAs.
+  Ambient drift glow + paper texture overlay.
+{%- endcomment -%}
+<section class="relative overflow-hidden border-b border-clay/40">
+  <div class="ambient-drift" aria-hidden="true"></div>
+  <div class="mx-auto max-w-7xl px-6 pt-24 pb-32 lg:px-8 lg:pt-32 lg:pb-40 animate-page-in">
+    <p class="kicker">{{ site.status_line }}</p>
+    <h1 class="mt-6 font-display text-[clamp(2.75rem,9vw,7rem)] font-light leading-[0.95] tracking-tight text-ink">
+      {%- for line in site.hero.title_lines -%}
+        <span class="block">{{ line }}</span>
+      {%- endfor -%}
+    </h1>
+    {% if site.subtitle %}
+      <p class="mt-6 font-display text-2xl italic font-light text-mist md:text-3xl">{{ site.subtitle }}</p>
+    {% endif %}
+    <p class="mt-10 max-w-3xl text-lg font-light leading-relaxed text-ink/80 md:text-xl">
+      {{ site.hero.deck }}
+    </p>
+    <div class="mt-12 flex flex-wrap items-center gap-3">
+      <a class="btn-primary" href="#prelude">
+        Read the book <span aria-hidden="true">↓</span>
+      </a>
+      <a class="btn-outline" href="{{ '/about/' | relative_url }}">
+        About this project
+      </a>
+    </div>
+  </div>
+</section>
