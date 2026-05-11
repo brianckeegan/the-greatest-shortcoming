@@ -120,3 +120,8 @@ exclude:
   - assets/css/src
   - esbuild.config.mjs
   - tsconfig.json
+  # vendor/ and .bundle/ are created by ruby/setup-ruby with bundler-cache: true.
+  # Without this exclude, Jekyll tries to process gem site_template files
+  # (e.g. jekyll-*/lib/site_template/_posts/*.erb) and errors out.
+  - vendor
+  - .bundle
