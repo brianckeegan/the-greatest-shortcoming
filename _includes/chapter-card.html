@@ -1,7 +1,10 @@
 {%- comment -%}
-  Chapter card on the homepage and any TOC.
-  Pass: {% include chapter-card.html ch=<a-_chapters/*.md-doc> part=<optional-part-from-_data/parts.yml> %}
-  Or:   {% include chapter-card.html ch=<a-_data/chapters.yml-entry> %} for legacy data-driven cards.
+  Chapter card used on the homepage and any TOC.
+  Params:
+    ch   (required) — a chapter object. Either a _chapters/*.md document
+                      or a _data/chapters.yml entry. Reads: slug, num, title,
+                      status (or abstract_status), url, pitch, abstract.
+    part (optional) — a _data/parts.yml entry. Reads: kicker, blurb, start, end.
 {%- endcomment -%}
 {%- assign ch = include.ch -%}
 {%- assign part = include.part -%}
