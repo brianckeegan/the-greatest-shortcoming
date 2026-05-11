@@ -1,21 +1,40 @@
 {%- comment -%}
-  Render a chapter card on the TOC.
-  Pass: include chapter-card.html ch=<one-entry-from-_data/chapters.yml>
+  Chapter card on the homepage and any TOC.
+  Pass: {% include chapter-card.html ch=<a-_chapters/*.md-doc> part=<optional-part-from-_data/parts.yml> %}
+  Or:   {% include chapter-card.html ch=<a-_data/chapters.yml-entry> %} for legacy data-driven cards.
 {%- endcomment -%}
 {%- assign ch = include.ch -%}
-<article class="ch-card ch-card--{{ ch.status }}">
-  <p class="kicker ch-card__num">Chapter {{ ch.num }}</p>
-  <h3 class="ch-card__title">
-    {% if ch.status == "drafted" or ch.slug == "preface" %}
-      <a href="{{ '/chapters/' | append: ch.slug | append: '/' | relative_url }}">
-        {{ ch.title | default: 'Untitled' }}
-      </a>
+{%- assign part = include.part -%}
+{%- assign status = ch.status | default: ch.abstract_status | default: 'drafted' -%}
+{%- assign slug = ch.slug -%}
+{%- if ch.url -%}{%- assign href = ch.url -%}{%- else -%}{%- assign href = '/chapters/' | append: slug | append: '/' -%}{%- endif -%}
+{%- assign drafted = false -%}
+{%- if status == "drafted" or status == "draft" or slug == "preface" or slug == "00-preface" -%}{%- assign drafted = true -%}{%- endif -%}
+<article class="deckle-card group flex h-full flex-col">
+  <div class="flex items-start justify-between gap-3">
+    <p class="kicker">Chapter {{ ch.num }}{% if part %} · {{ part.kicker }}{% endif %}</p>
+    <span class="hook-badge bg-clay/40 text-ink/80">{{ status | capitalize }}</span>
+  </div>
+  <h3 class="mt-4 font-display text-2xl font-light leading-tight text-ink">
+    {% if drafted %}
+      <a class="no-underline hover:text-accent" href="{{ href | relative_url }}">{{ ch.title | default: 'Untitled' }}</a>
     {% else %}
       {{ ch.title | default: 'Forthcoming' }}
     {% endif %}
   </h3>
-  <p class="ch-card__status">
-    <span class="status-badge status-badge--{{ ch.status }}">{{ ch.status | capitalize }}</span>
-  </p>
-  {% if ch.pitch %}<p class="ch-card__pitch">{{ ch.pitch }}</p>{% endif %}
+  {% if part and part.blurb %}
+    <p class="mt-3 text-sm leading-relaxed text-ink/70">{{ part.blurb }}</p>
+  {% elsif ch.pitch %}
+    <p class="mt-3 text-sm leading-relaxed text-ink/70">{{ ch.pitch }}</p>
+  {% elsif ch.abstract %}
+    <p class="mt-3 text-sm leading-relaxed text-ink/70">{{ ch.abstract | markdownify | strip_html | truncatewords: 32 }}</p>
+  {% endif %}
+  <div class="mt-auto flex items-center gap-2 pt-6 text-xs text-mist">
+    {% if part %}
+      {%- if part.start and part.end -%}<span class="font-mono">{{ part.start }}–{{ part.end }}</span>{%- endif -%}
+    {% endif %}
+    {% if drafted %}
+      <span class="ml-auto font-mono text-accent group-hover:translate-x-0.5 transition">Read →</span>
+    {% endif %}
+  </div>
 </article>

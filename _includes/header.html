@@ -1,60 +1,61 @@
 {%- comment -%}
-  Static-page header: HTML/CSS mirror of the React <Header> in app.jsx so the
-  chrome on /about/, /news/, /contents/, /bibliography/, /draft-status/ matches
-  the React-rendered chrome on / and /chapters/*. The Eras menu links into the
-  homepage scrollytelling sections (e.g. /#step-prelude).
+  Sticky frosted nav. Mirrors the chrome from skills.amditis.tech:
+  brand left, links + GitHub CTA right, scroll-state via JS class swap.
 {%- endcomment -%}
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="top-header">
-  <div class="title">
-    <a href="{{ '/' | relative_url }}" style="color: inherit; text-decoration: none;">
-      <b>{{ site.title }}</b>{% if site.subtitle %} <span style="color: var(--ink-soft)">· {{ site.subtitle }}</span>{% endif %}
+<header id="site-header" class="sticky top-0 z-40 border-b border-clay/40 bg-canvas/80 backdrop-blur transition-colors">
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+    <a href="{{ '/' | relative_url }}" class="group flex items-baseline gap-3 no-underline">
+      <span class="font-display text-2xl font-light leading-none">T<span class="text-accent">.</span></span>
+      <span class="hidden text-[10px] font-bold uppercase tracking-[0.25em] text-mist md:inline">{{ site.title }}</span>
     </a>
+
+    <nav class="flex items-center gap-6" aria-label="Primary">
+      <details class="relative hidden md:block">
+        <summary class="nav-link cursor-pointer list-none">
+          Eras
+          <span aria-hidden="true" class="ml-1 text-mist">▾</span>
+        </summary>
+        <div class="absolute right-0 mt-2 w-64 rounded-md border border-clay/60 bg-canvas p-2 shadow-lg">
+          {% for part in site.data.parts %}
+            {%- assign part_kind = part.kind | default: 'step' -%}
+            {%- if part_kind != 'step' -%}{% continue %}{%- endif -%}
+            <a href="{{ '/#' | append: part.id | relative_url }}" class="flex items-baseline justify-between gap-3 rounded px-3 py-2 text-sm text-ink/80 hover:bg-clay/30 hover:text-ink no-underline">
+              <span class="font-display">{{ part.title }}</span>
+              {%- if part.start and part.end -%}
+                <span class="text-xs text-mist">{{ part.start }}–{{ part.end }}</span>
+              {%- endif -%}
+            </a>
+          {% endfor %}
+        </div>
+      </details>
+
+      {% for item in site.nav %}
+        {%- assign is_current = false -%}
+        {%- if item.url == "/" and page.url == "/" -%}{%- assign is_current = true -%}{%- endif -%}
+        {%- if item.url != "/" and page.url contains item.url -%}{%- assign is_current = true -%}{%- endif -%}
+        <a class="nav-link hidden md:inline" href="{{ item.url | relative_url }}"{% if is_current %} aria-current="page"{% endif %}>{{ item.label }}</a>
+      {% endfor %}
+
+      <a class="btn-primary" href="https://github.com/brianckeegan/the-greatest-shortcoming">
+        <span class="hidden sm:inline">GitHub</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </nav>
   </div>
-  <nav class="nav-main" aria-label="Primary">
-    <div class="menu-wrap" id="static-parts-menu">
-      <button class="menu-btn" type="button" aria-haspopup="true" aria-expanded="false"
-              onclick="this.classList.toggle('open');this.nextElementSibling.style.display=this.classList.contains('open')?'block':'none';this.setAttribute('aria-expanded', this.classList.contains('open'));event.stopPropagation();">
-        Eras<span class="caret">▼</span>
-      </button>
-      <div class="menu-pop" style="display:none">
-        {% for part in site.data.parts %}
-          {%- assign part_kind = part.kind | default: 'step' -%}
-          {%- if part_kind != 'step' -%}{% continue %}{%- endif -%}
-          {%- assign part_years = '' -%}
-          {%- if part.start and part.end -%}
-            {%- assign part_years = part.start | append: ' – ' | append: part.end -%}
-          {%- elsif part.subtitle -%}
-            {%- assign part_years = part.subtitle -%}
-          {%- endif -%}
-          <a href="{{ '/#part-' | append: part.id | relative_url }}">
-            <span>{{ part.title }}</span>
-            <span class="yrs">{{ part_years }}</span>
-          </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% for item in site.nav %}
-      {%- assign is_current = false -%}
-      {%- if item.url == "/" and page.url == "/" -%}{%- assign is_current = true -%}{%- endif -%}
-      {%- if item.url != "/" and page.url contains item.url -%}{%- assign is_current = true -%}{%- endif -%}
-      <a class="menu-btn"
-         href="{{ item.url | relative_url }}"
-         {% if is_current %}aria-current="page" style="background: var(--rule);"{% endif %}>{{ item.label }}</a>
-    {% endfor %}
-  </nav>
 </header>
 <script>
   (function () {
-    var menu = document.getElementById('static-parts-menu');
-    if (!menu) return;
-    document.addEventListener('click', function (e) {
-      if (menu.contains(e.target)) return;
-      var btn = menu.querySelector('.menu-btn');
-      var pop = menu.querySelector('.menu-pop');
-      btn.classList.remove('open');
-      pop.style.display = 'none';
-      btn.setAttribute('aria-expanded', 'false');
-    });
+    var header = document.getElementById('site-header');
+    if (!header) return;
+    var onScroll = function () {
+      if (window.scrollY > 50) {
+        header.classList.add('shadow-sm', 'bg-canvas/90');
+      } else {
+        header.classList.remove('shadow-sm', 'bg-canvas/90');
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   })();
 </script>

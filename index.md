@@ -1,5 +1,5 @@
 ---
-layout: scrolly
+layout: home
 permalink: /
 page_kind: home
 page_id: home

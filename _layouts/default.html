@@ -1,25 +1,19 @@
 <!doctype html>
-<html lang="{{ site.lang | default: 'en' }}" data-surface="site" data-theme="warm">
+<html lang="{{ site.lang | default: 'en' }}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% if page.title %}{{ page.title }} — {% endif %}{{ site.title }}{% if page.title == nil and site.subtitle %} — {{ site.subtitle }}{% endif %}</title>
   <meta name="description" content="{{ page.description | default: site.description | strip_newlines }}" />
   {%- seo title=false -%}
-
-  <!-- Scrolly base provides the design language (fonts, palette, typography). -->
-  <link rel="stylesheet" href="{{ '/assets/css/scrolly.css' | relative_url }}" />
-  <!-- Landing-site layout patterns built on top of scrolly's tokens. -->
-  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}" />
+  <link rel="stylesheet" href="{{ '/assets/css/dist/main.css' | relative_url }}" />
   {% include head-extra.html %}
 </head>
-<body class="surface-site">
+<body>
   {% include header.html %}
-
-  <main class="page-wrap" id="main">
+  <main id="main" class="mx-auto max-w-3xl px-6 py-16 lg:py-24">
     {{ content }}
   </main>
-
   {% include footer.html %}
 </body>
 </html>

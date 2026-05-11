@@ -1,13 +1,13 @@
 # ============================================================================
-# greatest-shortcoming · scrollytelling book site
+# greatest-shortcoming · book site
 # ============================================================================
-# One unified design across every page. The homepage and each chapter page
-# mount the same React shell at /assets/js/app.jsx; static pages share the
-# same chrome rendered as plain HTML. Design tokens live in
-# assets/css/scrolly.css → _sass/tgs.scss.
+# Server-rendered Jekyll site styled with Tailwind CSS (built via Vite in CI).
+# Layouts: _layouts/home.html (landing) · _layouts/chapter.html (long-form) ·
+# _layouts/default.html / page.html (static). Tailwind tokens live in
+# tailwind.config.js; component recipes in assets/css/src/main.css.
 #
-# Edit this file to retitle, recolor, and rewire. Add chapters in
-# _data/chapters.yml. Add network entities under _data/{people,orgs,...}.yml.
+# Edit this file to retitle, recolor, and rewire. Chapter content lives in
+# _chapters/*.md; landing-item content in _landing/*.md.
 
 # ---- Site identity ---------------------------------------------------------
 title: "The Greatest Shortcoming"
@@ -18,12 +18,20 @@ description: >-
   change into technical problems subject to "objective" numerical analysis —
   and how those quantitative logics travel from progressive city councils to
   the journals of white nationalists.
-url: "https://www.thegreatestshortcoming.com"           # e.g. "https://brianckeegan.github.io"
-baseurl: ""       # e.g. "/the-greatest-shortcoming" if deploying under a path
+url: "https://www.thegreatestshortcoming.com"
+baseurl: ""
 lang: en
 # To set a custom domain: create a CNAME file at the repo root with the domain
 # (e.g. greatestshortcoming.com), then enable HTTPS under Settings → Pages.
 status_line: "in progress"
+
+# ---- Feature flags ---------------------------------------------------------
+# The scrollytelling network and the QC×EFI matrix are paused. All source
+# files remain in the repo (assets/js/islands/**, assets/js/dist/islands.js,
+# _data/scrolly/*.yml, assets/css/scrolly-network.css) — flip features.network
+# to true and add the network mount include to a layout to revive it.
+features:
+  network: false
 
 # ---- Hero (homepage) -------------------------------------------------------
 hero:
@@ -35,63 +43,29 @@ hero:
     the journals of white nationalists.
   scroll_cue: "scroll to begin"
 
-# ---- Top-level navigation (static-page header) -----------------------------
-# Used by _includes/header.html on /about/, /contents/, /bibliography/, /news/,
-# /draft-status/. The React shell on the homepage and chapter pages renders
-# its own nav from `nav_reading` further down.
+# ---- Top-level navigation --------------------------------------------------
+# Used by _includes/header.html across every page.
 nav:
   - { label: "Contents",     url: "/contents/" }
   - { label: "Preface",      url: "/chapters/preface/" }
   - { label: "About",        url: "/about/" }
   - { label: "News",         url: "/news/" }
 
-# ---- Scrollytelling navigation (used by the React app on home + chapters) --
-# This list is NAVIGATION ONLY. It does not determine the order in which
-# landing-page items render — that is controlled exclusively by `sort_order`
-# in each `_landing/<id>.md` file. Anchor entries here flagged `nav_only: true`
-# are pure jump-to-id menu links; they have zero effect on page-flow ordering.
-nav_reading:
-  # `kind: parts-menu` renders the navbar dropdown of every part. The `label`
-  # field is what the user sees on the menu button — keep it as "Eras" for
-  # this site, or rename to "Parts", "Chapters", "Acts", etc.
-  - { label: "Eras", kind: "parts-menu" }
-  - { label: "Matrix", url: "#qc-efi-matrix", nav_only: true }
-  - { label: "Book",   url: "#book",          nav_only: true }
-  - { label: "Author", url: "#author",        nav_only: true }
-  - { label: "News",   url: "#news",          nav_only: true }
-
 # ---- Landing-page items ----------------------------------------------------
-# Item content lives in `_landing/<id>.md` as Markdown + YAML frontmatter,
-# not inline here. Each file's frontmatter declares:
+# Each _landing/<id>.md declares (in YAML frontmatter):
 #
 #   kind        — coda | register | news | epigraphs | island   (renderer)
-#   sort_order  — integer; lower numbers render first.   THE ONLY ORDER SOURCE.
-#   home_only   — optional bool; when true, item is hidden on chapter pages.
+#   sort_order  — integer; lower numbers render first within a kind-section.
+#   home_only   — optional; reserved for future use.
 #   kicker      — small overline above the title (optional)
 #   title       — heading (optional for `news`/`epigraphs`)
 #   items       — for `kind: epigraphs`, a list of {quote, cite}
 #   island      — for `kind: island`, the window global to render
+#                  (only rendered when features.network: true).
 #
-# Reserved sort_order values (defined in assets/js/app.jsx; the React app
-# interleaves these structural elements between landing items by sort_order):
-#
-#   200 — eras stepper (the QC | parts | EFI navbar stepper)
-#   300 — scrolly figure (the network SVG)
-#
-# So an item with sort_order < 200 renders before the stepper; sort_order
-# 201–299 renders between stepper and figure; sort_order 301+ renders below
-# the figure. Conventional spacing: number items in steps of 10 or 50 so new
-# items can slot in without renumbering.
-#
-# To add a new landing item:  drop a file in `_landing/`, set `sort_order:`,
-# and (optionally) add a `nav_reading` jump-link entry above with
-# `nav_only: true`.
-
-# ---- Theme tokens (overridable knobs) --------------------------------------
-theme_defaults:
-  theme: "cool"      # "warm" | "ivory" | "cool"
-  net: "rough"       # "rough" | "clean"
-  fontSize: 20
+# _layouts/home.html groups landing items by `kind` into numbered sections
+# after the Parts/Chapters sections — see _layouts/home.html for the exact
+# section order (book, author, epigraphs, coda, news, resources, island).
 
 # ---- Footer ----------------------------------------------------------------
 footer:
@@ -109,9 +83,8 @@ permalink: pretty
 # ---- Collections -----------------------------------------------------------
 # `chapters`: drafted chapters and the preface at /chapters/<slug>/
 # `landing`:  landing-page item content (book / author / register defs /
-#             news / resources / epigraphs / matrix). Not output as
-#             standalone pages — rendered into the React shell via
-#             _includes/site-data.html in `sort_order` order.
+#             news / resources / epigraphs / island). Read as data by
+#             _layouts/home.html; not output as standalone pages.
 collections:
   chapters:
     output: true
@@ -119,16 +92,13 @@ collections:
   landing:
     output: false
 
-# Default layouts per scope. Pages at the root pick up `default`; chapter
-# collection items mount the React scrollytelling shell. Landing items
-# inherit nothing — they are read as data, not rendered as pages.
 defaults:
   - scope: { path: "" }
     values:
       layout: "default"
   - scope: { path: "", type: "chapters" }
     values:
-      layout: "scrolly"
+      layout: "chapter"
       page_kind: "chapter"
   - scope: { path: "pages" }
     values:
@@ -142,3 +112,11 @@ exclude:
   - CLAUDE.md
   - scripts
   - node_modules
+  - package.json
+  - package-lock.json
+  - vite.config.js
+  - tailwind.config.js
+  - postcss.config.js
+  - assets/css/src
+  - esbuild.config.mjs
+  - tsconfig.json

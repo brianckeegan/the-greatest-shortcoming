@@ -1,0 +1,23 @@
+{%- comment -%}
+  Numbered section wrapper. Params:
+    include.num     — section number (string, e.g. "00", "06")
+    include.kicker  — small overline text
+    include.title   — italic display title
+    include.count   — optional count badge ("3 Chapters")
+    include.count_label — label after the count (e.g. "Chapters", "Items")
+    include.id      — anchor id
+  The wrapping <section> is opened here; the homepage layout closes it after
+  emitting the inner grid (we use Liquid's `capture` pattern via raw HTML).
+{%- endcomment -%}
+<section id="{{ include.id }}" class="relative mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-24">
+  <header class="mb-12 flex items-end justify-between gap-6 border-b-2 border-accent/10 pb-6">
+    <div>
+      <p class="font-mono text-xs font-bold uppercase tracking-[0.3em] text-mist">{{ include.num }} · {{ include.kicker }}</p>
+      <h2 class="mt-3 font-display text-4xl font-light italic leading-tight text-ink md:text-5xl">{{ include.title }}</h2>
+    </div>
+    {% if include.count %}
+      <p class="shrink-0 font-mono text-[10px] font-bold uppercase tracking-widest text-mist">
+        {{ include.count }} {{ include.count_label | default: 'items' }}
+      </p>
+    {% endif %}
+  </header>

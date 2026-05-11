@@ -1,39 +1,13 @@
 {%- comment -%}
-  Loaded inside <head>. Used for favicons, fonts, analytics, and the
-  pre-paint theme-mode setter. Both _layouts/default.html (landing
-  pages — also extended by _layouts/page.html) and _layouts/scrolly.html
-  (React scrollytelling) include this file, so every page on the site
-  gets the same head additions.
+  Loaded inside <head>. Favicons + meta. Theme-mode pre-paint was removed
+  with the Tailwind refactor (no dark-mode support yet).
 {%- endcomment -%}
 
-<!-- Favicons. Files live under /assets/favicon/ to keep the repo root tidy.
-     Modern browsers honor these <link rel="icon"> entries; only direct
-     /favicon.ico lookups (extensions, scrapers, very old browsers) will
-     404 against the moved file. -->
 <link rel="icon" href="{{ '/assets/favicon/favicon.ico' | relative_url }}" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon/favicon-32x32.png' | relative_url }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon/favicon-16x16.png' | relative_url }}">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/favicon/apple-touch-icon.png' | relative_url }}">
 <link rel="manifest" href="{{ '/assets/favicon/site.webmanifest' | relative_url }}">
-<meta name="theme-color" content="#fffff8">
-
-<!-- Theme mode setter — runs synchronously to avoid a flash of light/dark.
-     Reads localStorage first, then falls back to prefers-color-scheme.
-     Toggle is wired in _includes/header.html. -->
-<script>
-  (function () {
-    try {
-      var stored = localStorage.getItem("tgs-theme-mode");
-      var mode;
-      if (stored === "dark" || stored === "light") {
-        mode = stored;
-      } else {
-        mode = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-               ? "dark" : "light";
-      }
-      document.documentElement.setAttribute("data-theme-mode", mode);
-    } catch (e) {
-      document.documentElement.setAttribute("data-theme-mode", "light");
-    }
-  })();
-</script>
+<meta name="theme-color" content="#ede6d4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

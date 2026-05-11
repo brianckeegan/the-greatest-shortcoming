@@ -1,12 +1,15 @@
 {
-  "name": "the-greatest-shortcoming-islands",
-  "version": "0.1.0",
+  "name": "the-greatest-shortcoming",
+  "version": "0.2.0",
   "private": true,
-  "description": "TypeScript islands bundle for the scrollytelling shell.",
+  "description": "Jekyll site for The Greatest Shortcoming. Tailwind CSS built via Vite; islands TypeScript bundle (paused) built via esbuild.",
   "type": "module",
   "scripts": {
-    "build": "node esbuild.config.mjs",
-    "build:watch": "node esbuild.config.mjs --watch",
+    "build": "npm run build:css",
+    "build:css": "vite build",
+    "dev:css": "vite",
+    "build:islands": "node esbuild.config.mjs",
+    "build:islands:watch": "node esbuild.config.mjs --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,11 +22,16 @@
     "scrollama": "^3.2.0"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
     "@types/d3": "^7.4.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-scroll": "^1.8.10",
+    "autoprefixer": "^10.4.20",
     "esbuild": "^0.24.0",
-    "typescript": "^5.6.3"
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
   }
 }
