@@ -187,11 +187,15 @@ def main() -> None:
             if alias not in phrases:
                 problems.append(f"alias not covered by a replacement: {alias!r}")
 
-    # prev_slug files must exist; new slug files must be free (chapters)
+    # prev_slug files must exist; new slug files must be free (chapters).
+    # Tolerate an already-applied rename: if the prev_slug file is gone AND the
+    # new slug file is present on disk, the move was already done on a prior pass
+    # — that is the committed steady state, not a coverage failure (#1).
     for ch in meta["chapters"]:
         if ch.get("prev_slug") and ch["prev_slug"] not in (ch["slug"], "preface"):
             old = REPO / "_chapters" / f"{ch['prev_slug']}.md"
-            if not old.exists():
+            new = REPO / "_chapters" / f"{ch['slug']}.md"
+            if not old.exists() and not new.exists():
                 problems.append(f"chapter prev_slug missing on disk: {old.name}")
         if ch.get("status") in ("renamed+renumbered", "renumbered", "new"):
             new = REPO / "_chapters" / f"{ch['slug']}.md"
@@ -199,10 +203,13 @@ def main() -> None:
                 problems.append(f"new chapter would overwrite existing file: {new.name}")
 
     # ---- file moves ------------------------------------------------------
+    # Only plan a move whose source still exists. If the source is gone and the
+    # destination is present, the rename was already applied on a prior pass —
+    # planning it again would fail `git mv` and is not a rendered-surface change (#1).
     file_moves = []
     for ch in meta["chapters"]:
         ps = ch.get("prev_slug")
-        if ps and ps not in (ch["slug"], "preface"):
+        if ps and ps not in (ch["slug"], "preface") and (REPO / f"_chapters/{ps}.md").exists():
             file_moves.append({
                 "from": f"_chapters/{ps}.md", "to": f"_chapters/{ch['slug']}.md",
                 "redirect_from": f"/chapters/{ps}/"})
