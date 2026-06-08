@@ -129,21 +129,7 @@ exclude:
   - node_modules
   - package.json
   - package-lock.json
-  - "*.napkin"
-  - "Wireframes.html"
-  - "Greatest Shortcoming v1.html"
-  - "Greatest Shortcoming.html"
-  - "components.jsx"
-  - "pages.jsx"
-  - "design-canvas.jsx"
-  - "scrolly-network.jsx"
-  - "tweaks-panel.jsx"
-  - "data.js"
-  - "styles.css"
-  - "scrolly.css"
-  - "landing.html"
-  - "register-preview.html"
-  - "_preview"
+  - tailwind.config.js
 
 collections:
   chapters:
