@@ -4,43 +4,34 @@ num: "09"
 title: "Boulder Again"
 abstract_status: draft
 abstract: |
-  *Boulder Again* returns to the city the book opened in, a hundred years
-  later in argumentative time. It excavates what the chapter calls the
-  *primordial soup* — the late-nineteenth-century intellectual formation of
-  Darwinist biogeography, environmental determinism, eugenics, conservation
-  biology, and colonial spatial theory that circulated as respectable Western
-  science between roughly 1860 and 1920. Friedrich Ratzel&rsquo;s 1897
-  *Lebensraum*, Johan Rudolf Kjell&eacute;n&rsquo;s coinage of *geopolitik*,
-  the conservation-eugenics nexus, and the genealogy that connects American
-  Manifest Destiny to the Nazi *Ostkrieg* are read as the deep architecture
-  beneath every administrative instrument the book has documented. The
-  vocabulary of *Lebensraum* was condemned after 1945; the architecture was
-  not. The chapter then turns to three counter-traditions of environmental
-  thought — Black, Indigenous, and antifascist — that have been refusing
-  the architecture for as long as it has been operating, and develops, from
-  their convergent commitments, an *eco-cooperative* imaginary built on
-  sovereignty, resilience, and sociomaterial stewardship. It closes by
-  asking what *infrastructuring solidarity* would look like in Boulder, the
-  city where the book began.
+  *Boulder Again* returns to the city the book opened in. It begins with the
+  two obituaries that followed Albert Bartlett&rsquo;s death in 2013 — the
+  beloved physics professor of the *Daily Camera* and the movement hero of
+  John Tanton&rsquo;s *The Social Contract* — and sets aside the unanswerable
+  question of whether Bartlett was an ecofascist for a more revealing one:
+  what his *bacteria in a bottle* leaves out. Read as a *micro-macro
+  isomorphism*, the thought experiment strips from real bacteria exactly what
+  *lebensraum imaginaries* strip from human communities — feedback,
+  coordination, memory, and survival: quorum sensing, CRISPR-Cas immune
+  memory, persister cells, horizontal gene transfer. The chapter pairs the
+  five resistance traditions of the preceding chapter with these biological
+  capacities — guarding against biological determinism as it goes — then
+  grounds the argument in Boulder&rsquo;s own terrain: the Cheyenne and
+  Arapaho, the 1864 Sand Creek Massacre as the local precedent for what the
+  architecture produces under stress, and a deep-time coda of Flatirons, fire,
+  and heat. It closes by turning the nativist question of *who belongs* into
+  the question of what the valley owes the people a warming world will send.
 source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
-  - "Return"
-  - "The Primordial Soup"
-  - "The Biological Imaginary"
-  - "The Long Afterlife of Environmental Determinism"
-  - "Conservation Lebensraum"
-  - "Manifest Destiny as Predecessor"
-  - "The Politics of Calculation"
-  - "Counter-Traditions"
-  - "Eco-Cooperative Imaginaries"
-  - "Infrastructuring Solidarity"
+  - "The Bottle: What the Thought Experiment Assumes"
+  - "The Analogy: From Micro to Macro"
+  - "Recombinatory Futures"
+  - "Lessons for Deep Time"
 redirect_from: "/chapters/08-boulder-again/"
 ---
 
-<p class="aside"><i>From &sect;The Biological Imaginary, mid-chapter:</i></p>
+<p class="aside"><i>From &sect;The Bottle: What the Thought Experiment Assumes, mid-chapter:</i></p>
 
-<p>In 1897, the German geographer Friedrich Ratzel used the word <i>Lebensraum</i> in his <i>Politische Geographie</i> to describe the relationship between a population and the territory it occupies. In 1901, he extended the concept in a biogeographical essay that stated its core premise: the finite surface of the earth is the binding constraint on all life, and the struggle for survival is therefore a struggle for space. Ratzel&rsquo;s move was a translation of Darwin&rsquo;s &ldquo;struggle for life&rdquo; recast as a &ldquo;struggle for space,&rdquo; converting evolutionary biology into territorial politics. While Darwin&rsquo;s framework left room for adaptation, niche differentiation, and coexistence, Ratzel&rsquo;s compressed the biological world into a zero-sum contest over fixed terrain.</p>
+<p>Bartlett&rsquo;s &ldquo;greatest shortcoming&rdquo; thought experiment assumes a great deal. The bottle is closed. The medium is uniform. The bacteria are incapable of communication, adaptation, or behavioral change. The resources are simple and exhaustible. The growth is only exponential, with a fixed doubling time. There is no immune system, no environmental feedback, no genetic recombination, no symbiotic relationship, no quorum sensing, no biofilm formation, no horizontal gene transfer, no diauxic shift, no stress response, and no memory. Bartlett&rsquo;s bacteria are abstract counters whose only relevant property is their ability to double, and the bottle is an abstract container whose only relevant property is its finite capacity. The thought experiment is mathematically rigorous and biologically false at every step.</p>
 
-<p>Read Ratzel&rsquo;s premise alongside Bartlett&rsquo;s bacteria-in-a-bottle thought experiment. The catastrophe arrives in the final minutes, a recognition that is too late for intervention. The geographer tells his readers to consider the finite surface of the earth and the populations that draw on it. Both arguments rest on the same foundation: a bounded container, a growing population, and a natural law that governs the relationship between them. Both suppressed the same variables: social organization, technological adaptation, redistribution, political choice. Both converted a conditional projection into an unconditional destiny, and located the source of crisis in the count of population rather than the governance of the territory.</p>
-
-<p>Bartlett likely never read Ratzel but he did not need to. The naturalization of politics as biology is a recurring pattern because it performs what this book has called the will to simplify: it replaces an entire political economy with a single variable — the growth rate, the territorial limit, the carrying capacity — and it makes the replacement appear to be a discovery about nature rather than a choice about governance. The exponential curve, the closed bottle, the finite surface: these are portability engines. They compress complex political questions into simple arithmetic, and the arithmetic&rsquo;s authority forecloses the political questions it has absorbed. Ratzel articulated this operation in the language of biogeography. Bartlett articulated it in the language of physics. The language changed. The operation persisted.</p>
+<p>Four properties of real bacterial populations, stripped from the bottle, organize the biology the experiment refuses. <i>Feedback</i> is the property by which populations respond to their own outputs: bacteria detect accumulated waste, depleted nutrients, and chemical signals from their neighbors, and adjust metabolism, growth rate, and gene expression accordingly. <i>Coordination</i> is the property by which they act collectively — quorum sensing, first described in the 1970s and now understood as ubiquitous across the bacterial domain, lets bacteria read population density and switch behaviors together once a threshold concentration is reached. <i>Memory</i> is carried in CRISPR-Cas systems, a bacterial adaptive immunity that encodes sequences from past phage attacks and transmits the record across generations. And <i>survival</i> persists through persister cells, spores, biofilms, and horizontal gene transfer. What the bottle deletes from bacteria is precisely what lebensraum imaginaries delete from human communities.</p>

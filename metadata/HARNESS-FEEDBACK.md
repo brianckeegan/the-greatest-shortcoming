@@ -24,6 +24,39 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P1 — do first (makes re-runs clean; supports the real filename convention)
 
+### [x] #11 Rename pass stamps "Reconciled" but never checks chapter body content  — TRUST/FUNCTIONALITY, highest
+- **Problem:** when the book is restructured (a chapter renamed/renumbered), the harness
+  reconciles `num`/`slug`/`redirect_from` and stamps every chapter
+  `source_note: "Reconciled from source/<pdf>"` (`apply-rename.py:354`), but it never
+  touches the chapter's `abstract`/`sections`/body — and `audit-site.py` had **no check
+  that a chapter's rendered content corresponds to its draft chapter**. So a chapter
+  could carry stale prose from an earlier conception of the book *under a source_note
+  that falsely certifies it as reconciled*, and the audit passed clean (0 problems).
+  Found live: `_chapters/09-boulder-again.md` carried a Ratzel/Lebensraum/"primordial
+  soup" section (`Ratzel` 7×) absent from draft ch09 — that material now lives in draft
+  ch02 (`Ratzel` 21×); `_chapters/08-the-long-term.md` (formerly `07-the-alternatives`)
+  kept its old "counter-cross-tabulation/EJSCREEN" body, whose subject now lives in
+  draft ch04. Both were renumbered shells with bodies never updated.
+- **Fix:** add a **content-drift check** to the audit (`content_drift` in
+  `audit-site.py`): for each chapter, flag a distinctive proper noun that is prominent
+  in the rendered body (≥3×, case-insensitive) yet **absent** from that chapter's draft
+  text **and** central to a *different* draft chapter (≥5×) — i.e. relocated content.
+  It contributes to coverage problems (audit exits 1), so a renumbered shell can no
+  longer pass while its body is stale, which makes the "Reconciled" source_note honest.
+  The check needs the full draft text (`metadata/v<N>/extract.json`, git-ignored); it
+  skips with a note when absent (e.g. CI). Reconcile the two flagged chapters' bodies
+  to the draft to clear it.
+- **Scope/limit:** the check targets the *relocated-content* class (the reported
+  ch09/Ratzel case) with zero false positives across ch01–07; *wholesale-cut* prose
+  (content reframed and dropped entirely, using shared vocabulary) is fuzzier and not
+  asserted, to avoid false positives that would destabilize the steady-state gate.
+- **Acceptance:** with a chapter body referencing another chapter's signature entity,
+  `audit-site.py` exits 1 and names the file, the entity, and the chapter it belongs to;
+  once the body is reconciled, the audit exits 0 and the apply dry run still reports
+  rendered-surface changes: 0.
+- **Files:** `bin/audit-site.py` (new `content_drift`), `_chapters/08-the-long-term.md`
+  + `_chapters/09-boulder-again.md` (bodies reconciled to v3), `HARNESS.md`.
+
 ### [x] #10 Missed chapter openings silently absorb the next chapters' bodies  — FUNCTIONALITY, highest
 - **Problem:** ingesting `source/20260607.pdf` produced a poisoned interface: ch02
   "The Inheritance" extracted as **243,110 chars** spanning chapters 02–04 (its tail
@@ -174,7 +207,9 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 ---
 
 ## Implementation order
-P1 (`#10`, `#1`, `#2`, `#5`) → P2 (`#3`, `#6`, `#7`) → P3 (`#4`, `#8`, `#9`).
+P1 (`#11`, `#10`, `#1`, `#2`, `#5`) → P2 (`#3`, `#6`, `#7`) → P3 (`#4`, `#8`, `#9`).
+`#11` (content drift) and `#10` (mis-segmentation) are highest — both let the harness
+silently certify a site/interface that does not match the manuscript.
 `#10` (mis-segmentation) is highest — it silently corrupts the per-chapter interface
 that every later stage reads — and was found + fixed re-ingesting `20260607.pdf`.
 After each item: re-run `audit-site.py` + `apply-rename.py` (dry run) and confirm the
