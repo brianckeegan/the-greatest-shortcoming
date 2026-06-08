@@ -28,12 +28,13 @@ hero:
   scroll_cue: "scroll to begin"
 
 # ---- Top-level navigation --------------------------------------------------
-# Each item links either to a section anchor on the home page or to a sub-page.
+# Rendered in the brandbar (landing + home) and in header.html (content pages).
+# The brand on the upper left always returns to the home hub (/home.html); these
+# are the buttons beside it. Concepts/Chapters jump to sections on the home hub.
 nav:
-  - { label: "Eras", kind: "eras-menu" }   # special: opens dropdown of eras
-  - { label: "Book", url: "#book" }
-  - { label: "Author", url: "#author" }
-  - { label: "Resources", url: "#resources" }
+  - { label: "Concepts", url: "/home.html#concepts" }
+  - { label: "Chapters", url: "/home.html#chapters" }
+  - { label: "About", url: "/about/" }
 
 # ---- Two analytical registers (definition bars beneath the hero) -----------
 registers:

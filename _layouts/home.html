@@ -11,65 +11,7 @@
 </head>
 <body class="landing">
   <div class="progress" id="progress"></div>
-  <div class="brandbar" id="brandbar">
-    <span class="b-title"><span class="brand-1">The Greatest</span> <span class="brand-2">Shortcoming</span></span>
-    <a class="b-cta" href="#chapters">Chapters ↓</a>
-  </div>
-
-  <canvas id="bcanvas"></canvas>
-
-  <!-- ============================ ACT 1 — PROVOCATION ============================ -->
-  <section class="act1" id="act1">
-    <div class="stage">
-      <div class="stage-visual">
-        <div class="flask-wrap">
-          <div class="clock"><span id="clockTime">11:00</span><small>doubling every minute</small></div>
-          <div class="flask" id="flask">
-            <div class="readout"><div class="pct" id="pct">1%</div><div class="lbl">of the bottle</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="stage-steps" id="stageSteps">
-        <div class="pstep"><p>Picture a bottle.</p></div>
-        <div class="pstep"><p>At <b>eleven o'clock</b>…</p></div>
-        <div class="pstep"><p>…drop in a single bacterium.</p></div>
-        <div class="pstep"><p>It divides once a minute — <b>one becomes two</b>.</p></div>
-        <div class="pstep"><p><b>Two become four.</b></p></div>
-        <div class="pstep"><p>For most of the hour, the bottle looks <b>nearly empty</b>.</p><p class="small">11:55 — three percent full.</p></div>
-        <div class="pstep"><p>11:56 — the fill <b>doubles</b>.</p><p class="small">Six percent.</p></div>
-        <div class="pstep"><p>11:57 — and <b>doubles again</b>.</p><p class="small">Twelve percent.</p></div>
-        <div class="pstep"><p>11:58 — a <b>quarter</b> full.</p></div>
-        <div class="pstep"><p>11:59 — <b>half</b> full.</p></div>
-        <div class="pstep"><p><b>Noon.</b> The bottle is full.</p></div>
-        <div class="pstep"><p>12:01 — it begins to <b>spill out</b>.</p></div>
-        <div class="pstep"><p>12:03 — the circles <b>fill the screen</b>.</p></div>
-      </div>
-    </div>
-    <div class="pscene"></div><div class="pscene"></div><div class="pscene"></div><div class="pscene"></div>
-    <div class="pscene"></div><div class="pscene"></div><div class="pscene"></div><div class="pscene"></div>
-    <div class="pscene"></div><div class="pscene"></div><div class="pscene"></div><div class="pscene"></div>
-    <div class="pscene"></div><div class="pscene"></div><div class="pscene"></div><div class="pscene"></div>
-  </section>
-
-  <!-- ======================= ACT 2 — THE HEDCUT ======================= -->
-  <section class="act2" id="act2">
-    <div class="a2-sticky">
-      <div class="a2-quote" id="a2quote">
-        <p class="epi-q"><span class="w" style="transition-delay:0ms">"The</span> <span class="w" style="transition-delay:60ms">greatest</span> <span class="w" style="transition-delay:120ms">shortcoming</span> <span class="w" style="transition-delay:180ms">of</span> <span class="w" style="transition-delay:240ms">the</span> <span class="w" style="transition-delay:300ms">human</span> <span class="w" style="transition-delay:360ms">race</span> <span class="w" style="transition-delay:420ms">is</span> <span class="w" style="transition-delay:480ms">our</span> <span class="w" style="transition-delay:540ms">inability</span> <span class="w" style="transition-delay:600ms">to</span> <span class="w" style="transition-delay:660ms">understand</span> <span class="w" style="transition-delay:720ms">the</span> <span class="w" style="transition-delay:780ms">exponential</span> <span class="w" style="transition-delay:840ms">function."</span></p>
-        <span class="src">— Albert Bartlett, 1972</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== ACT 3 — THE STORY (animated text) ===================== -->
-  <section class="act3" id="act3">
-    <div class="a3-sticky">
-      <div class="a3-line"><p>For over half a century, Al Bartlett's bacteria-in-a-bottle thought experiment influenced a movement of scientists and environmental activists worried about <b>overpopulation.</b></p></div>
-      <div class="a3-line"><p>When Bartlett died in 2013, he was eulogized in <b>white&nbsp;nationalist&nbsp;journals</b> for his advocacy to end immigration into the United States.</p></div>
-      <div class="a3-line"><p>This is the story of how quantitative tools and arguments about conservation repeatedly become tools of <b>exclusion&nbsp;and&nbsp;dominance.</b></p></div>
-    </div>
-  </section>
+  {% include brandbar.html %}
 
   <!-- ============================ ACT 3 — TITLE ============================ -->
   <section class="titlecard" id="titlecard">
@@ -134,10 +76,34 @@
         <div class="f-title"><span class="brand-1">The Greatest</span> <span class="brand-2">Shortcoming</span></div>
         <div class="f-sub">Quantitative Chauvinism and Lebensraum Imaginaries · Brian C. Keegan</div>
       </div>
-      <a class="f-cta" href="#act1">Back to the top ↑</a>
+      <a class="f-cta" href="#titlecard">Back to the top ↑</a>
     </div>
   </footer>
 
-  <script src="{{ '/assets/js/landing.js' | relative_url }}"></script>
+  <script>
+    (function () {
+      // Scroll-revealed sections (concepts + chapters).
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-on'); io.unobserve(en.target); } });
+      }, { threshold: 0.18 });
+      document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+
+      // The title card is the hero — reveal it on load rather than on scroll.
+      var big = document.getElementById('bigtitle');
+      if (big) requestAnimationFrame(function () { big.classList.add('is-on'); });
+
+      // Scroll progress bar.
+      var prog = document.getElementById('progress');
+      if (prog) {
+        var onScroll = function () {
+          var docH = document.documentElement.scrollHeight - window.innerHeight;
+          prog.style.width = (docH > 0 ? (window.scrollY / docH * 100) : 0) + '%';
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll();
+      }
+    })();
+  </script>
 </body>
 </html>

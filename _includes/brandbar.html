@@ -1,0 +1,17 @@
+{%- comment -%}
+  Immersive top bar for the scrollytelling pages (landing `/` + home `/home.html`).
+  The brand on the upper left returns to the home hub; the links jump to the home
+  sections and the About page. Difference-blend keeps it legible over both the
+  light canvas and the dark title card. The link set mirrors `site.nav`, which
+  _includes/header.html also renders on the long-form content pages.
+{%- endcomment -%}
+<div class="brandbar" id="brandbar">
+  <a class="b-title" href="{{ '/home.html' | relative_url }}">
+    <span class="brand-1">The Greatest</span> <span class="brand-2">Shortcoming</span>
+  </a>
+  <nav class="b-nav" aria-label="Primary">
+    {% for item in site.nav %}
+      <a class="b-link" href="{{ item.url | relative_url }}">{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+</div>
