@@ -57,8 +57,12 @@ const ART = {
 };
 
 /* ---------------- Build chapter cards ---------------- */
+// On the Jekyll homepage the chapter cards are rendered server-side from
+// _data/chapters.yml (see _includes/chapter-card.html), so #chGrid is absent
+// and this client-side build is skipped. It runs only on the standalone
+// landing.html prototype, which still carries #chGrid.
 const grid = document.getElementById('chGrid');
-CHAPTERS.forEach((c,i)=>{
+if (grid) CHAPTERS.forEach((c,i)=>{
   const card = document.createElement('a');
   card.className='ch-card reveal';
   card.href = 'chapters/'+c.slug+'.html';
