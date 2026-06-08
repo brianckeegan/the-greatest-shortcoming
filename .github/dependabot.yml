@@ -1,0 +1,42 @@
+# Keeps the build toolchain current so the site stays buildable over time.
+# Grouped, low-frequency PRs; each is validated by the Pages build job before
+# it can be merged.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      # Group only safe minor/patch updates; majors get their own PR so one
+      # breaking bump (e.g. Tailwind v4) can't block the rest.
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # Tailwind v4 is a breaking rewrite of the config + CLI; migrate
+      # deliberately, not via an automated bump.
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      bundler:
+        patterns: ["*"]
+    commit-message:
+      prefix: deps
