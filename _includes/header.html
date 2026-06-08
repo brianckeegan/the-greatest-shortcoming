@@ -5,35 +5,15 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header id="site-header" class="sticky top-0 z-40 border-b border-clay/40 bg-canvas/80 backdrop-blur transition-colors">
   <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-    <a href="{{ '/' | relative_url }}" class="group flex items-baseline gap-3 no-underline">
+    <a href="{{ '/home.html' | relative_url }}" class="group flex items-baseline gap-3 no-underline">
       <span class="font-display text-2xl font-light leading-none">T<span class="text-accent">.</span></span>
       <span class="hidden text-[10px] font-bold uppercase tracking-[0.25em] text-mist md:inline">{{ site.title }}</span>
     </a>
 
     <nav class="flex items-center gap-6" aria-label="Primary">
-      <details class="relative hidden md:block">
-        <summary class="nav-link cursor-pointer list-none">
-          Eras
-          <span aria-hidden="true" class="ml-1 text-mist">▾</span>
-        </summary>
-        <div class="absolute right-0 mt-2 w-64 rounded-md border border-clay/60 bg-canvas p-2 shadow-lg">
-          {% for part in site.data.parts %}
-            {%- assign part_kind = part.kind | default: 'step' -%}
-            {%- if part_kind != 'step' -%}{% continue %}{%- endif -%}
-            <a href="{{ '/#' | append: part.id | relative_url }}" class="flex items-baseline justify-between gap-3 rounded px-3 py-2 text-sm text-ink/80 hover:bg-clay/30 hover:text-ink no-underline">
-              <span class="font-display">{{ part.title }}</span>
-              {%- if part.start and part.end -%}
-                <span class="text-xs text-mist">{{ part.start }}–{{ part.end }}</span>
-              {%- endif -%}
-            </a>
-          {% endfor %}
-        </div>
-      </details>
-
       {% for item in site.nav %}
         {%- assign is_current = false -%}
-        {%- if item.url == "/" and page.url == "/" -%}{%- assign is_current = true -%}{%- endif -%}
-        {%- if item.url != "/" and page.url contains item.url -%}{%- assign is_current = true -%}{%- endif -%}
+        {%- if item.url != "/" and item.url != "/home.html" and page.url contains item.url -%}{%- assign is_current = true -%}{%- endif -%}
         <a class="nav-link hidden md:inline" href="{{ item.url | relative_url }}"{% if is_current %} aria-current="page"{% endif %}>{{ item.label }}</a>
       {% endfor %}
 

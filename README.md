@@ -59,14 +59,16 @@ unstyled.
 ├── _landing/                       # homepage prose snippets (Markdown collection, not output)
 ├── _layouts/
 │   ├── default.html                # base shell (head, footer, stylesheet)
-│   ├── home.html                   # homepage — the scrollytelling layout
+│   ├── landing.html                # `/` — cinematic intro: bottle, Bartlett, the story
+│   ├── home.html                   # `/home.html` — the hub: title card, concepts, chapters
 │   └── chapter.html                # individual chapter page
-├── _includes/                      # partials: header, footer, hero, chapter-card, …
+├── _includes/                      # partials: header, brandbar, footer, chapter-card, …
 ├── assets/
 │   ├── css/src/main.css            # Tailwind source → built to assets/css/dist/main.css
-│   ├── js/landing.js               # homepage scroll engine (bottle / hedcut animation)
+│   ├── js/landing.js               # landing scroll engine (bottle / hedcut animation)
 │   └── img/                        # images
-├── index.html                      # homepage entry (layout: home, permalink: /)
+├── index.html                      # landing entry (layout: landing, permalink: /)
+├── home.html                       # home hub entry (layout: home, permalink: /home.html)
 ├── tailwind.config.js              # Tailwind configuration
 ├── package.json                    # npm scripts (build:css, dev:css, …)
 ├── Gemfile                         # Jekyll 4 + plugins + webrick
@@ -86,6 +88,12 @@ You can change everything the site *says* without touching layout code.
   unique `id`.
 - **Chapters** — add a Markdown file to `_chapters/` with front matter; it
   publishes at `/chapters/<name>/` using the `chapter` layout.
+- **Front door** — `/` is the cinematic landing (`_layouts/landing.html`): the
+  bottle thought experiment, the Bartlett epigraph, and the story bridge, ending
+  in an "Enter the book" link. It opens onto the home hub at `/home.html`
+  (`_layouts/home.html`): the title card, the two concepts, and the chapter grid.
+  The shared top bar lives in `_includes/brandbar.html`; its links come from
+  `nav` in `_config.yml` (also rendered by `_includes/header.html`).
 - **Homepage prose** — `_landing/*.md` snippets and the data the homepage reads
   from `_config.yml` / `_data/`.
 - **Look** — Tailwind utility classes in the templates, plus

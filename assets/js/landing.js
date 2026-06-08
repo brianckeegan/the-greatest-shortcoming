@@ -83,10 +83,15 @@ const io=new IntersectionObserver((es)=>{
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
 /* ---------------- Title reveal ---------------- */
+// The title card lives on the home hub (/home.html), not this landing page, so
+// guard: only wire the reveal when both elements are actually present.
 const bigtitle=document.getElementById('bigtitle');
-new IntersectionObserver((es)=>{
-  es.forEach(en=>{ if(en.isIntersecting) bigtitle.classList.add('is-on'); });
-},{threshold:.4}).observe(document.getElementById('titlecard'));
+const titlecardEl=document.getElementById('titlecard');
+if(bigtitle&&titlecardEl){
+  new IntersectionObserver((es)=>{
+    es.forEach(en=>{ if(en.isIntersecting) bigtitle.classList.add('is-on'); });
+  },{threshold:.4}).observe(titlecardEl);
+}
 
 /* ---------------- ACT 1 scroll engine: bottle fill + steps ---------------- */
 const act1=document.getElementById('act1');
@@ -169,9 +174,16 @@ function onScroll(){
   const idx=Math.min(N-1,Math.max(0,Math.round(bi)));
   steps.forEach((st,k)=>st.classList.toggle('is-on',k===idx));
   const docH=document.documentElement.scrollHeight-window.innerHeight;
-  document.getElementById('progress').style.width=(window.scrollY/docH*100)+'%';
-  const tc=document.getElementById('titlecard').getBoundingClientRect();
-  document.getElementById('brandbar').style.opacity=(tc.top<60 && tc.bottom>60)?'0':'1';
+  const progEl=document.getElementById('progress');
+  if(progEl) progEl.style.width=(docH>0?(window.scrollY/docH*100):0)+'%';
+  // Fade the brandbar out over the title card — but the title card only exists
+  // on the home hub, so this is a no-op on the landing page (bar stays visible).
+  const tcEl=document.getElementById('titlecard');
+  const bbEl=document.getElementById('brandbar');
+  if(tcEl&&bbEl){
+    const tc=tcEl.getBoundingClientRect();
+    bbEl.style.opacity=(tc.top<60 && tc.bottom>60)?'0':'1';
+  }
 }
 window.addEventListener('scroll',onScroll,{passive:true});
 window.addEventListener('resize',onScroll);
