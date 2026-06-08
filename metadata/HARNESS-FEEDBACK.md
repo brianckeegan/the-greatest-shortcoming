@@ -75,7 +75,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P2 — trust/clarity (prevents misleading "republishes")
 
-### [ ] #3 Stale, hard-coded, book-specific review flags  — STABILITY
+### [x] #3 Stale, hard-coded, book-specific review flags  — STABILITY
 - **Problem:** `audit-site.py:223` unconditionally appends the "Chapter split:
   'The Free Fall' → 'The Inheritance' + 'The Bottle'" flag; it fired this run with
   **zero** chapter changes, telling the human gate to review a split that isn't

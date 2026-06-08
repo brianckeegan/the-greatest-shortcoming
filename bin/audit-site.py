@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -237,15 +238,46 @@ def main() -> None:
 
     new_chapters = [ch["slug"] for ch in meta["chapters"] if ch.get("status") == "new"]
 
-    # ---- human-review flags ---------------------------------------------
+    # ---- human-review flags (derived from metadata, never hard-coded) ----
+    # Surface only the changes a human gate should actually eyeball: structural
+    # chapter changes, code-symbol renames in extra_renames, and unusually large
+    # edit fan-out. An all-"unchanged" metadata with empty extra_renames yields
+    # zero flags (#3).
+    HEAVY_FILE = 40  # replacements in a single file worth a second look
     flags = []
-    flags.append("Chapter split: old 'The Free Fall' maps to NEW 'The Inheritance' "
-                 "(new, pre-1968) + 'The Bottle' (renamed). Confirm this split.")
-    if "QcEfiMatrix" in tokens:
-        js_hits = [o for o in occurrences if o["old"] in ("QcEfiMatrix",)]
-        flags.append(f"JS code symbol QcEfiMatrix→QcLiMatrix touches "
-                     f"{len(js_hits)} site location(s) plus its JS definition — "
-                     "this is the only code (not data) identifier renamed.")
+
+    # structural chapter changes (new / renumbered / renamed+renumbered)
+    notable = {"new", "renamed+renumbered", "renumbered"}
+    for ch in meta["chapters"]:
+        st = ch.get("status", "")
+        if st in notable:
+            frm = ch.get("prev_slug") or "—"
+            flags.append(f"Chapter {st}: `{frm}` → `{ch['slug']}` ({ch['title']}). "
+                         f"Confirm order/redirects.")
+
+    # chapter split: two or more target chapters claim the same prev_slug
+    src_counts = Counter(ch["prev_slug"] for ch in meta["chapters"]
+                         if ch.get("prev_slug") and ch["prev_slug"] != ch.get("slug"))
+    for ps, n in src_counts.items():
+        if n > 1:
+            targets = [ch["slug"] for ch in meta["chapters"] if ch.get("prev_slug") == ps]
+            flags.append(f"Chapter split: `{ps}` maps to {n} chapters "
+                         f"({', '.join(targets)}). Confirm this split.")
+
+    # code-symbol renames carried via extra_renames.tokens (JS/CamelCase identifiers)
+    extra_tokens = meta.get("extra_renames", {}).get("tokens", {})
+    for k, v in extra_tokens.items():
+        if re.match(r"^[A-Za-z_$][A-Za-z0-9_$]*$", k) and re.search(r"[a-z][A-Z]", k):
+            hits = [o for o in occurrences if o["old"] == k]
+            flags.append(f"Code symbol rename `{k}` → `{v}` (extra_renames) touches "
+                         f"{len(hits)} site location(s) plus its definition — review by hand.")
+
+    # unusually large edit fan-out in any single file
+    per_file = Counter(o["file"] for o in occurrences)
+    for f, n in per_file.items():
+        if n >= HEAVY_FILE:
+            flags.append(f"Large edit fan-out: {n} replacements in `{f}` "
+                         f"(≥{HEAVY_FILE}) — spot-check the result.")
 
     apply_files = [rel(p) for p in files]
     plan = {
@@ -311,8 +343,12 @@ def main() -> None:
         md.append(f"- `{k}` → `{phrases[k]}`")
 
     md.append("\n## ⚠ Review flags")
-    for f in flags:
-        md.append(f"- {f}")
+    if flags:
+        for f in flags:
+            md.append(f"- {f}")
+    else:
+        md.append("_none — no structural chapter changes, code-symbol renames, "
+                  "or large edit fan-out._")
     if problems:
         md.append("\n## ❌ Coverage problems (resolve before apply)")
         for p in problems:
@@ -338,6 +374,9 @@ def main() -> None:
     print(f"  coverage problems: {len(problems)}")
     for p in problems:
         print(f"    ❌ {p}")
+    print(f"  review flags: {len(flags)}")
+    for f in flags:
+        print(f"    ⚠ {f}")
     print(f"  preserved-term sightings (left untouched): {len(preserved_hits)}")
     print(f"\n  → metadata/rename-plan.json")
     print(f"  → metadata/audit-report.md  (review this before applying)")
