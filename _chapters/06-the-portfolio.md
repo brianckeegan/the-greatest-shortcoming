@@ -1,6 +1,6 @@
 ---
-slug: 05-the-portfolio
-num: "05"
+slug: 06-the-portfolio
+num: "06"
 title: "The Portfolio"
 abstract_status: draft
 abstract: |
@@ -22,7 +22,7 @@ abstract: |
   reversal in *Dobbs*. The era&rsquo;s coalition is bipartisan in form,
   pronatalist in operation, and structurally indifferent to whether its
   partners agree about reproduction at all.
-source_note: "Excerpt below is verbatim from §Policy Laboratories, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "The Fertility Tables"
   - "The Pronatalist Turn"
@@ -31,6 +31,7 @@ sections:
   - "The Bipartisan Consensus"
   - "Fine-Tuning"
   - "Temporal Gerrymandering"
+redirect_from: "/chapters/05-the-portfolio/"
 ---
 
 <p class="aside"><i>From &sect;Policy Laboratories, mid-chapter:</i></p>

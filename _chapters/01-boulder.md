@@ -5,7 +5,7 @@ title: "Boulder"
 abstract_status: draft
 abstract: |
   *Boulder* introduces the book's two operating concepts — *quantitative
-  chauvinism* and *ecofascist imaginaries* — through the city that gives the
+  chauvinism* and *lebensraum imaginaries* — through the city that gives the
   manuscript its case study. It traces a hundred years of Boulder's
   institutional history, from the 1898 Colorado Chautauqua and the 1910 Olmsted
   Report to the 1959 Blue Line and the carrying-capacity ordinances of the
@@ -18,10 +18,10 @@ abstract: |
   posing the book's central question — how the quantitative tools of
   environmental governance came to share a grammar with the journals of white
   nationalists.
-source_note: "Excerpt below is verbatim from §Quantitative chauvinism, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "Quantitative chauvinism"
-  - "Eco-fascist Imaginaries"
+  - "Lebensraum Imaginaries"
   - "A Mutually Constituting Relationship"
   - "The Road Ahead"
   - "Speculation and Counter-Frameworks"

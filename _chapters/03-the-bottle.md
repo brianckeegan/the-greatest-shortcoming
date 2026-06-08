@@ -1,10 +1,10 @@
 ---
-slug: 02-the-free-fall
-num: "02"
-title: "The Free Fall"
+slug: 03-the-bottle
+num: "03"
+title: "The Bottle"
 abstract_status: draft
 abstract: |
-  *The Free Fall* tracks the post-1968 emergence of populationism as the
+  *The Bottle* tracks the post-1968 emergence of populationism as the
   master variable of American environmental thought. It opens with Albert
   Bartlett at the lectern — a Manhattan Project physicist who delivered his
   &ldquo;Arithmetic, Population, and Energy&rdquo; lecture 1,742 times over
@@ -20,7 +20,7 @@ abstract: |
   *Population and Environment* exchange in which the Sierra Club&rsquo;s
   internal split over immigration restriction crystallized the
   era&rsquo;s contradictions.
-source_note: "Excerpt below is verbatim from §Portability, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "A Physicist at the Lectern"
   - "What the Lecture Suppressed"
@@ -32,6 +32,7 @@ sections:
   - "The Eugenics Backstory"
   - "Domesticated Scientism"
   - "The 1995 Exchange"
+redirect_from: "/chapters/02-the-free-fall/"
 ---
 
 <p class="aside"><i>From &sect;Portability, mid-chapter:</i></p>

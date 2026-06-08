@@ -50,18 +50,21 @@ registers:
       through credentialed authority), and the <b>politics of inevitability</b>
       (converting conditional projections into mandates that foreclose
       political choice).
-  - id: "ecofascist-imaginaries"
+  - id: "lebensraum-imaginaries"
     kicker: "political register · ii"
-    title: "Ecofascist Imaginaries"
+    title: "Lebensraum Imaginaries"
     body: >-
-      <em>n.</em> Organized visions of environmental futures that naturalize
-      hierarchy and exclusion as ecological necessity. Three constitutive
-      features: ecological crisis as the ground for <b>palingenetic
-      purification</b> (national rebirth from decadence); demographic content
-      given to that contamination (the wrong bodies, the wrong fertility); and
-      the <b>coercive sorting of populations</b> authorized as stewardship
-      rather than violence. Made durable, in Sheila Jasanoff's terms, through
-      the laws, infrastructures, and administrative routines that enact them.
+      <em>n.</em> A recurring epistemic architecture within ecofascism:
+      organized visions of environmental futures that naturalize hierarchy and
+      exclusion as ecological necessity. Three constitutive features: ecological
+      crisis as the ground for <b>palingenetic purification</b> (national
+      rebirth from decadence); demographic content given to that contamination
+      (the wrong bodies, the wrong fertility); and the <b>coercive sorting of
+      populations</b> authorized as stewardship rather than violence.
+      <b>Lebensraum</b> is a deliberate reference to a concept crossing
+      biological, ecological, social, and political boundaries — one that
+      animated the calamities of the Third Reich but has longer roots and more
+      unsettling afterlives.
 
 # ---- Coda sections (after the scrollytelling) ------------------------------
 # Each becomes an in-page section AND can be expanded as its own page later.
@@ -111,6 +114,7 @@ footer:
 # Standalone Jekyll 4 (see Gemfile). Use kramdown with GFM input so markdown
 # renders as it did under the former github-pages gem.
 plugins:
+  - jekyll-redirect-from
   - jekyll-seo-tag
   - jekyll-sitemap
 
