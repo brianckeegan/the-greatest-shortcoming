@@ -1,6 +1,6 @@
 ---
-slug: 03-the-quarantine
-num: "03"
+slug: 04-the-quarantine
+num: "04"
 title: "The Quarantine"
 abstract_status: draft
 abstract: |
@@ -21,7 +21,7 @@ abstract: |
   chapter calls *the architecture of ignorance*: an institutional arrangement
   that survived delegitimation by embedding itself in the aesthetic of
   credentialed policy analysis.
-source_note: "Excerpt below is verbatim from §What an Immigrant Costs, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "Cairo and the Doors That Remained Open"
   - "An Ophthalmologist Builds a Movement"
@@ -30,6 +30,7 @@ sections:
   - "The Sierra Club Verdict and the Architecture of Ignorance"
   - "Where the Audit Breaks"
   - "The Boundary About to Collapse"
+redirect_from: "/chapters/03-the-quarantine/"
 ---
 
 <p class="aside"><i>From &sect;What an Immigrant Costs: The Impact Statement and Its Arithmetic, mid-chapter:</i></p>

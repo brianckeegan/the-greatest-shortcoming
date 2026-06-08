@@ -8,8 +8,8 @@
   blurb: "The deployment of numerical instruments to foreclose political deliberation by converting contested claims into apparent technical necessities."
   links: [will_to_simplify, rule_of_expertise, politics_of_inevitability, porter, desrosieres, arendt]
 
-- id: ecofascist_imaginary
-  name: "Eco-fascist Imaginary"
+- id: lebensraum_imaginary
+  name: "Lebensraum Imaginary"
   kind: theme
   blurb: "Organized visions of environmental futures that naturalize hierarchy and exclusion as ecological necessity."
   links: [palingenesis, jasanoff, griffin, arendt]
@@ -18,7 +18,7 @@
   name: "Will to Simplify"
   kind: theme
   blurb: "Compression of complex demographic and ecological processes into a single governing metric."
-  links: [exponential_curve, bartlett, quant_chauvinism, free_fall]
+  links: [exponential_curve, bartlett, quant_chauvinism, bottle]
 
 - id: rule_of_expertise
   name: "Rule of Expertise"
@@ -36,7 +36,7 @@
   name: "Palingenesis"
   kind: theme
   blurb: "Myth of national rebirth from decadence — the structure that distinguishes fascism from adjacent forms."
-  links: [griffin, ecofascist_imaginary]
+  links: [griffin, lebensraum_imaginary]
 
 - id: carrying_capacity
   name: "Carrying Capacity"

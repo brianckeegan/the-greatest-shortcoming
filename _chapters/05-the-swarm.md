@@ -1,6 +1,6 @@
 ---
-slug: 04-the-swarm
-num: "04"
+slug: 05-the-swarm
+num: "05"
 title: "The Swarm"
 abstract_status: draft
 abstract: |
@@ -21,7 +21,7 @@ abstract: |
   the era&rsquo;s mode of foreclosure *the politics of inevitability*: the
   conversion of a conditional projection into a destiny that no political
   arrangement can refuse.
-source_note: "Excerpt below is verbatim from §What the Technique Suppresses, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "The Crossover Point"
   - "What Decomposition Does"
@@ -31,6 +31,7 @@ sections:
   - "From Extrapolation to Decomposition"
   - "From Projection to Replacement"
   - "The Swarm and Its Eliminationist Grammar"
+redirect_from: "/chapters/04-the-swarm/"
 ---
 
 <p class="aside"><i>From &sect;What the Technique Suppresses, mid-chapter:</i></p>

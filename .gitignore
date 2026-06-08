@@ -17,3 +17,11 @@ Thumbs.db
 # Node / build output
 node_modules/
 assets/css/dist/
+
+# Claude Code local worktrees
+.claude/worktrees/
+
+# Draft-reconciliation harness — generated artifacts (regenerate with bin/*.py)
+metadata/v*/
+metadata/rename-plan.json
+metadata/audit-report.md

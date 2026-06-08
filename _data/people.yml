@@ -15,7 +15,7 @@
   name: "Albert Bartlett"
   role: "Nuclear physicist · CU Boulder"
   dates: "1923–2013"
-  era: [free_fall, quarantine]
+  era: [bottle, quarantine]
   blurb: >-
     Manhattan Project alum who spent half a century translating exponential mathematics of
     radioactivity into a persuasive template about the consequences of growth. Co-instigator
@@ -26,7 +26,7 @@
   name: "Bob McKelvey"
   role: "Mathematics · CU Boulder"
   dates: "fl. 1958"
-  era: [free_fall]
+  era: [bottle]
   blurb: "In 1958 told Bartlett that something had to be done about the foothills. Co-instigator of PLAN-Boulder."
   links: [bartlett, plan_boulder, blue_line, cu_boulder]
 
@@ -53,24 +53,24 @@
   blurb: >-
     Defined chauvinism as the conversion of asserted superiority into self-evident premise of
     political judgment. Race-thinking and the camp as political technology.
-  links: [quant_chauvinism, ecofascist_imaginary]
+  links: [quant_chauvinism, lebensraum_imaginary]
 
 - id: griffin
   name: "Roger Griffin"
   role: "Fascism theorist"
   blurb: "Defined fascism as palingenetic ultranationalism — the myth of national rebirth from decadence — distinguishing ecofascism from adjacent forms."
-  links: [ecofascist_imaginary, palingenesis]
+  links: [lebensraum_imaginary, palingenesis]
 
 - id: jasanoff
   name: "Sheila Jasanoff"
   role: "STS scholar"
   blurb: "Sociotechnical imaginaries: collectively held visions stabilized through laws, infrastructures, and routines that enact futures rather than merely describe them."
-  links: [ecofascist_imaginary, quant_chauvinism]
+  links: [lebensraum_imaginary, quant_chauvinism]
 
 - id: connelly
   name: "Matthew Connelly"
   role: "Historian"
-  era: [free_fall]
+  era: [bottle]
   blurb: "Showed how mid-century demographic science was recruited into a coercive apparatus targeting the fertility of women in the Global South."
   links: [population_bomb, quant_chauvinism]
 

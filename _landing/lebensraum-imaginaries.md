@@ -3,10 +3,10 @@ kind: register
 sort_order: 250
 home_only: true
 kicker: "political register · ii"
-title: "Ecofascist Imaginaries"
+title: "Lebensraum Imaginaries"
 ---
 <em>n.</em> Organized visions of environmental futures that naturalize
-hierarchy and exclusion as ecological necessity.  ecofascist imaginaries
+hierarchy and exclusion as ecological necessity.  lebensraum imaginaries
 become analytically recognizable through four diagnostic elements:
 
 Threat objects are the entities cast as sources of ecological and social danger
