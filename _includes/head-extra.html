@@ -2,3 +2,8 @@
   Drop additional <script> tags, fonts, analytics, etc. by editing this file.
   Loaded inside <head> after the site data and before the app.
 {%- endcomment -%}
+{%- comment -%} Favicon — Al Bartlett, cropped from assets/img/bartlett.jpg. {%- endcomment -%}
+<link rel="icon" href="{{ '/assets/favicon.ico' | relative_url }}" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon-32.png' | relative_url }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon-16.png' | relative_url }}">
+<link rel="apple-touch-icon" href="{{ '/assets/apple-touch-icon.png' | relative_url }}">

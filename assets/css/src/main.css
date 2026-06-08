@@ -321,6 +321,9 @@
 /* serif emphasis — old patterns breaking through (scoped to the landing) */
 .landing em,.landing i,.landing b,.landing strong,.landing .em,.landing .concept,.landing .def .pull,.landing .thesis .lead,.landing .titlecard .epi,.landing .titlecard .sub{
   font-family:var(--emph) !important;font-style:italic !important;font-weight:700 !important;font-size:1.04em}
+/* the same break carried into long-form prose (chapters, colophon): italic
+   emphasis drops to the old-style serif — the older voice surfacing through. */
+.prose em,.prose i{font-family:var(--emph);font-style:italic}
 .landing h1,.landing h2,.landing h3{font-weight:500;letter-spacing:-.005em}
 .landing .kicker{font-family:var(--serif);font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);font-size:12px}
 

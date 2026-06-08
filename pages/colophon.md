@@ -28,21 +28,52 @@ is needed.
 
 ## Why Bauhaus
 
-The vocabulary is a deliberate citation, not decoration. The Bauhaus is a precise
-historical address: inter-war Germany, the Weimar years — the same decades in
-which this book locates the respectable origins of its subject. Eugenics, "racial
-hygiene," and the arithmetic of overpopulation were not then the property of the
-far right; they were ordinary furniture of post-war progressive science —
-measured, optimistic, taught in universities and funded as reform. To borrow the
-era's design language is to set the book's *quantitative chauvinism* back in the
-room where it was once polite.
+The vocabulary is a deliberate citation, not decoration. The Bauhaus was, above
+all, **an attempt at recombination** — Walter Gropius built the school to "unify
+art, craft, and technology," dissolving the old hierarchy that walled the fine
+artist off from the craftsman and the engineer, and fusing them into a single
+*total work*. That instinct is also how this site is built: as Simon Collison
+argues in [*Bauhaus, ideology and the future of web
+design*](https://colly.com/journal/bauhaus-ideology-and-the-future-of-web-design),
+"we don't design pages, we design systems," bringing "independent tools" — HTML,
+CSS, the DOM, and here SVG and a plate-geometry data file — to work together.
 
-There is a sharper reason. The Bauhaus was among the very first institutions the
-Nazis closed — shuttered in 1933, its work soon paraded as *entartete Kunst*,
-"degenerate art." Its rational, internationalist, machine-age modernism — which
-the regime denounced as rootless "cultural Bolshevism" — was intolerable to a
-politics of blood and soil. So the aesthetic holds the book's central tension in
-a single image: a forward-looking modernism produced by the very culture that
-also perfected the machinery of exclusion, then destroyed by the state that
-carried that machinery to its end. To build this argument in Bauhaus forms is to
-reclaim a language the perpetrators tried to erase.
+Recombination also fixes the Bauhaus to a precise historical address: inter-war
+Germany, the Weimar years — the same decades in which this book locates the
+respectable origins of its subject. Eugenics, "racial hygiene," and the
+arithmetic of overpopulation were not then the property of the far right; they
+were ordinary furniture of post-war progressive science. To borrow the era's
+design language is to set the book's *quantitative chauvinism* back in the room
+where it was once polite.
+
+And recombination is exactly what made the school intolerable. A politics of
+**blood and soil** is a politics of purity and separation — fixed hierarchies,
+native essences, sorted populations. A school devoted to mixing — disciplines,
+nations, media, the rational and the handmade — was its negation in miniature.
+So the Bauhaus was among the very first institutions the Nazis closed: shuttered
+in 1933, its work soon paraded as *entartete Kunst*, "degenerate art," its
+rootless internationalism denounced as "cultural Bolshevism." The aesthetic thus
+holds the book's central tension in one image — a forward-looking modernism made
+by the same culture that perfected the machinery of exclusion, then destroyed by
+the state that carried that machinery to its end. To build this argument in
+Bauhaus forms is to reclaim a language the perpetrators tried to erase.
+
+## Typography, and where it breaks
+
+Type was the Bauhaus at its most doctrinaire. Herbert Bayer's *universal*
+alphabet reduced letters to "as few geometric forms as possible" — a single
+lowercase sans, no serif, no flourish — because "type must be an expression of
+our times, like cinema, architecture and machines." The future was to be set in
+the grotesque.
+
+This site keeps that as its dominant voice: geometric and grotesque sans-serifs
+(Josefin Sans across the display, Archivo in the running text) carry the
+structure — headings, labels, the measured argument. But it **breaks**,
+deliberately and sparingly, into an old-style serif — EB Garamond, set in italic.
+The rule for the break is semantic, not decorative. The serif is held back for
+emphasis and for the book's charged terms; it is the older, humanist, pre-modern
+voice surfacing *through* the rational modernist grid. Read it as a small
+enactment of the argument: the confident sans-serif plane of measurement and
+progress, and the older pattern that keeps erupting through it. Where the type
+turns to serif — as it does on the words you just read — the prose is turning
+toward the thing underneath.
