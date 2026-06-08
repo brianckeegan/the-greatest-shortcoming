@@ -2,8 +2,11 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+  # Build (but do not deploy) on PRs so build breakage is caught before it
+  # reaches master. The deploy job is guarded to non-PR events below.
+  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -11,13 +14,16 @@ permissions:
   pages: write
   id-token: write
 
+# Serialize per ref. Never cancel an in-flight deploy (push/dispatch);
+# do cancel superseded PR validation builds.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -45,7 +51,7 @@ jobs:
         uses: actions/configure-pages@v6
 
       - name: Build with Jekyll
-        run: bundle exec jekyll build --destination ./_site
+        run: bundle exec jekyll build --destination ./_site --trace
         env:
           JEKYLL_ENV: production
 
@@ -55,8 +61,11 @@ jobs:
           path: ./_site
 
   deploy:
+    # PR runs validate the build only; deploying is reserved for master/manual.
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
