@@ -1,10 +1,10 @@
 ---
-slug: 06-the-shock
-num: "06"
-title: "The Shock"
+slug: 07-the-evacuation
+num: "07"
+title: "The Evacuation"
 abstract_status: draft
 abstract: |
-  *The Shock* is a deliberately speculative chapter. It opens with a document
+  *The Evacuation* is a deliberately speculative chapter. It opens with a document
   that does not exist — a *Climate Resettlement Eligibility Assessment*
   spreadsheet ranking four thousand applicants by &ldquo;projected fiscal
   contribution,&rdquo; &ldquo;dependency ratio,&rdquo; and a composite
@@ -21,7 +21,7 @@ abstract: |
   and emergency authorizes a different repertoire of governance — the
   suspension of procedure, the concentration of authority, the treatment of
   triage as a temporary necessity that becomes permanent infrastructure.
-source_note: "Excerpt below is verbatim from §A Triage Dashboard, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "A Triage Dashboard"
   - "The Speculative Register"
@@ -31,11 +31,12 @@ sections:
   - "From Inevitability to Emergency"
   - "The Lifeboat Society"
   - "The Full Trajectory"
+redirect_from: "/chapters/06-the-shock/"
 ---
 
 <p class="aside"><i>From &sect;A Triage Dashboard, mid-chapter:</i></p>
 
-<p>What has changed since the preceding chapters is the relationship between scarcity and governance. In the Free Fall era, scarcity was projected: Bartlett&rsquo;s bottle would fill at noon, but the audience heard the lecture at eleven-thirty. In the Quarantine era, scarcity was manufactured: the fiscal impact statement constructed immigrants as a cost by selecting variables that guaranteed a negative sum. In the Swarm era, scarcity was imagined: the decomposition chart produced the visual experience of displacement without any actual loss of resources, territory, or political power by the majority population. In the Portfolio era, scarcity was anticipated: pronatalist policy treated demographic contraction as a future fiscal crisis requiring present intervention. In the Evacuation era, scarcity is material. The bottle is full. The question is no longer who will be affected by the policies the instruments authorize. The question is who will be abandoned by them.</p>
+<p>What has changed since the preceding chapters is the relationship between scarcity and governance. In the The Bottle era, scarcity was projected: Bartlett&rsquo;s bottle would fill at noon, but the audience heard the lecture at eleven-thirty. In the Quarantine era, scarcity was manufactured: the fiscal impact statement constructed immigrants as a cost by selecting variables that guaranteed a negative sum. In the Swarm era, scarcity was imagined: the decomposition chart produced the visual experience of displacement without any actual loss of resources, territory, or political power by the majority population. In the Portfolio era, scarcity was anticipated: pronatalist policy treated demographic contraction as a future fiscal crisis requiring present intervention. In the Evacuation era, scarcity is material. The bottle is full. The question is no longer who will be affected by the policies the instruments authorize. The question is who will be abandoned by them.</p>
 
 <p>Shock modeling operates on a different logic. Where trend forecasting tracks continuous change, shock modeling tracks discontinuities: tipping points, cascading failures, abrupt regime shifts, threshold effects that produce nonlinear consequences. A coastal aquifer does not salinize gradually; it breaches a threshold and becomes unusable within a single season. A monsoon system does not weaken incrementally; it shifts its track and leaves an agricultural region without rain. A permafrost layer does not thaw linearly; it reaches a temperature threshold and releases methane in quantities that accelerate the warming that caused the thaw. Climate science has spent three decades documenting these dynamics. The transition from continuous to discontinuous forecasting is not a technical refinement. It is a transformation in the political affordances of the quantitative instrument.</p>
 

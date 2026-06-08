@@ -1,6 +1,6 @@
 ---
-slug: 08-boulder-again
-num: "08"
+slug: 09-boulder-again
+num: "09"
 title: "Boulder Again"
 abstract_status: draft
 abstract: |
@@ -22,7 +22,7 @@ abstract: |
   sovereignty, resilience, and sociomaterial stewardship. It closes by
   asking what *infrastructuring solidarity* would look like in Boulder, the
   city where the book began.
-source_note: "Excerpt below is verbatim from §The Biological Imaginary, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "Return"
   - "The Primordial Soup"
@@ -34,6 +34,7 @@ sections:
   - "Counter-Traditions"
   - "Eco-Cooperative Imaginaries"
   - "Infrastructuring Solidarity"
+redirect_from: "/chapters/08-boulder-again/"
 ---
 
 <p class="aside"><i>From &sect;The Biological Imaginary, mid-chapter:</i></p>

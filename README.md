@@ -1,7 +1,7 @@
 # The Greatest Shortcoming — Jekyll site
 
 A scrollytelling reading of *The Greatest Shortcoming: Quantitative Chauvinism
-and Ecofascist Imaginaries*. The site is data-driven: the text, structure,
+and Lebensraum Imaginaries*. The site is data-driven: the text, structure,
 navigation, and colors are edited from a handful of YAML, Markdown, and config
 files. It builds with **Jekyll 4** and deploys to **GitHub Pages via GitHub
 Actions** on every push to `master`.
@@ -112,5 +112,5 @@ for Actions, npm, and Bundler), each validated by the PR build before merge.
 
 The site code (layouts, includes, JS, CSS, config) is released under the **MIT
 License**. The book content — chapter prose, entity data, and the manuscript in
-`uploads/` — is © 2026 Brian C. Keegan, **all rights reserved**, and is not
+`source/` — is © 2026 Brian C. Keegan, **all rights reserved**, and is not
 licensed for reuse without permission. See [LICENSE](LICENSE).

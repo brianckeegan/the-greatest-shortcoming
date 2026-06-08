@@ -1,10 +1,10 @@
 ---
-slug: 07-the-alternatives
-num: "07"
-title: "The Alternatives"
+slug: 08-the-long-term
+num: "08"
+title: "The Long Term"
 abstract_status: draft
 abstract: |
-  *The Alternatives* is the book&rsquo;s constructive chapter. It refuses the
+  *The Long Term* is the book&rsquo;s constructive chapter. It refuses the
   choice that quantitative chauvinism imposes — between accepting its
   simplified projections as mandates and being dismissed as innumerate — by
   rebuilding each of the preceding instruments with a different question
@@ -23,7 +23,7 @@ abstract: |
   normativity, decolonial ecologies, and antifascist solidarity
   infrastructures — that name the political horizons the counter-methods
   serve. It closes with a commitment, not a blueprint.
-source_note: "Excerpt below is verbatim from §Counter-Cross-Tabulation, mid-chapter."
+source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
 sections:
   - "Counter-Methods"
   - "Counter-Extrapolation: Scenario Planning That Preserves Optionality"
@@ -33,6 +33,7 @@ sections:
   - "Counter-Shock-Modeling: Anticipation That Builds Shared Capacity"
   - "Counter-Imaginaries"
   - "The Commitment"
+redirect_from: "/chapters/07-the-alternatives/"
 ---
 
 <p class="aside"><i>From &sect;Counter-Cross-Tabulation: Disaggregation That Surfaces Inequality, mid-chapter:</i></p>

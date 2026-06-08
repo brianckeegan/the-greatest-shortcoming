@@ -2,7 +2,7 @@
   name: "PLAN-Boulder"
   full: "People's League for Action Now"
   founded: 1959
-  era: [free_fall]
+  era: [bottle]
   blurb: "Citizen coalition that successfully campaigned for the Blue Line Amendment."
   links: [bartlett, mckelvey, blue_line, open_space_program, danish_plan]
 
@@ -31,19 +31,19 @@
   name: "CU Boulder"
   full: "University of Colorado, Boulder"
   founded: 1876
-  era: [free_fall, quarantine]
+  era: [bottle, quarantine]
   blurb: "Land-grant university charged with transforming Colorado's miners and farmers into good American citizens."
   links: [bartlett, mckelvey]
 
 - id: los_alamos
   name: "Los Alamos / Manhattan Project"
-  era: [free_fall]
+  era: [bottle]
   blurb: "Where Bartlett spent the final years of WWII measuring plutonium isotopes."
   links: [bartlett]
 
 - id: sierra_club
   name: "Sierra Club"
-  era: [free_fall, quarantine]
+  era: [bottle, quarantine]
   blurb: "Newsletters carried Bartlett's exponential curve into broader circulation."
   links: [bartlett, exponential_curve]
 

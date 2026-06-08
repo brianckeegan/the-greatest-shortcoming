@@ -1,0 +1,170 @@
+{
+  "draft": {
+    "source_pdf": "source/The_Greatest_Shortcoming-1.pdf",
+    "version": 1,
+    "pages": 103,
+    "sha256": "c65250f6f2c71ef161997d21918eeb5dd30f5697e9d1bc867f6d312d298a784b",
+    "ingested": "2026-06-07",
+    "title_line": "Quantitative Chauvinism and Lebensraum Imaginaries"
+  },
+
+  "constructs": [
+    {
+      "id": "quant_chauvinism",
+      "canonical_name": "Quantitative Chauvinism",
+      "slug": "quant-chauvinism",
+      "short_label": "QC",
+      "aliases_deprecated": [],
+      "preserve_terms": [],
+      "definition": "A style of reasoning that privileges quantitative metrics as having jurisdiction over political judgments, collapses heterogeneous social complexity into a single aggregated trajectory, and then inscribes the result in portable artifacts that travel as if they were neutral facts — using numerical abstractions to close political questions before they can be opened.",
+      "status": "unchanged"
+    },
+    {
+      "id": "lebensraum_imaginary",
+      "prev_id": "ecofascist_imaginary",
+      "canonical_name": "Lebensraum Imaginaries",
+      "prev_name": "Ecofascist Imaginaries",
+      "slug": "lebensraum-imaginaries",
+      "prev_slug": "ecofascist-imaginaries",
+      "short_label": "LI",
+      "prev_short_label": "EFI",
+      "aliases_deprecated": [
+        "Ecofascist Imaginaries",
+        "ecofascist imaginaries",
+        "Ecofascist imaginaries",
+        "Eco-fascist Imaginaries",
+        "eco-fascist imaginaries",
+        "Eco-fascist Imaginary",
+        "eco-fascist imaginary"
+      ],
+      "preserve_terms": ["ecofascism", "ecofascist"],
+      "definition": "A recurring epistemic architecture within ecofascism: an ensemble of future narratives, organizational practices, and rhetorical repertoires through which ecological emergency is converted into demographic hierarchy and coercive governance is presented as reluctant but responsible management of natural limits. Lebensraum is a deliberate reference to a concept crossing biological, ecological, social, and political boundaries — one that animated the calamities of the Third Reich but has a longer history and more unsettling afterlives.",
+      "status": "renamed"
+    }
+  ],
+
+  "chapters": [
+    {
+      "num": "00", "slug": "preface", "title": "Preface",
+      "prev_slug": "preface", "prev_title": "Preface",
+      "era_id": null, "prev_era_id": null, "era_label": "before the lecture",
+      "concept": "The book's two operating concepts",
+      "teaser": "Not a verdict on individuals but a tracing of the structures that recruit them.",
+      "pitch": "An archival encounter, the naming of the two operating concepts — quantitative chauvinism and lebensraum imaginaries — and a politically direct closing.",
+      "summary": "The preface names the book's two co-evolving concepts. Quantitative chauvinism is the epistemic infrastructure; lebensraum imaginaries are the political projects that infrastructure serves. It distinguishes the analytic target (recurring imaginaries) from a verdict on any individual, and frames inoculation as anticipatory recognition of the moves by which numerical claims become moral permission structures.",
+      "key_terms": ["quantitative chauvinism", "lebensraum imaginaries", "inoculation"],
+      "source": "pdf", "status": "unchanged"
+    },
+    {
+      "num": "01", "slug": "01-boulder", "title": "Boulder",
+      "prev_slug": "01-boulder", "prev_title": "Boulder",
+      "era_id": "prelude", "prev_era_id": "prelude", "era_label": "the case",
+      "concept": "Quantitative chauvinism & lebensraum imaginaries",
+      "teaser": "A progressive city builds the most elaborate growth-control machinery in America — and ends up whiter than the state around it.",
+      "pitch": "Boulder, Colorado: a nominally progressive community where conservation slid gradually into exclusion, each step looking like responsible stewardship from the inside.",
+      "summary": "Boulder introduces the book's two operating concepts through a hundred years of its own institutional history: the Colorado Chautauqua of 1898, the Olmsted Report of 1910, the Blue Line of 1959, the carrying-capacity ordinances of the 1970s. A nominally progressive community built one of the most elaborate growth-management apparatuses in the country — and produced a city that was, by 2020, 83% non-Hispanic white in a state two-thirds so. The slide from conservation into exclusion was gradual enough that each step looked, from the inside, like responsible stewardship.",
+      "key_terms": ["Blue Line", "carrying capacity", "Olmsted Report"],
+      "source": "pdf+landing.js", "status": "unchanged"
+    },
+    {
+      "num": "02", "slug": "02-the-inheritance", "title": "The Inheritance",
+      "prev_slug": null, "prev_title": null,
+      "era_id": null, "prev_era_id": null, "era_label": "1900 – 1968",
+      "concept": "The architecture, already built",
+      "teaser": "Before Bartlett ever picked up the chalk, the apparatus, the vocabulary, and the audience were already in place.",
+      "pitch": "The eugenics apparatus, the German science of Lebensraum, the conservation movement, and the postwar population-concern community — the formation Bartlett's lecture entered, already assembled.",
+      "summary": "Bartlett's lecture was not an original act of creation; it entered a formation assembled across the first half of the twentieth century. Four currents converge: the institutional eugenics apparatus at Cold Spring Harbor, codified through sterilization regimes after Buck v. Bell; the German science of Lebensraum (Friedrich Ratzel to Rudolf Kjellén to Karl Haushofer); the American conservation movement, sharing donors and personnel with eugenics through Madison Grant and Henry Fairfield Osborn; and the postwar population-concern community — the Population Council, Paul Ehrlich, Garrett Hardin, the Club of Rome.",
+      "key_terms": ["Lebensraum", "eugenics apparatus", "conservation movement", "population-concern community"],
+      "source": "landing.js", "status": "new"
+    },
+    {
+      "num": "03", "slug": "03-the-bottle", "title": "The Bottle",
+      "prev_slug": "02-the-free-fall", "prev_title": "The Free Fall",
+      "era_id": "bottle", "prev_era_id": "free_fall", "era_label": "1968 – 1994",
+      "concept": "Domesticated scientism",
+      "teaser": "He gave the same lecture 1,742 times. Each time, arithmetic quietly became obligation.",
+      "pitch": "Bartlett's bacteria-in-a-bottle lecture turned exponential arithmetic into environmental common sense — the chapter names the mechanism: domesticated scientism.",
+      "summary": "In the late 1960s the Cold War's ambient dread found a new target. Ehrlich's Population Bomb sold three million copies; Hardin's lifeboat ethics argued some must drown so others survive. Bartlett's contribution worked at a different register — it didn't predict famine, it taught arithmetic, and made the math feel like insight and the insight feel like obligation. This chapter names the mechanism — domesticated scientism — by which exponential arithmetic was naturalized as ecology, and ends on the 1995 exchange where the movement's exclusionary logic first surfaced as a dispute.",
+      "key_terms": ["domesticated scientism", "exponential curve", "Population Bomb", "lifeboat ethics"],
+      "source": "landing.js", "status": "renamed+renumbered"
+    },
+    {
+      "num": "04", "slug": "04-the-quarantine", "title": "The Quarantine",
+      "prev_slug": "03-the-quarantine", "prev_title": "The Quarantine",
+      "era_id": "quarantine", "prev_era_id": "quarantine", "era_label": "1995 – 2008",
+      "concept": "Agnotological infrastructuring",
+      "teaser": "After Cairo, the movement lost its license — so it built a new one out of footnotes.",
+      "pitch": "With fertility control delegitimized after Cairo, immigration restriction became the residual lever, laundered through the aesthetics of neutral policy expertise.",
+      "summary": "The 1994 Cairo conference replaced coercive population control with women's reproductive autonomy. For the population-concern community it was a catastrophe — but the anxieties didn't vanish, they migrated. With fertility control delegitimized, immigration restriction became the residual lever. John Tanton built a network that laundered nativist conclusions through the aesthetics of neutral policy expertise: fiscal impact statements that turned 'should we admit these people?' into 'what do these people cost?' The chapter calls the method agnotological infrastructuring — the manufacture of ignorance through parallel institutions.",
+      "key_terms": ["agnotological infrastructuring", "fiscal impact statement", "Tanton network", "Cairo 1994"],
+      "source": "landing.js", "status": "renumbered"
+    },
+    {
+      "num": "05", "slug": "05-the-swarm", "title": "The Swarm",
+      "prev_slug": "04-the-swarm", "prev_title": "The Swarm",
+      "era_id": "swarm", "prev_era_id": "swarm", "era_label": "2009 – 2024",
+      "concept": "Demographic engineering",
+      "teaser": "A federal press release became one of the most-cited numbers in a mass-shooter's manifesto.",
+      "pitch": "The 2008 Census crossover chart traveled, stripped of its caveats, from a federal agency into the 'great replacement' narrative.",
+      "summary": "In 2008 the Census Bureau announced that non-Hispanic whites would become a minority by 2042, with a chart of converging lines. The projection was conditional; the chart was not. Stripped of caveats by screenshots and memes, the crossover chart traveled from a federal agency to chan-boards to the 'great replacement' narrative and into manifestos. Federal demographers had produced, with unimpeachable authority, exactly the object restrictionists could never have manufactured themselves. The chapter calls the operation demographic engineering.",
+      "key_terms": ["demographic engineering", "crossover chart", "great replacement", "majority-minority"],
+      "source": "landing.js", "status": "renumbered"
+    },
+    {
+      "num": "06", "slug": "06-the-portfolio", "title": "The Portfolio",
+      "prev_slug": "05-the-portfolio", "prev_title": "The Portfolio",
+      "era_id": "portfolio", "prev_era_id": "portfolio", "era_label": "2025 – 2048",
+      "concept": "Fine-tuning & temporal gerrymandering",
+      "teaser": "Overpopulation panic flips into its mirror image: where did all the babies go?",
+      "pitch": "Pronatalism recruits the same quantitative infrastructure as zero population growth: wombs as policy levers, births as fiscal returns.",
+      "summary": "As replacement anxiety crested, the headline inverted — from 'minorities will be the majority' to 'where have all the babies gone?' Pronatalism recruited the very same quantitative infrastructure: fiscal-burden analysis became demographic return-on-investment, and wombs became policy levers. A 2024 legal complaint treated each prevented birth as an implied cost, each birth as a fiscal return. The chapter develops two concepts — fine-tuning (financial optimization applied to demography) and temporal gerrymandering (manipulating time horizons to manufacture urgency) — and shows that zero population growth and pronatalism are structurally the same project.",
+      "key_terms": ["fine-tuning", "temporal gerrymandering", "pronatalism", "demographic ROI"],
+      "source": "landing.js", "status": "renumbered"
+    },
+    {
+      "num": "07", "slug": "07-the-evacuation", "title": "The Evacuation",
+      "prev_slug": "06-the-shock", "prev_title": "The Shock",
+      "era_id": "evacuation", "prev_era_id": "evacuation", "era_label": "2049 – 2068",
+      "concept": "Regenerative sovereignty",
+      "teaser": "When the bottle is finally full, the question stops being who stays and becomes who gets rescued.",
+      "pitch": "A speculative final era where cascading climate catastrophe turns demographic sorting into automated triage, and a bioregional vocabulary becomes the idiom in which Hardin's lifeboat returns.",
+      "summary": "The final era is speculative; its mechanisms are not. Cascading climate catastrophe shifts the governing question from who belongs to who gets rescued. The instrument is no longer a curve but a model of the shocks themselves — shock-spillover modeling, where a disruption in one region is forecast as a cascade carried by the displaced into the regions that receive them. The chapter follows that apparatus to an autonomous decision system issuing evacuation determinations faster than any human review, and shows how a bioregional, restorative vocabulary — regenerative sovereignty — becomes the progressive idiom in which Hardin's lifeboat returns.",
+      "key_terms": ["regenerative sovereignty", "shock-spillover modeling", "autonomous decision system", "climate triage"],
+      "source": "landing.js", "status": "renamed+renumbered"
+    },
+    {
+      "num": "08", "slug": "08-the-long-term", "title": "The Long Term",
+      "prev_slug": "07-the-alternatives", "prev_title": "The Alternatives",
+      "era_id": null, "prev_era_id": null, "era_label": "the reclamation",
+      "concept": "Intersectional longtermism",
+      "teaser": "The future has been ceded to people who use it as a warrant for present cruelty. Take it back.",
+      "pitch": "Reclaiming long-term thinking from longtermisms — drawing intersectional longtermism from communities that have already survived long-term projects of erasure.",
+      "summary": "Long-term thinking has been surrendered to longtermisms that treat the future as a license for present coercion. This chapter reclaims it — drawing intersectional longtermism from communities that have already survived long-term projects of erasure and had to think in generations to do it: Black ecologies, Indigenous continuance, disability justice, reproductive justice, and antifascist organizing. From them it distills a constructive program — quantitative egalitarianism, which demotes the number from verdict to evidence, and solidarity infrastructuring, the work of carrying these traditions across generations.",
+      "key_terms": ["intersectional longtermism", "quantitative egalitarianism", "solidarity infrastructuring"],
+      "source": "pdf+landing.js", "status": "renamed+renumbered"
+    },
+    {
+      "num": "09", "slug": "09-boulder-again", "title": "Boulder Again",
+      "prev_slug": "08-boulder-again", "prev_title": "Boulder Again",
+      "era_id": null, "prev_era_id": null, "era_label": "the return",
+      "concept": "What the valley owes",
+      "teaser": "What the model strips from bacteria — memory, feedback, survival — is what lebensraum imaginaries strip from us.",
+      "pitch": "The book returns to Boulder's ground — Sand Creek, deep time, and the question of what the valley owes the people in a warming world.",
+      "summary": "The book returns to where it opened. Bartlett's bacteria-in-a-bottle is read as a micro-macro isomorphism: what the model deletes from real bacteria — feedback, coordination, memory, survival — is exactly what lebensraum imaginaries delete from human communities. The chapter brings the argument down to Boulder's own ground — the Cheyenne and Arapaho, the Sand Creek Massacre as the local precedent for what the architecture produces under stress, and a deep-time future of water, fire, and heat — and turns the nativist question of who belongs into the question of what the valley owes the people in a rapidly warming world.",
+      "key_terms": ["micro-macro isomorphism", "Sand Creek Massacre", "deep time"],
+      "source": "pdf+landing.js", "status": "renumbered"
+    }
+  ],
+
+  "extra_renames": {
+    "tokens": {
+      "QcEfiMatrix": "QcLiMatrix",
+      "qc-efi-matrix": "qc-li-matrix"
+    },
+    "phrases": {
+      "Free Fall": "The Bottle"
+    }
+  },
+
+  "definition_blocks": []
+}
