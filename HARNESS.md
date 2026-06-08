@@ -91,6 +91,12 @@ audit's coverage check proves the bare movement terms were left untouched and th
 no deprecated alias survives. Renames run as a single longest-first pass so
 overlapping keys (e.g. `The Free Fall` vs `Free Fall`) never double-apply.
 
+`aliases_deprecated` is emitted as a phrase guard **regardless of a construct's
+`status`** — so once a rename settles you can keep the construct at
+`status: "unchanged"` and retain its deprecated spellings as a standing
+regression guard that re-canonicalizes any reintroduced spelling on the next
+apply, without the construct having to masquerade as `"renamed"` forever.
+
 ## Verification (local Jekyll build is broken — validate via CI + offline checks)
 
 1. **Validity** — `python3 -m json.tool metadata/*.json`; load every edited

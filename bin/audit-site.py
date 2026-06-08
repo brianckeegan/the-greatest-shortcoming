@@ -91,14 +91,22 @@ def derive_maps(meta: dict) -> tuple[dict, dict, list]:
     notes: list[str] = []
 
     for c in meta["constructs"]:
-        if c.get("status") != "renamed":
-            continue
-        for a, b in (("prev_id", "id"), ("prev_slug", "slug"),
-                     ("prev_short_label", "short_label")):
-            if c.get(a) and c.get(b) and c[a] != c[b]:
-                tokens[c[a]] = c[b]
+        # Token renames (id/slug/label) only apply to an in-flight rename; the
+        # prev_* != current guard already makes a settled construct emit none.
+        if c.get("status") == "renamed":
+            for a, b in (("prev_id", "id"), ("prev_slug", "slug"),
+                         ("prev_short_label", "short_label")):
+                if c.get(a) and c.get(b) and c[a] != c[b]:
+                    tokens[c[a]] = c[b]
+        # Alias→canonical phrases are emitted REGARDLESS of status (#2): they are a
+        # regression guard, so they must keep mapping a reintroduced deprecated
+        # spelling back to canonical even after the rename has settled to
+        # "unchanged". Skip any alias that already equals its canonical target
+        # (an idempotent no-op that would otherwise self-match the canonical name).
         for alias in c.get("aliases_deprecated", []):
-            phrases[alias] = target_for_alias(alias, c["canonical_name"])
+            tgt = target_for_alias(alias, c["canonical_name"])
+            if alias != tgt:
+                phrases[alias] = tgt
 
     for ch in meta["chapters"]:
         if ch.get("prev_slug") and ch["prev_slug"] != ch["slug"]:
@@ -181,11 +189,15 @@ def main() -> None:
     # ---- coverage checks -------------------------------------------------
     problems: list[str] = []
 
-    # every deprecated alias must be covered by a phrase key
+    # Every deprecated alias must be covered by a phrase key — regardless of the
+    # construct's status (#2), so a guard on a settled "unchanged" construct still
+    # audits clean. An alias that already equals its canonical target needs no
+    # replacement and counts as covered.
     for c in meta["constructs"]:
         for alias in c.get("aliases_deprecated", []):
-            if alias not in phrases:
-                problems.append(f"alias not covered by a replacement: {alias!r}")
+            if alias in phrases or alias == target_for_alias(alias, c["canonical_name"]):
+                continue
+            problems.append(f"alias not covered by a replacement: {alias!r}")
 
     # prev_slug files must exist; new slug files must be free (chapters).
     # Tolerate an already-applied rename: if the prev_slug file is gone AND the

@@ -43,7 +43,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 - **Files:** `bin/audit-site.py` (coverage check + `file_moves`), optionally
   `bin/apply-rename.py`, `HARNESS.md`.
 
-### [ ] #2 Construct guards can't coexist with `status: "unchanged"`  — STABILITY
+### [x] #2 Construct guards can't coexist with `status: "unchanged"`  — STABILITY
 - **Problem:** the alias-coverage check loops over **all** constructs
   (`audit-site.py:185`) but `derive_maps` only emits alias→canonical phrases for
   `status=="renamed"` (`audit-site.py:93`). Keeping `aliases_deprecated` as a
