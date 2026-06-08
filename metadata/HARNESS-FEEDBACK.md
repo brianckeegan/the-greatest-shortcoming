@@ -123,7 +123,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   `REGENERATED` and remove the dead `regen_file` branch. Decide alongside #6.
 - **Files:** `bin/audit-site.py`, `bin/apply-rename.py`.
 
-### [ ] #8 No re-ingest provenance guard  — FUNCTIONALITY
+### [x] #8 No re-ingest provenance guard  — FUNCTIONALITY
 - **Problem:** re-ingesting the same or an older PDF overwrites silently.
 - **Fix:** record `sha256`/`ingested`; warn/skip on an already-seen sha; warn when
   the version ≤ the last reconciled one. (Overlaps the #5 overwrite guard.)

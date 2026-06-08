@@ -57,10 +57,15 @@ Or, in Claude Code, the two slash commands wrap the stages: `/ingest-draft` then
 - anything else → a warned fallback to mtime rank (never a silent collapse to v1).
 
 `metadata/v<N>/` is git-ignored (a local working artifact); the authoritative
-`version` lives in `draft-metadata.json`, written by the Stage-2 agent.
-Re-ingesting an **identical** PDF (same sha256) into an occupied slot is a warned
-no-op; a **different** PDF in an occupied slot is refused unless you pass
-`--force`.
+`version` lives in `draft-metadata.json`, written by the Stage-2 agent. The
+extract records `sha256` + `ingested` for provenance. Re-ingest guards:
+
+- an **identical** PDF (same sha256) into an occupied slot → warned no-op;
+- a **different** PDF in an occupied slot → refused unless `--force`;
+- the same content already extracted under **another** version slot → warned
+  (looks like a re-ingest under a new name);
+- a resolved version **≤ the last reconciled** `version` in `draft-metadata.json`
+  → warned (the harness expects forward progress).
 
 ### Re-running on an already-reconciled site
 

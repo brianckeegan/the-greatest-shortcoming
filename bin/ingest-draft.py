@@ -23,6 +23,7 @@ Only dependency is PyMuPDF (``fitz``), already present in this environment.
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import re
@@ -169,6 +170,10 @@ def section_start(pages: list[str], name: str) -> int | None:
     return None
 
 
+def _today() -> str:
+    return datetime.date.today().isoformat()
+
+
 def existing_sha(out_dir: Path) -> str | None:
     """sha256 recorded by a prior extract in ``out_dir`` (None if absent)."""
     ej = out_dir / "extract.json"
@@ -178,6 +183,37 @@ def existing_sha(out_dir: Path) -> str | None:
         return json.loads(ej.read_text()).get("draft", {}).get("sha256")
     except (json.JSONDecodeError, OSError):
         return None
+
+
+def provenance_warnings(sha: str, version: int, this_dir: Path) -> list[str]:
+    """Re-ingest provenance guard (#8): warn if this PDF's sha was already
+    extracted under a *different* version slot, and if the resolved version is
+    not newer than the last reconciled draft recorded in draft-metadata.json."""
+    warns: list[str] = []
+
+    # same content already seen under another metadata/v<N>/ dir?
+    meta_root = REPO / "metadata"
+    for d in sorted(meta_root.glob("v*")):
+        if d == this_dir or not d.is_dir():
+            continue
+        if existing_sha(d) == sha:
+            warns.append(f"identical content (sha {sha[:12]}) was already ingested as "
+                         f"{d.relative_to(REPO)}/ — this looks like a re-ingest under a "
+                         f"different name/version.")
+
+    # version not advancing past the last reconciled draft?
+    dm = meta_root / "draft-metadata.json"
+    if dm.exists():
+        try:
+            last = json.loads(dm.read_text()).get("draft", {})
+            last_v, last_sha = last.get("version"), last.get("sha256")
+        except (json.JSONDecodeError, OSError):
+            last_v = last_sha = None
+        if isinstance(last_v, int) and last_sha != sha and version <= last_v:
+            warns.append(f"resolved version v{version} ≤ last reconciled v{last_v} "
+                         f"(draft-metadata.json) — ingesting an older/equal draft; "
+                         f"the reconcile harness expects forward progress.")
+    return warns
 
 
 def main() -> None:
@@ -212,6 +248,10 @@ def main() -> None:
         print(f"⚠ {out_dir.relative_to(REPO)}/ already holds this exact draft "
               f"(sha {sha[:12]}); re-extracting (no-op for provenance).",
               file=sys.stderr)
+
+    # Re-ingest provenance guard (#8): same content under another slot / non-advancing version
+    for w in provenance_warnings(sha, version, out_dir):
+        print(f"⚠ {w}", file=sys.stderr)
 
     toc = parse_contents(pages)
     titles = [c["title"] for c in toc]
@@ -253,8 +293,10 @@ def main() -> None:
         "draft": {
             "source_pdf": str(pdf.relative_to(REPO)),
             "version": version,
+            "version_kind": vkind,
             "pages": len(pages),
             "sha256": sha,
+            "ingested": _today(),
             "title_page": _norm(pages[0])[:200] if pages else "",
         },
         "preface_text": preface_text,
