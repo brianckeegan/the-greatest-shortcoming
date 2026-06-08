@@ -1,0 +1,24 @@
+{%- comment -%}
+  Full-width span row for the homepage chapter grid. Title + concept + teaser,
+  horizontal. Drives the preface (ch00) before the cards and the appendix links
+  (README, ecofascism-bench, colophon) after them.
+  Params: either `ch` (a _chapters/*.md doc) OR `title`/`concept`/`teaser`/`href`.
+{%- endcomment -%}
+{%- assign ch = include.ch -%}
+{%- if ch -%}
+  {%- assign meta = site.data.cards[ch.slug] -%}
+  {%- assign sp_title = ch.title | default: 'Untitled' -%}
+  {%- assign sp_concept = ch.concept | default: meta.concept -%}
+  {%- assign sp_teaser = ch.teaser | default: meta.teaser -%}
+  {%- if ch.url -%}{%- assign sp_href = ch.url -%}{%- else -%}{%- assign sp_href = '/chapters/' | append: ch.slug | append: '/' -%}{%- endif -%}
+{%- else -%}
+  {%- assign sp_title = include.title | default: 'Untitled' -%}
+  {%- assign sp_concept = include.concept -%}
+  {%- assign sp_teaser = include.teaser -%}
+  {%- assign sp_href = include.href -%}
+{%- endif -%}
+<a class="ch-span reveal" href="{{ sp_href | relative_url }}">
+  <h3>{{ sp_title }}</h3>
+  {% if sp_concept %}<div class="concept">{{ sp_concept }}</div>{% endif %}
+  {% if sp_teaser %}<p class="teaser">{{ sp_teaser }}</p>{% endif %}
+</a>

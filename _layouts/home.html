@@ -114,15 +114,22 @@
 
   <!-- ============================ ACT 5 — CHAPTERS ============================ -->
   {%- assign chs = site.chapters | sort: 'num' -%}
+  {%- assign preface = chs | where: 'slug', 'preface' | first -%}
+  {%- assign body_chs = chs | where_exp: 'c', "c.slug != 'preface'" -%}
   <section class="chapters" id="chapters">
     <div class="wrap">
       <div class="sec-head reveal">
-        <h2>{{ chs.size }} chapters</h2>
+        <h2>{{ body_chs.size }} chapters</h2>
         <span class="kicker">an inheritance, five eras, a reckoning</span>
       </div>
       <p class="ch-intro reveal">One architecture, traced across a century and into the next — from a barren mesa in Boulder to an autonomous machine deciding who gets evacuated. Tap any chapter.</p>
       <div class="ch-grid">
-        {% for ch in chs %}{% include chapter-card.html ch=ch %}{% endfor %}
+        {%- comment -%} ch00 — preface, full-width span before the chapter cards {%- endcomment -%}
+        {% if preface %}{% include chapter-span.html ch=preface %}{% endif %}
+        {%- comment -%} ch01–ch09 — chapter cards {%- endcomment -%}
+        {% for ch in body_chs %}{% include chapter-card.html ch=ch %}{% endfor %}
+        {%- comment -%} appendix spans after ch09 — README, ecofascism-bench, colophon {%- endcomment -%}
+        {% for s in site.data.spans %}{% include chapter-span.html title=s.title concept=s.concept teaser=s.teaser href=s.href %}{% endfor %}
       </div>
     </div>
   </section>
