@@ -118,8 +118,12 @@ permalink: pretty
 exclude:
   - Gemfile
   - Gemfile.lock
+  - vendor/          # bundler-cache installs gems here in CI; Jekyll must not scan it
+  - .bundle/
   - README.md
   - node_modules
+  - package.json
+  - package-lock.json
   - "*.napkin"
   - "Wireframes.html"
   - "Greatest Shortcoming v1.html"
