@@ -148,6 +148,12 @@ apply, without the construct having to masquerade as `"renamed"` forever.
 
 ## Verification (local Jekyll build is broken — validate via CI + offline checks)
 
+0. **Offline lint gate** — `python3 bin/lint-site.py` (run before pushing). Parses
+   `_config.yml` + every `_data/*.yml`, checks chapter/landing front matter is
+   well-formed with required keys, that every `cards.yml` slug resolves to a
+   chapter file, and that no deprecated id/slug/alias from a settled rename
+   survives in a build-scope file. Exit 0 = clean; catches the cheap failures the
+   CI Jekyll build would otherwise surface only after a push.
 1. **Validity** — `python3 -m json.tool metadata/*.json`; load every edited
    `_data/*.yml` and chapter front matter with a YAML parser.
 2. **Invariants** — after `--apply`: no `ecofascist imaginar*` / `ecofascist_imaginary`
@@ -170,4 +176,5 @@ apply, without the construct having to masquerade as `"renamed"` forever.
 | `.claude/agents/pdf-reader.md` | the PDF-reading agent |
 | `bin/audit-site.py` | Stage 3 — audit → `audit-report.md` + `rename-plan.json` |
 | `bin/apply-rename.py` | Stage 4 — idempotent reconcile (dry-run by default) |
+| `bin/lint-site.py` | offline pre-push gate — YAML / front-matter / slug-xref / reverse-drift lint |
 | `.claude/commands/ingest-draft.md`, `audit-constructs.md` | slash-command triggers |

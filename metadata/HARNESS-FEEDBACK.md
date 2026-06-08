@@ -129,7 +129,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   the version ≤ the last reconciled one. (Overlaps the #5 overwrite guard.)
 - **Files:** `bin/ingest-draft.py`.
 
-### [ ] #9 Everything rides on CI  — STABILITY
+### [x] #9 Everything rides on CI  — STABILITY
 - **Problem:** local Jekyll build is broken; breakage is only caught after it hits
   `master`.
 - **Fix:** add a lightweight pre-push offline check — containerized `jekyll build`,
