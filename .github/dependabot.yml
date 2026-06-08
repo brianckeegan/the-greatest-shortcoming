@@ -18,8 +18,16 @@ updates:
     schedule:
       interval: monthly
     groups:
-      npm:
+      # Group only safe minor/patch updates; majors get their own PR so one
+      # breaking bump (e.g. Tailwind v4) can't block the rest.
+      npm-minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # Tailwind v4 is a breaking rewrite of the config + CLI; migrate
+      # deliberately, not via an automated bump.
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: deps
 
