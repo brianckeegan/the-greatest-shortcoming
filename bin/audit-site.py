@@ -31,8 +31,8 @@ REPO = Path(__file__).resolve().parent.parent
 META = REPO / "metadata" / "draft-metadata.json"
 
 # Files the rename touches. Build-scope first; then tracked-but-excluded files we
-# keep consistent. chapters.yml/cards.yml are regenerated, so excluded from text
-# replacement. _preview/, node_modules/, _site/, metadata/, bin/ are never scanned.
+# keep consistent. cards.yml is regenerated, so excluded from text replacement.
+# _preview/, node_modules/, _site/, metadata/, bin/ are never scanned.
 SCAN_GLOBS = [
     "_config.yml",
     "_data/*.yml",
@@ -48,7 +48,9 @@ SCAN_GLOBS = [
     "data.js",
     "assets/js/landing.js",
 ]
-REGENERATED = {"_data/chapters.yml", "_data/cards.yml"}
+# cards.yml is generated from the metadata; never scanned for text replacement.
+# (There is intentionally no chapters.yml — it was a phantom regen target, #4.)
+REGENERATED = {"_data/cards.yml"}
 
 
 def rel(p: Path) -> str:

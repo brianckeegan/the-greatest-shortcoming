@@ -115,7 +115,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P3 — cleanup / hardening
 
-### [ ] #4 `chapters.yml` is a phantom regen target  — STABILITY
+### [x] #4 `chapters.yml` is a phantom regen target  — STABILITY
 - **Problem:** `REGENERATED` lists `_data/chapters.yml` (`audit-site.py:50`) but the
   file doesn't exist, so the `pitch` written by `regen_file` (`apply-rename.py:115`)
   goes nowhere. Dead path / latent inconsistency.
