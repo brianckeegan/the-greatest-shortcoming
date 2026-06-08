@@ -24,6 +24,40 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P1 — do first (makes re-runs clean; supports the real filename convention)
 
+### [x] #10 Missed chapter openings silently absorb the next chapters' bodies  — FUNCTIONALITY, highest
+- **Problem:** ingesting `source/20260607.pdf` produced a poisoned interface: ch02
+  "The Inheritance" extracted as **243,110 chars** spanning chapters 02–04 (its tail
+  held ch04 "The Quarantine" prose — "…The Quarantine era was over"), while ch03 "The
+  Bottle" and ch04 "The Quarantine" were reported **"Contents-only"** even though
+  their bodies are in the PDF. The real ch02 ends at ~char 75,571 where "3 The Bottle"
+  begins. Stage 2 would then summarize a 3-chapters-in-one blob and mark two drafted
+  chapters as un-drafted.
+- **Root cause:** `find_openings` (`ingest-draft.py`) keyed a chapter opening on a
+  SMALL-CAPS lead-in — `^\d{1,2}\s+<Title>\s+(.{0,40})` then `[A-Z]{3,}` in the lead.
+  Openings that don't start with a small-caps run fail it: ch03 opens on a quotation
+  (`3 The Bottle “I looked at the arithmetic…`) and ch04 on a two-letter lead word
+  (`4 The Quarantine IN September…`). With the opening unmatched, the segmenter never
+  closed the previous chapter, so its span ran to the *next* detected opening and the
+  `present` (drafted vs. Contents-only) flag was wrong.
+- **Fix:** detect openings by the structural signal instead of styling — the chapter's
+  **own number then its title** at the very start of the page
+  (`^<chapter-number>\s+<Title>\s+\S`). That form is unique to openings; the running
+  headers (`<page-no> Chapter <n> <Title>…` verso, `<page-no> <body>…` recto) and
+  mid-chapter section heads (`<page-no> <Section Title>…`) never begin with the
+  chapter's own number + title. Keying on the exact number (not `\d{1,2}`) also makes
+  decoys like `91 The Quarantine Era's Lebensraum Imaginary` impossible to match.
+- **Regression check:** `python3 bin/ingest-draft.py --self-test` — hermetic fixture
+  reproducing all nine opening shapes (incl. the quotation and short-lead openings)
+  plus running-header / section-head decoys, asserting every opening is found at its
+  own page, no decoy is, and no chapter is absorbed; plus, when `source/20260607.pdf`
+  is present, the real ch02/03/04 boundaries from the evidence above.
+- **Acceptance:** `python3 bin/ingest-draft.py source/20260607.pdf` reports **9 of 9**
+  chapters drafted; ch02 = pages [32,57] ≈ 75.6k chars and contains neither "3 The
+  Bottle" nor "The Quarantine era was over"; ch03 = [58,81] opens "3 The Bottle"; ch04
+  = [82,115] opens "4 The Quarantine" and holds the tell-tale. `--self-test` exits 0.
+- **Files:** `bin/ingest-draft.py` (`find_openings`, new `chapter_ranges` helper,
+  `_self_test`), `HARNESS.md` (Verification §0).
+
 ### [x] #1 Re-running on an already-reconciled site fails the audit (stale `prev_*`)  — STABILITY, highest
 - **Problem:** the committed `draft-metadata.json` is post-rename, but chapter
   `prev_slug` values still point at pre-rename files. The audit requires every
@@ -140,7 +174,9 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 ---
 
 ## Implementation order
-P1 (`#1`, `#2`, `#5`) → P2 (`#3`, `#6`, `#7`) → P3 (`#4`, `#8`, `#9`).
+P1 (`#10`, `#1`, `#2`, `#5`) → P2 (`#3`, `#6`, `#7`) → P3 (`#4`, `#8`, `#9`).
+`#10` (mis-segmentation) is highest — it silently corrupts the per-chapter interface
+that every later stage reads — and was found + fixed re-ingesting `20260607.pdf`.
 After each item: re-run `audit-site.py` + `apply-rename.py` (dry run) and confirm the
 north-star steady state still holds. Commit each item (or tight group) directly to
 `master`. Update `HARNESS.md` and `metadata/draft-metadata.schema.json` when behavior
