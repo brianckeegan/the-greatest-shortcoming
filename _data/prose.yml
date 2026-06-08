@@ -1,0 +1,157 @@
+# Era prose. Each entry is the body of one scrollytelling step.
+# Markup conventions:
+#   <span class="ent" data-ent="ID">label</span>   — entity reference (opens drawer)
+#   <span class="hl">…</span>                       — highlighted phrase
+#   {{ DOC:doc_id }}                                — inline document vignette (rendered server-side)
+#   {{ QUOTE:source | body }}                       — pull-quote (rendered server-side)
+# Edit freely. Add new eras in _data/eras.yml first; then add a matching key here.
+
+prelude: |
+  <p class="dropcap">
+    Boulder is not a safe place. The valley sits on accumulated catastrophe — seas dried up, mountains
+    erupted, ice ground them down, fires incinerated forests. What looks like solid ground is an alluvial
+    fan, a delta of everything the mountains could no longer hold.
+  </p>
+  <p>
+    The civic identity built atop that debris was a sustained act of collective forgetting. In 1898 a
+    coalition of Texas educators and Boulder boosters founded the
+    <span class="ent" data-ent="chautauqua">Colorado Chautauqua</span> on a barren mesa
+    at the foot of the Flatirons — the first parkland the city ever purchased, leased back to a
+    nonprofit whose perimeter fence and ten-o'clock curfew policed its borders.
+  </p>
+  <p>
+    A decade later, the <span class="ent" data-ent="bcia">Boulder City Improvement Association</span>
+    retained the firm of <span class="ent" data-ent="olmsted_brothers">Olmsted Brothers</span> to survey
+    the city. The resulting 1910 document, authored by
+    <span class="ent" data-ent="olmsted_jr">Frederick Law Olmsted Jr.</span>, is a genuinely reformist
+    work — and one of the earliest codifications of a vision of environmental preservation that specifies
+    who belongs.
+  </p>
+  {{ DOC:olmsted_report }}
+  <p>
+    The most enduring element of that plumbing was a grammar of <span class="hl">scarcity and urgency</span>.
+    Mountain views, Olmsted argued, were a finite common resource subject to irreversible privatization.
+    The subheading <i>"The Cost of Delay"</i> recurs through the report like a drumbeat.
+  </p>
+  <p>
+    The institutional template waited half a century for its next formal elaboration.
+  </p>
+
+free_fall: |
+  <p class="dropcap">
+    In 1958 a math professor named <span class="ent" data-ent="mckelvey">Bob McKelvey</span> told a young
+    physicist that something had to be done about those foothills, or they would be covered in houses.
+    The other half of that conversation was <span class="ent" data-ent="bartlett">Albert Bartlett</span>,
+    a nuclear physicist who had spent the final years of WWII at
+    <span class="ent" data-ent="los_alamos">Los Alamos</span> measuring plutonium isotopes.
+  </p>
+  <p>
+    Bartlett would spend the next half century translating his expertise with the exponential mathematics
+    of radioactivity into a persuasive template about the consequences of growth. In 1959 a coalition of
+    alarmed citizens organized as <span class="ent" data-ent="plan_boulder">PLAN-Boulder</span> and
+    successfully campaigned for the <span class="ent" data-ent="blue_line">Blue Line Amendment</span> —
+    a provision prohibiting the city from extending water service above a fixed elevation contour.
+  </p>
+  {{ QUOTE:ch. 1, p. 5 | What Olmsted had argued through the cultivated authority of the landscape architect, McKelvey and Bartlett could argue through the harder authority of mathematics and physics. }}
+  <p>
+    The thought experiment was pedagogically brilliant. A bottle. A single bacterium. A doubling time of
+    one minute. <em>"At what time was the bottle half full?"</em> The audience hesitates.
+    <em>"Eleven fifty-nine."</em>
+  </p>
+  {{ DOC:bartlett_lecture }}
+  <p>
+    The <span class="ent" data-ent="exponential_curve">exponential curve</span> compressed fertility,
+    mortality, migration, technology, consumption, distribution, and political economy into a single
+    alarming metric — and converted a conditional projection into an unconditional destiny:
+    <i>the bottle will fill</i>. Once compressed, the metric traveled. Into
+    <span class="ent" data-ent="sierra_club">Sierra Club</span> newsletters. Into congressional testimony.
+    Into nativist pamphlets at county fairs.
+  </p>
+  <p>
+    Around this anchor instrument accumulated others. The
+    <span class="ent" data-ent="open_space_program">open space program</span> in 1967 authorized the city
+    to purchase and permanently retire perimeter land. The
+    <span class="ent" data-ent="danish_plan">Danish Plan</span> in 1976 capped annual residential building
+    permits at 450 units, derived from
+    <span class="ent" data-ent="carrying_capacity">carrying-capacity</span> calculations that arrived at
+    council with the authority of technical necessity.
+  </p>
+  {{ DOC:danish_plan_doc }}
+  <p>
+    None of this required the invention of new political logic. Each instrument extended a template
+    already in place for decades, further rationalized through the emerging vocabularies of environmental
+    protection and technocratic governance. This is what the book calls
+    <strong><span class="ent" data-ent="quant_chauvinism">quantitative chauvinism</span></strong>: the
+    deployment of numerical instruments to foreclose political deliberation by converting contested claims
+    into apparent technical necessities.
+  </p>
+
+quarantine: |
+  <p class="dropcap">
+    When a think tank publishes a <span class="ent" data-ent="fiscal_impact">fiscal impact statement</span>
+    concluding that immigrants cost a state government a specific dollar amount per household, the finding
+    arrives at the congressional hearing wrapped in the authority of expertise. The methodological choices,
+    the aggregation decisions, the suppressed variables, and the political assumptions embedded in the cost
+    categories are invisible to the audience.
+  </p>
+  <p>
+    The <span class="ent" data-ent="tanton">Tanton network</span> and its think tank affiliates including
+    the <span class="ent" data-ent="cis">Center for Immigration Studies</span> hierarchized immigrant
+    populations by fiscal burden — converting a political claim ("certain people cost too much") into an
+    administrative finding ("the data show a net fiscal burden").
+  </p>
+  {{ QUOTE:after Theodore Porter, <i>Trust in Numbers</i> | Numerical objectivity did not spread because it reliably produced accurate descriptions of the world. It spread because it supplied a politically useful pose of impersonality. }}
+  <p>
+    <span class="ent" data-ent="porter">Theodore Porter</span> diagnosed the mechanism;
+    <span class="ent" data-ent="desrosieres">Alain Desrosières</span> showed why these substitutions become
+    invisible. Statistical categories are political settlements that become naturalized through
+    institutional routinization. Once institutionalized, the categories produce the very reality they claim
+    to describe.
+  </p>
+
+swarm: |
+  <p class="dropcap">
+    In 2008 the <span class="ent" data-ent="census_bureau">U.S. Census Bureau</span> released a projection
+    showing that non-Hispanic whites would become a minority of the American population by 2042. The
+    projection was conditional, built on assumptions about stable racial categories, consistent
+    self-identification, and unchanged classification systems over a fifty-year horizon. Every one of those
+    assumptions was empirically questionable.
+  </p>
+  {{ DOC:census_2008_proj }}
+  <p>
+    But the <span class="ent" data-ent="majority_minority">crossover chart</span>, with its converging
+    lines and marked intersection point, created the visual grammar of a countdown: a destination rather
+    than a scenario, a destiny rather than a set of assumptions. The conditionality was invisible. The
+    countdown was not.
+  </p>
+  <p>
+    The political projects that recruited this authority are the book's second analytical register:
+    <strong><span class="ent" data-ent="ecofascist_imaginary">eco-fascist imaginaries</span></strong>,
+    organized visions of environmental futures that naturalize hierarchy and exclusion as ecological
+    necessity. <span class="ent" data-ent="griffin">Roger Griffin</span> defined fascism as
+    <span class="ent" data-ent="palingenesis">palingenetic</span> ultranationalism — the myth of national
+    rebirth from decadence. <span class="ent" data-ent="arendt">Hannah Arendt</span> showed how techniques
+    of classification developed at the edges of empire re-enter domestic politics under crisis.
+    <span class="ent" data-ent="jasanoff">Sheila Jasanoff's</span> sociotechnical imaginaries explain how
+    visions become durable through laws, infrastructures, and administrative routine.
+  </p>
+
+portfolio: |
+  <p class="dropcap">
+    Fertility rates as investment metrics. Pronatalist longtermism reframes demographic change as a
+    portfolio problem — populations to be optimized, hedged, and underwritten. The instruments of
+    environmental stewardship reach a new asset class.
+  </p>
+  <p style="color:var(--ink-soft);font-style:italic">
+    ↳ This era will be developed as the chapter is drafted. The network above shows where the threads will land.
+  </p>
+
+evacuation: |
+  <p class="dropcap">
+    Selective rescue and demographic triage as administrative routine. Climate planning normalizes
+    detention, sorting, and the camp as political technology. The afterlife of a hundred years of
+    instruments, finally put to their fullest use.
+  </p>
+  <p style="color:var(--ink-soft);font-style:italic">
+    ↳ This era will be developed as the chapter is drafted.
+  </p>

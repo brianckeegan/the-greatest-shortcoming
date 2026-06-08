@@ -1,76 +1,111 @@
 # ============================================================================
-# greatest-shortcoming · book site
+# greatest-shortcoming · a Jekyll theme for book / network-reading websites
 # ============================================================================
-# Server-rendered Jekyll site styled with Tailwind CSS (built via Vite in CI).
-# Layouts: _layouts/home.html (landing) · _layouts/chapter.html (long-form) ·
-# _layouts/default.html / page.html (static). Tailwind tokens live in
-# tailwind.config.js; component recipes in assets/css/src/main.css.
-#
-# Edit this file to retitle, recolor, and rewire. Chapter content lives in
-# _chapters/*.md; landing-item content in _landing/*.md.
+# This site is built with Jekyll and deploys to GitHub Pages out of the box.
+# Edit this file to retitle, recolor, and rewire the site without touching code.
+# Add or edit entities under `_data/` to grow the network.
 
 # ---- Site identity ---------------------------------------------------------
 title: "The Greatest Shortcoming"
-subtitle: "Quantitative Chauvinism and Ecofascist Imaginaries"
-author: "Brian C. Keegan"
+subtitle: "a network reading"
 description: >-
   How a community abstracts its anxieties about disorder, contamination, and
   change into technical problems subject to "objective" numerical analysis —
   and how those quantitative logics travel from progressive city councils to
   the journals of white nationalists.
-url: "https://www.thegreatestshortcoming.com"
-baseurl: ""
+url: ""           # e.g. "https://username.github.io"
+baseurl: ""       # e.g. "/greatest-shortcoming" if deploying under a path
 lang: en
-# To set a custom domain: create a CNAME file at the repo root with the domain
-# (e.g. greatestshortcoming.com), then enable HTTPS under Settings → Pages.
-status_line: "in progress"
-
-# ---- Feature flags ---------------------------------------------------------
-# The scrollytelling network and the QC×EFI matrix are paused. All source
-# files remain in the repo (assets/js/islands/**, assets/js/dist/islands.js,
-# _data/scrolly/*.yml, assets/css/scrolly-network.css) — flip features.network
-# to true and add the network mount include to a layout to revive it.
-features:
-  network: false
 
 # ---- Hero (homepage) -------------------------------------------------------
 hero:
-  title_lines: ["The Greatest Shortcoming"]
+  title_lines: ["The Greatest", "Shortcoming"]
   deck: >-
     How a community abstracts its anxieties about disorder, contamination, and
     change into technical problems subject to "objective" numerical analysis —
     and how those quantitative logics travel from progressive city councils to
-    the journals of white nationalists.
+    the journals of white nationalists. Five eras. One mechanism.
   scroll_cue: "scroll to begin"
 
 # ---- Top-level navigation --------------------------------------------------
-# Used by _includes/header.html across every page.
+# Each item links either to a section anchor on the home page or to a sub-page.
 nav:
-  - { label: "Contents",     url: "/contents/" }
-  - { label: "Preface",      url: "/chapters/preface/" }
-  - { label: "About",        url: "/about/" }
-  - { label: "News",         url: "/news/" }
+  - { label: "Eras", kind: "eras-menu" }   # special: opens dropdown of eras
+  - { label: "Book", url: "#book" }
+  - { label: "Author", url: "#author" }
+  - { label: "Resources", url: "#resources" }
 
-# ---- Landing-page items ----------------------------------------------------
-# Each _landing/<id>.md declares (in YAML frontmatter):
-#
-#   kind        — coda | register | news | epigraphs | island   (renderer)
-#   sort_order  — integer; lower numbers render first within a kind-section.
-#   home_only   — optional; reserved for future use.
-#   kicker      — small overline above the title (optional)
-#   title       — heading (optional for `news`/`epigraphs`)
-#   items       — for `kind: epigraphs`, a list of {quote, cite}
-#   island      — for `kind: island`, the window global to render
-#                  (only rendered when features.network: true).
-#
-# _layouts/home.html groups landing items by `kind` into numbered sections
-# after the Parts/Chapters sections — see _layouts/home.html for the exact
-# section order (book, author, epigraphs, coda, news, resources, island).
+# ---- Two analytical registers (definition bars beneath the hero) -----------
+registers:
+  - id: "quant-chauvinism"
+    kicker: "epistemic register · i"
+    title: "Quantitative Chauvinism"
+    body: >-
+      <em>n.</em> A political operation: the deployment of numerical
+      instruments to foreclose political deliberation by converting contested
+      claims into apparent technical necessities. It operates through three
+      reinforcing patterns — the <b>will to simplify</b> (compressing complex
+      social processes into a single governing metric), the <b>rule of
+      expertise</b> (insulating quantified claims from democratic scrutiny
+      through credentialed authority), and the <b>politics of inevitability</b>
+      (converting conditional projections into mandates that foreclose
+      political choice).
+  - id: "ecofascist-imaginaries"
+    kicker: "political register · ii"
+    title: "Ecofascist Imaginaries"
+    body: >-
+      <em>n.</em> Organized visions of environmental futures that naturalize
+      hierarchy and exclusion as ecological necessity. Three constitutive
+      features: ecological crisis as the ground for <b>palingenetic
+      purification</b> (national rebirth from decadence); demographic content
+      given to that contamination (the wrong bodies, the wrong fertility); and
+      the <b>coercive sorting of populations</b> authorized as stewardship
+      rather than violence. Made durable, in Sheila Jasanoff's terms, through
+      the laws, infrastructures, and administrative routines that enact them.
+
+# ---- Coda sections (after the scrollytelling) ------------------------------
+# Each becomes an in-page section AND can be expanded as its own page later.
+coda:
+  - id: "book"
+    kicker: "about"
+    title: "The Book"
+    body: >-
+      <i>The Greatest Shortcoming</i> traces a hundred years of American
+      demographic and environmental governance through five eras — from the
+      Olmsted Report's grammar of scarcity to climate triage as administrative
+      routine. It identifies the actors who built the instruments, the
+      organizations that circulated them, the metaphors that made them
+      persuasive, and the political projects they served. And it asks whether
+      measurement can be redirected: whether the same quantitative tools that
+      narrowed the circle of concern can be rebuilt to widen it.
+  - id: "author"
+    kicker: "about"
+    title: "The Author"
+    body: >-
+      <span style="color:var(--ink-soft);font-style:italic">↳ Author bio
+      placeholder — edit <code>_config.yml</code> to replace.</span>
+  - id: "resources"
+    kicker: "further"
+    title: "Resources"
+    body: >-
+      Selected works referenced in chapter 1: Theodore Porter, <i>Trust in
+      Numbers</i>; Alain Desrosières, <i>The Politics of Large Numbers</i>;
+      Hannah Arendt, <i>The Origins of Totalitarianism</i>; Matthew Connelly,
+      <i>Fatal Misconception</i>; Emily Klancher Merchant, <i>Building the
+      Population Bomb</i>; Betsy Hartmann, <i>Reproductive Rights and
+      Wrongs</i>; Sheila Jasanoff &amp; Sang-Hyun Kim, <i>Dreamscapes of
+      Modernity</i>; Roger Griffin on palingenetic ultranationalism.
+
+# ---- Theme tokens (overridable knobs) --------------------------------------
+theme_defaults:
+  theme: "cool"      # "warm" | "ivory" | "cool"
+  net: "rough"       # "rough" | "clean"
+  fontSize: 18
 
 # ---- Footer ----------------------------------------------------------------
 footer:
-  left:  "scrollytelling theme"
-  right: "Copyright 2026"
+  left:  "The Greatest Shortcoming · ch. 1 Boulder · network reading"
+  right: "scroll-driven"
 
 # ---- Jekyll plumbing -------------------------------------------------------
 # Compatible with the github-pages gem; no plugins beyond GH Pages allow-list.
@@ -80,11 +115,27 @@ plugins:
 
 permalink: pretty
 
-# ---- Collections -----------------------------------------------------------
-# `chapters`: drafted chapters and the preface at /chapters/<slug>/
-# `landing`:  landing-page item content (book / author / register defs /
-#             news / resources / epigraphs / island). Read as data by
-#             _layouts/home.html; not output as standalone pages.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - node_modules
+  - "*.napkin"
+  - "Wireframes.html"
+  - "Greatest Shortcoming v1.html"
+  - "Greatest Shortcoming.html"
+  - "components.jsx"
+  - "pages.jsx"
+  - "design-canvas.jsx"
+  - "scrolly-network.jsx"
+  - "tweaks-panel.jsx"
+  - "data.js"
+  - "styles.css"
+  - "scrolly.css"
+  - "landing.html"
+  - "register-preview.html"
+  - "_preview"
+
 collections:
   chapters:
     output: true
@@ -99,29 +150,6 @@ defaults:
   - scope: { path: "", type: "chapters" }
     values:
       layout: "chapter"
-      page_kind: "chapter"
-  - scope: { path: "pages" }
+  - scope: { path: "", type: "landing" }
     values:
-      layout: "page"
-
-exclude:
-  - Gemfile
-  - Gemfile.lock
-  - README.md
-  - MAINTAINERS.md
-  - CLAUDE.md
-  - scripts
-  - node_modules
-  - package.json
-  - package-lock.json
-  - vite.config.js
-  - tailwind.config.js
-  - postcss.config.js
-  - assets/css/src
-  - esbuild.config.mjs
-  - tsconfig.json
-  # vendor/ and .bundle/ are created by ruby/setup-ruby with bundler-cache: true.
-  # Without this exclude, Jekyll tries to process gem site_template files
-  # (e.g. jekyll-*/lib/site_template/_posts/*.erb) and errors out.
-  - vendor
-  - .bundle
+      layout: null

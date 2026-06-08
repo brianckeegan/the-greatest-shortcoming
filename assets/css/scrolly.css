@@ -1,0 +1,459 @@
+/* Scrollytelling stylesheet — replaces page.css for scrolly mode */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Caveat:wght@400;700&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@font-face {
+  font-family: "et-book";
+  src: url("https://edwardtufte.github.io/tufte-css/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff");
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "et-book";
+  src: url("https://edwardtufte.github.io/tufte-css/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff") format("woff");
+  font-weight: normal; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "et-book";
+  src: url("https://edwardtufte.github.io/tufte-css/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff") format("woff");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --paper: #fffff8;
+  --ink: #111111;
+  --ink-soft: #4a463c;
+  --rule: #d8d2bf;
+  --tufte-red: #c83c3c;
+  --highlight: #fff0a8;
+  --serif: 'et-book', 'EB Garamond', Georgia, serif;
+  --hand: 'Kalam', 'Caveat', cursive;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+[data-theme="cool"] { --paper: #fafbfc; --tufte-red: #2a5a8a; --highlight: #d9e8f5; }
+[data-theme="warm"] { --paper: #fffff8; --tufte-red: #c83c3c; }
+[data-theme="ivory"] { --paper: #f5f1e8; --tufte-red: #a8341e; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+body {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); transition: background .15s, border-color .15s; cursor: pointer; }
+a:hover { background: var(--highlight); border-bottom-color: var(--ink); }
+
+h1, h2, h3 { font-weight: 400; line-height: 1.1; margin: 0 0 .5em; }
+h1 { font-size: 3.4rem; font-style: italic; }
+h2 { font-size: 2.2rem; font-style: italic; }
+h3 { font-size: 1.3rem; font-style: italic; }
+
+.mono { font-family: var(--mono); }
+.hand { font-family: var(--hand); }
+.kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.hl { background: var(--highlight); padding: 0 2px; }
+
+/* === Top scroll progress bar === */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px; background: transparent;
+  z-index: 50; pointer-events: none;
+}
+.scroll-progress .bar {
+  height: 100%; background: var(--ink); width: 0%;
+  transition: width .12s ease-out;
+}
+
+/* === Top header === */
+.top-header {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono); font-size: 12px;
+}
+.top-header .title { font-family: var(--serif); font-style: italic; font-size: 14px; letter-spacing: .01em; }
+.top-header .title b { font-style: normal; }
+.top-header .nav-eras { display: flex; gap: 4px; }
+.top-header .nav-eras button {
+  appearance: none; background: transparent; border: none; cursor: pointer;
+  padding: 4px 8px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .06em; color: var(--ink-soft); text-transform: uppercase;
+  border-radius: 2px; transition: background .15s, color .15s;
+}
+.top-header .nav-eras button:hover { background: var(--rule); color: var(--ink); }
+.top-header .nav-eras button.active { background: var(--ink); color: var(--paper); }
+@media (max-width: 760px) {
+  .top-header { padding: 10px 16px; }
+  .top-header .nav-eras { display: none; }
+}
+
+/* === Hero === */
+.hero {
+  padding: 100px 28px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.hero .kicker { margin-bottom: 14px; }
+.hero-kicker { margin: 18px 0 24px !important; font-size: 12px; }
+.hero-kicker a {
+  color: var(--tufte-red); text-decoration: none;
+  border-bottom: 1px solid var(--tufte-red); padding-bottom: 1px;
+  font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase;
+}
+.hero-kicker a:hover { background: var(--tufte-red); color: var(--paper); }
+.hero-kicker .amp { color: var(--ink-soft); font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; padding: 0 4px; }
+.hero h1 { font-size: clamp(2.4rem, 6vw, 4.6rem); margin: 0 0 .3em; line-height: 1.04; }
+
+/* === Definition bars (Quantitative Chauvinism / Ecofascist Imaginaries) === */
+.def-bar {
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper-tint, var(--paper));
+  padding: 36px 28px;
+  margin: 0;
+}
+.def-bar + .def-bar { border-top: none; }
+.def-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 220px 1fr; gap: 36px; align-items: start;
+}
+.def-inner .kicker { padding-top: 6px; color: var(--tufte-red); }
+.def-inner h3 {
+  font-family: var(--serif); font-size: 1.9rem; margin: 0 0 12px;
+  font-weight: 600; letter-spacing: -0.01em; grid-column: 2;
+}
+.def-inner p {
+  grid-column: 2; margin: 0; max-width: 720px; font-size: 1.05rem;
+  line-height: 1.55; color: var(--ink);
+}
+.def-inner .kicker { grid-column: 1; grid-row: 1 / span 99; }
+@media (max-width: 760px) {
+  .def-inner { grid-template-columns: 1fr; gap: 8px; }
+  .def-inner .kicker, .def-inner h3, .def-inner p { grid-column: 1; }
+  .def-bar { padding: 28px 20px; }
+}
+.hero .deck {
+  font-size: 1.25rem; max-width: 680px; color: var(--ink-soft); font-style: italic; line-height: 1.5;
+}
+.hero .scroll-cue {
+  margin-top: 80px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft);
+  display: flex; align-items: center; gap: 10px;
+}
+.hero .scroll-cue::after {
+  content: ''; display: inline-block; width: 60px; height: 1px; background: var(--ink-soft);
+  animation: scrollcue 1.6s ease-in-out infinite;
+}
+@keyframes scrollcue {
+  0%, 100% { transform: translateY(0); opacity: .6; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
+/* === Scrolly stage === */
+.scrolly {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+@media (max-width: 900px) {
+  .scrolly { grid-template-columns: 1fr; }
+}
+
+/* Sticky figure column */
+.sticky-figure {
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 90px);
+  display: flex; flex-direction: column;
+  padding: 24px 24px 24px 0;
+}
+@media (max-width: 900px) {
+  .sticky-figure { height: 60vh; padding: 16px 0; top: 50px; background: var(--paper); border-bottom: 1px solid var(--rule); z-index: 5; }
+}
+
+.figure-frame {
+  flex: 1;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.figure-caption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.figure-caption b { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--ink); font-size: 14px; }
+.figure-svg-wrap { flex: 1; position: relative; overflow: hidden; }
+.figure-svg-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.figure-legend {
+  border-top: 1px solid var(--rule);
+  padding: 8px 14px;
+  display: flex; gap: 14px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 10px; color: var(--ink-soft);
+}
+.figure-legend i {
+  width: 10px; height: 10px; display: inline-block;
+  border: 1px solid var(--ink); margin-right: 5px; vertical-align: middle; background: var(--paper);
+}
+.figure-legend i.org { border-radius: 1px; }
+.figure-legend i.person { border-radius: 50%; }
+.figure-legend i.theme { transform: rotate(45deg); margin-right: 8px; }
+.figure-legend i.instrument { border-style: dashed; }
+.figure-legend i.doc { border-color: var(--ink-soft); }
+
+/* === Prose column === */
+.prose {
+  padding: 24px 0 24px 24px;
+  max-width: 580px;
+}
+@media (max-width: 900px) {
+  .prose { padding: 24px 0; max-width: 100%; }
+}
+
+/* Each era as a long step */
+.era-step {
+  padding: 60vh 0 40vh;
+  border-top: 1px solid var(--rule);
+}
+.era-step:first-of-type { border-top: none; padding-top: 30vh; }
+.era-step .era-num {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.era-step .era-num .num {
+  display: inline-block; width: 22px; height: 22px; line-height: 22px;
+  border: 1px solid var(--ink); border-radius: 50%; text-align: center;
+  font-size: 10px; margin-right: 8px; color: var(--ink); background: var(--paper);
+  vertical-align: middle;
+}
+.era-step.active .era-num .num { background: var(--ink); color: var(--paper); }
+.era-step h2 {
+  font-size: 3rem; margin: 8px 0 4px; line-height: 1;
+}
+.era-step .era-dates { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); margin-bottom: 24px; }
+
+.era-step p { margin: 1em 0; font-size: 1.06rem; line-height: 1.65; }
+.era-step p:first-of-type { margin-top: 0; }
+
+/* Inline document card (chat-bubble equivalent) */
+.doc-vignette {
+  margin: 36px -10px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 18px 20px;
+  position: relative;
+  box-shadow: 4px 4px 0 var(--rule);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.doc-vignette:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+.doc-vignette .vk { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
+.doc-vignette h4 { font-style: italic; margin: 4px 0 8px; font-size: 1.15rem; }
+.doc-vignette .vexcerpt {
+  font-style: italic; font-size: .98rem; line-height: 1.5;
+  border-left: 2px solid var(--tufte-red); padding-left: 12px; margin: 8px 0;
+}
+.doc-vignette .vmeta { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-top: 6px; }
+
+/* Inline pull quote */
+.pull-quote {
+  font-style: italic; font-size: 1.4rem; line-height: 1.35;
+  border-left: 3px solid var(--tufte-red);
+  padding: 4px 0 4px 18px; margin: 36px -10px;
+  color: var(--ink);
+}
+.pull-quote cite {
+  display: block; font-style: normal; font-size: .78rem;
+  font-family: var(--mono); margin-top: 8px; color: var(--ink-soft);
+}
+
+/* Entity tag in prose */
+.ent {
+  font-style: italic; cursor: pointer;
+  border-bottom: 1px dotted var(--ink-soft);
+  transition: color .15s, background .15s, border-color .15s;
+}
+.ent:hover { background: var(--highlight); border-bottom-color: var(--ink); }
+.ent.active { color: var(--tufte-red); border-bottom-color: var(--tufte-red); }
+
+/* Drop cap for first paragraph of an era */
+.dropcap::first-letter {
+  font-size: 4em; float: left; line-height: 0.85;
+  padding: 0.05em 0.08em 0 0; font-style: italic;
+}
+
+/* === Era stepper (horizontal bar beneath hero, sticky) === */
+.era-stepper {
+  position: sticky; top: 48px; z-index: 30;
+  display: flex; align-items: stretch; gap: 0;
+  background: var(--paper);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 10px 22px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.era-stepper .stepper-eras {
+  flex: 1; display: flex; align-items: center; justify-content: space-around;
+  gap: 4px; min-width: 0;
+}
+.era-stepper button {
+  appearance: none; background: transparent; border: none; cursor: pointer;
+  padding: 6px 10px; color: var(--ink-soft);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  position: relative; transition: color .2s;
+  font: inherit; letter-spacing: .08em; text-transform: uppercase;
+  min-width: 0;
+}
+.era-stepper button .enum {
+  font-size: 9px; opacity: .5; letter-spacing: .15em;
+}
+.era-stepper button .ename {
+  font-size: 11px; white-space: nowrap;
+}
+.era-stepper button.active { color: var(--ink); }
+.era-stepper button.active .ename {
+  border-bottom: 2px solid var(--ink); padding-bottom: 1px;
+}
+.era-stepper button.passed { color: var(--ink); opacity: .55; }
+.era-stepper button:hover { color: var(--ink); opacity: 1; }
+
+/* Brackets flanking the era list — connect the two registers */
+.stepper-bracket {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 14px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--tufte-red);
+  text-decoration: none; cursor: pointer; flex-shrink: 0;
+}
+.stepper-bracket.left { border-right: 1px dashed var(--rule); padding-left: 0; }
+.stepper-bracket.right { border-left: 1px dashed var(--rule); padding-right: 0; }
+.stepper-bracket .bracket-line {
+  width: 18px; height: 1px; background: var(--tufte-red);
+}
+.stepper-bracket .bracket-label {
+  white-space: nowrap; font-style: normal;
+  border-bottom: 1px dotted var(--tufte-red); padding-bottom: 1px;
+}
+.stepper-bracket:hover .bracket-label { background: var(--tufte-red); color: var(--paper); border-color: var(--tufte-red); }
+
+@media (max-width: 900px) {
+  .era-stepper { padding: 8px 10px; flex-wrap: wrap; }
+  .stepper-bracket { padding: 4px 8px; border: none !important; }
+  .stepper-bracket .bracket-line { display: none; }
+  .era-stepper .stepper-eras { flex-basis: 100%; overflow-x: auto; justify-content: flex-start; }
+  .era-stepper button .enum { display: none; }
+  .era-stepper button .ename { font-size: 10px; }
+}
+
+/* Sketchy network shapes */
+.sketch text { font-family: var(--hand); fill: var(--ink); pointer-events: none; }
+.sketch .edge { stroke: var(--ink-soft); stroke-width: 1; fill: none; opacity: .35; transition: opacity .6s, stroke-dashoffset 1.2s, stroke .3s, stroke-width .3s; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+.sketch .edge.visible { stroke-dashoffset: 0; opacity: .55; }
+.sketch .edge.active { stroke: var(--tufte-red); stroke-width: 1.8; opacity: 1; }
+.sketch .node-shape { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; transition: fill .25s, stroke .25s, transform .25s; }
+.sketch g.node { cursor: pointer; opacity: 0; transition: opacity .8s ease, transform .8s ease; transform-origin: center; }
+.sketch g.node.visible { opacity: 1; }
+.sketch g.node.dim { opacity: 0.18; }
+.sketch g.node:hover .node-shape { fill: var(--highlight); }
+.sketch g.node.active .node-shape { fill: var(--tufte-red); stroke: var(--tufte-red); }
+.sketch g.node.active text { fill: var(--tufte-red); font-weight: 700; }
+.sketch text.label { font-size: 11px; }
+
+/* Network style for clean mode */
+[data-net="clean"] .sketch g.node text { font-family: var(--mono); font-size: 10px; }
+
+/* Coda */
+.coda {
+  max-width: 760px; margin: 80px auto; padding: 0 28px 120px;
+  text-align: left;
+}
+.coda h2 { font-size: 2.4rem; }
+.coda p { font-size: 1.08rem; }
+
+.footer {
+  border-top: 1px solid var(--rule); padding: 24px 28px; max-width: 1100px; margin: 0 auto;
+  font-family: var(--mono); font-size: 11px; color: var(--ink-soft);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+}
+
+/* Entity drawer (when clicking a node) */
+.ent-drawer {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: min(420px, 90vw); background: var(--paper);
+  border-left: 1px solid var(--ink);
+  z-index: 60; padding: 28px 28px 80px; overflow-y: auto;
+  box-shadow: -10px 0 40px rgba(0,0,0,.08);
+  transform: translateX(100%); transition: transform .35s ease;
+}
+.ent-drawer.open { transform: translateX(0); }
+.ent-drawer .close {
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--ink);
+  background: var(--paper); cursor: pointer; font-size: 14px;
+}
+.ent-drawer .close:hover { background: var(--ink); color: var(--paper); }
+.ent-drawer h3 { font-size: 1.6rem; margin-top: 16px; }
+.ent-drawer .meta { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+.ent-drawer .pill {
+  display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; padding: 2px 7px; border: 1px solid var(--ink); border-radius: 999px;
+}
+.ent-drawer .links {
+  margin-top: 20px; display: flex; flex-direction: column; gap: 6px;
+}
+.ent-drawer .links a {
+  border: 1px solid var(--rule); padding: 8px 12px; font-size: .92rem;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+}
+.ent-drawer .links a:hover { background: var(--highlight); }
+.ent-drawer .links a .lk { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; }
+
+.scrim { position: fixed; inset: 0; background: rgba(17,17,17,.18); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+
+
+/* ============================================================================
+ * Header dropdown for Eras (extracted from inline <style> in source HTML)
+ * ============================================================================ */
+.menu-wrap { position: relative; }
+.menu-btn {
+  appearance: none; background: transparent; border: none; cursor: pointer;
+  padding: 6px 10px; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .08em; color: var(--ink); text-transform: uppercase;
+  border-radius: 2px; transition: background .15s;
+}
+.menu-btn:hover, .menu-btn.open { background: var(--rule); }
+.menu-btn .caret { display: inline-block; margin-left: 5px; font-size: 8px; transform: translateY(-1px); }
+.menu-pop {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  min-width: 220px; background: var(--paper); border: 1px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--rule);
+  padding: 6px 0; z-index: 60;
+}
+.menu-pop a {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 8px 14px; border: none; font-family: var(--serif); font-size: 14px;
+  font-style: italic;
+}
+.menu-pop a:hover { background: var(--highlight); }
+.menu-pop a .yrs { font-family: var(--mono); font-style: normal; font-size: 10px; color: var(--ink-soft); }
+
+.top-header .nav-main { display: flex; gap: 4px; align-items: center; }
+@media (max-width: 760px) { .top-header .nav-main { gap: 0; } .menu-btn { padding: 6px 6px; } }
+
+

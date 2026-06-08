@@ -1,0 +1,26 @@
+{%- comment -%}
+  Register card — the "definition bar" renderer for the book's two analytical
+  registers (Quantitative Chauvinism · Ecofascist Imaginaries). Implements the
+  `kind: register` renderer that _config.yml documents.
+
+  Unlike a generic deckle-card, a register reads as the conceptual spine of the
+  book: a full-width bar with a left rail (kicker + bracket) and a wide
+  definition column. Pass: {% include register-card.html item=item %}
+{%- endcomment -%}
+{%- assign item = include.item -%}
+<article class="register-bar md:col-span-2">
+  <div class="grid gap-6 md:grid-cols-[13rem_1fr] md:gap-10">
+    <div class="register-rail">
+      {% if item.kicker %}<p class="kicker text-accent">{{ item.kicker }}</p>{% endif %}
+      <span class="register-bracket" aria-hidden="true"></span>
+    </div>
+    <div>
+      {% if item.title %}
+        <h3 class="font-display text-3xl font-light italic leading-tight text-ink md:text-4xl">{{ item.title }}</h3>
+      {% endif %}
+      <div class="register-def mt-4 max-w-prose text-base leading-relaxed text-ink/90 md:text-lg">
+        {{ item.content | markdownify }}
+      </div>
+    </div>
+  </div>
+</article>

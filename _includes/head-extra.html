@@ -1,13 +1,4 @@
 {%- comment -%}
-  Loaded inside <head>. Favicons + meta. Theme-mode pre-paint was removed
-  with the Tailwind refactor (no dark-mode support yet).
+  Drop additional <script> tags, fonts, analytics, etc. by editing this file.
+  Loaded inside <head> after the site data and before the app.
 {%- endcomment -%}
-
-<link rel="icon" href="{{ '/assets/favicon/favicon.ico' | relative_url }}" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon/favicon-32x32.png' | relative_url }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon/favicon-16x16.png' | relative_url }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/favicon/apple-touch-icon.png' | relative_url }}">
-<link rel="manifest" href="{{ '/assets/favicon/site.webmanifest' | relative_url }}">
-<meta name="theme-color" content="#ede6d4">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

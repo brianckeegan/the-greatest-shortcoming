@@ -1,0 +1,39 @@
+# Homepage chapter-card metadata, keyed by chapter slug.
+# concept = the mechanism named in the chapter; teaser = one-line hook;
+# era = the small label shown in the plate caption.
+00-preface:
+  era: "before the lecture"
+  concept: "The architecture, already built"
+  teaser: "Before Bartlett ever picked up the chalk, the apparatus, the vocabulary, and the audience were already in place."
+01-boulder:
+  era: "the case"
+  concept: "Quantitative chauvinism & ecofascist imaginaries"
+  teaser: "A progressive city builds the most elaborate growth-control machinery in America — and ends up whiter than the state around it."
+02-the-free-fall:
+  era: "1968 – 1994"
+  concept: "Domesticated scientism"
+  teaser: "He gave the same lecture 1,742 times. Each time, arithmetic quietly became obligation."
+03-the-quarantine:
+  era: "1995 – 2008"
+  concept: "Agnotological infrastructuring"
+  teaser: "After Cairo, the movement lost its license — so it built a new one out of footnotes."
+04-the-swarm:
+  era: "2009 – 2024"
+  concept: "Demographic engineering"
+  teaser: "A federal press release became one of the most-cited numbers in a mass-shooter's manifesto."
+05-the-portfolio:
+  era: "2025 – 2048"
+  concept: "Fine-tuning & temporal gerrymandering"
+  teaser: "Overpopulation panic flips into its mirror image: where did all the babies go?"
+06-the-shock:
+  era: "2049 – 2068"
+  concept: "Regenerative sovereignty"
+  teaser: "When the bottle is finally full, the question stops being who stays and becomes who gets rescued."
+07-the-alternatives:
+  era: "the reclamation"
+  concept: "Intersectional longtermism"
+  teaser: "The future has been ceded to people who use it as a warrant for present cruelty. Take it back."
+08-boulder-again:
+  era: "the return"
+  concept: "What the valley owes"
+  teaser: "What the model strips from bacteria — memory, feedback, survival — is what these imaginaries strip from us."

@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import typography from '@tailwindcss/typography';
+
 export default {
   content: [
     './_layouts/**/*.html',
@@ -11,15 +13,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: '#ede6d4',
-        ink: '#121212',
-        clay: '#d6cdb7',
-        mist: '#525252',
-        accent: '#3d4b40',
+        canvas: '#ece4d2',
+        'canvas-2': '#e4d9c0',
+        ink: '#1a1a1a',
+        clay: '#d3c9b2',
+        mist: '#555047',
+        accent: '#b0382a',     /* bauhaus red */
+        blue: '#285079',       /* bauhaus blue */
+        yellow: '#e0a52f',     /* bauhaus yellow */
       },
       fontFamily: {
-        display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Josefin Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Archivo', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        emph: ['"EB Garamond"', 'Georgia', 'serif'],
       },
       maxWidth: {
         prose: '65ch',
@@ -73,5 +79,5 @@ export default {
       }),
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [typography],
 };

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="{{ site.lang | default: 'en' }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ site.title }}{% if site.subtitle %} — {{ site.subtitle }}{% endif %}</title>
+  <meta name="description" content="{{ page.description | default: site.description | strip_newlines }}" />
+  {%- seo title=false -%}
+  <link rel="stylesheet" href="{{ '/assets/css/dist/main.css' | relative_url }}" />
+  {% include head-extra.html %}
+</head>
+<body>
+  {% include header.html %}
+  {% include hero.html %}
+
+  <main id="main" class="paper-texture">
+    {%- assign step_parts = site.data.parts | where: "kind", "step" -%}
+    {%- for part in step_parts -%}
+      {%- assign part_chapters = site.chapters | where: "slug", part.chapter_slug -%}
+      {% include section.html num=part.num kicker=part.kicker title=part.title count=part_chapters.size count_label="Chapter" id=part.id %}
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for ch in part_chapters %}{% include chapter-card.html ch=ch part=part %}{% endfor %}
+      </div>
+      {% include section-close.html %}
+    {%- endfor -%}
+
+    {%- comment -%} Catch-all section for chapters not bound to a part {%- endcomment -%}
+    {%- assign mapped_slugs = step_parts | map: "chapter_slug" -%}
+    {%- assign extras_count = 0 -%}
+    {%- for c in site.chapters -%}
+      {%- unless mapped_slugs contains c.slug -%}
+        {%- assign extras_count = extras_count | plus: 1 -%}
+      {%- endunless -%}
+    {%- endfor -%}
+    {% if extras_count > 0 %}
+      {% include section.html num="06" kicker="apparatus" title="Front- and back-matter" count=extras_count count_label="Chapter" id="apparatus" %}
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for ch in site.chapters %}{% unless mapped_slugs contains ch.slug %}{% include chapter-card.html ch=ch %}{% endunless %}{% endfor %}
+      </div>
+      {% include section-close.html %}
+    {% endif %}
+
+    {%- comment -%} Landing-kind sections (in display order; skip island when network is off) {%- endcomment -%}
+    {%- assign landing_kinds = "register,book,author,epigraphs,coda,news,resources,island" | split: "," -%}
+    {%- assign section_idx = 6 -%}
+    {%- for kind in landing_kinds -%}
+      {%- if kind == "island" and site.features.network != true -%}{% continue %}{%- endif -%}
+      {%- assign items = site.landing | where: "kind", kind | sort: "sort_order" -%}
+      {%- comment -%} For 'coda' we want to filter out items already represented by another section (book/author/resources) {%- endcomment -%}
+      {%- if items.size > 0 -%}
+        {%- assign section_idx = section_idx | plus: 1 -%}
+        {%- capture sec_num -%}{% if section_idx < 10 %}0{% endif %}{{ section_idx }}{%- endcapture -%}
+        {%- capture sec_title -%}
+          {%- case kind -%}
+            {%- when "register" -%}Analytical registers
+            {%- when "book" -%}The book
+            {%- when "author" -%}The author
+            {%- when "epigraphs" -%}Epigraphs
+            {%- when "coda" -%}Codas
+            {%- when "news" -%}News
+            {%- when "resources" -%}Resources
+            {%- when "island" -%}Synthesis
+            {%- else -%}{{ kind }}
+          {%- endcase -%}
+        {%- endcapture -%}
+        {% include section.html num=sec_num kicker=kind title=sec_title count=items.size count_label="Item" id=kind %}
+        <div class="grid gap-6 md:grid-cols-2">
+          {% for item in items %}{% include landing-card.html item=item %}{% endfor %}
+        </div>
+        {% include section-close.html %}
+      {%- endif -%}
+    {%- endfor -%}
+  </main>
+
+  {% include footer.html %}
+</body>
+</html>

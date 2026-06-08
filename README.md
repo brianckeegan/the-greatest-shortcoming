@@ -1,33 +1,15 @@
 # The Greatest Shortcoming — Jekyll site
 
-A book site built around a single React-driven scrollytelling experience. The
-homepage is a book-summary scrollytelling. Every chapter page mounts the same
-React shell, with the chapter's mapped *part* pinned in a shared QC | parts
-| EFI navbar — all chapters are treated identically. Static pages (about,
-news, bibliography, contents, draft-status) share the same chrome rendered
-as plain HTML.
+A scrollytelling reading of chapter 1, *Boulder*. Built as a Jekyll site so the
+text, the entity graph, the colors, the typography, and the structure of the
+page are all editable from a handful of YAML and CSS files — no JavaScript
+required to retitle a section, add a person to the network, or rewrite a
+paragraph.
 
-The site uses three layered abstractions that are worth getting straight:
-
-- **Parts** (`_data/parts.yml`) — the chapter-level structural divisions of
-  the book (Boulder, Free Fall, …). Each is a stop in the navbar stepper.
-  The file also holds *bracket*-kind stops (Quantitative Chauvinism,
-  Ecofascist Imaginaries) that flank the parts.
-- **Sections** (`_config.yml` `sections:`) — every block of homepage
-  content (Book, Author, register definition bars, News, Resources,
-  Bartlett epigraphs). Each declares a `kind` (renderer) and a `slot`
-  (where in the page flow it lands).
-- **Steps** (`_data/scrolly/<key>.yml`) — per-page node sets for the
-  scrolly figure. Reference part ids; carry the entity ids that appear in
-  the network at each step.
-
-This page is the high-level reference; for operations and edit recipes see
-[MAINTAINERS.md](MAINTAINERS.md).
-
-If you are looking for the short version: edit `_config.yml` to retitle and
-renavigate, edit `_data/*.yml` to grow the network and prose, edit
-`assets/css/scrolly.css` to change how it looks. Push to `master` and GitHub
-Pages will rebuild.
+This page is a complete reference for customizing the site. If you are looking
+for the short version: edit `_config.yml` to retitle and renavigate, edit
+`_data/*.yml` to grow the network, edit `assets/css/scrolly.css` to change how
+it looks. Push to `main` and GitHub Pages will rebuild.
 
 ---
 
@@ -38,16 +20,13 @@ Pages will rebuild.
 3. [How the site is wired](#how-the-site-is-wired)
 4. [Customizing the chrome (`_config.yml`)](#customizing-the-chrome-_configyml)
 5. [Customizing the network (`_data/*.yml`)](#customizing-the-network-_datayml)
-6. [Customizing the prose (`_data/prose/*.yml`)](#customizing-the-prose-_dataproseyml)
+6. [Customizing the prose (`_data/prose.yml`)](#customizing-the-prose-_dataproseyml)
 7. [Customizing the look (`assets/css/scrolly.css`)](#customizing-the-look-assetscssscrollycss)
-8. [Customizing behavior (`assets/js/*.jsx` and `assets/js/islands/*.tsx`)](#customizing-behavior-assetsjsjsx-and-assetsjsislandstsx)
-9. [Adding a new part](#adding-a-new-part)
-10. [Customizing the stepper](#customizing-the-stepper)
-11. [Adding a new entity](#adding-a-new-entity)
-12. [Adding a news item](#adding-a-news-item)
-13. [Adding a new page](#adding-a-new-page)
-14. [Adding or reordering a landing-page item](#adding-or-reordering-a-landing-page-item)
-15. [Troubleshooting](#troubleshooting)
+8. [Customizing behavior (`assets/js/*.jsx`)](#customizing-behavior-assetsjsjsx)
+9. [Adding a new era](#adding-a-new-era)
+10. [Adding a new entity](#adding-a-new-entity)
+11. [Adding a new page](#adding-a-new-page)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -67,9 +46,16 @@ Then visit <http://localhost:4000>.
 
 ## Deploy to GitHub Pages
 
-A workflow at `.github/workflows/github-pages.yml` builds and deploys on every
-push to `master`. To enable, go to **Settings → Pages → Build and deployment
-→ Source** and choose **GitHub Actions**.
+Two options.
+
+**Option A — GitHub Actions (recommended).** A workflow at
+`.github/workflows/pages.yml` builds and deploys on every push to `main`. To
+enable, go to **Settings → Pages → Build and deployment → Source** and choose
+**GitHub Actions**.
+
+**Option B — classic Pages.** Push to `main` and let GitHub build with the
+`github-pages` gem automatically. Set **Source** to **Deploy from a branch**
+and pick `main` / `/ (root)`.
 
 If you deploy under a sub-path (e.g. `username.github.io/greatest-shortcoming`),
 set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
@@ -80,90 +66,44 @@ set `baseurl: "/greatest-shortcoming"` in `_config.yml`.
 
 ```
 .
-├── _config.yml              # site identity, hero, nav, sections (unified registers + coda + news + epigraphs), theme defaults, defaults
+├── _config.yml              # site identity, hero, nav, registers, coda, theme defaults
 ├── _data/
-│   ├── parts.yml            # the 6 parts (chapter-level) + bracket stops — drives stepper, network, chapter mapping (chapter_slug)
+│   ├── eras.yml             # the five (or N) eras — drives timeline + scrolly steps
 │   ├── people.yml           # individuals in the network
 │   ├── orgs.yml             # organizations
 │   ├── themes.yml           # concepts / theoretical scaffolding
 │   ├── instruments.yml      # policy or measurement instruments
-│   ├── documents.yml        # primary-source documents
-│   ├── chapters.yml         # TOC + prev/next nav
-│   ├── bibliography.yml     # generated by scripts/bib_to_yaml.rb
-│   ├── news.yml             # news/events list (surfaces in Coda + /news/ archive)
-│   ├── prose/               # per-page part prose
-│   │   └── home.yml         # book-summary (homepage)
-│   └── scrolly/             # per-page step (nodes/focus) configs
-│       ├── home.yml         # homepage book-summary (marquee node sets per part)
-│       ├── preface.yml      # preface stub (highlight_part: prelude)
-│       ├── 01-boulder.yml   # one per chapter; uses `steps_inherit: home`
-│       ├── 02-the-free-fall.yml
-│       ├── 03-the-quarantine.yml
-│       ├── 04-the-swarm.yml
-│       ├── 05-the-portfolio.yml
-│       ├── 06-the-shock.yml
-│       ├── 07-the-alternatives.yml
-│       └── 08-boulder-again.yml
+│   ├── documents.yml        # primary-source documents (with excerpts)
+│   └── prose.yml            # body text for each era step
 ├── _layouts/
-│   ├── default.html         # static-page shell (about, news, bibliography, …)
-│   ├── scrolly.html         # React mount + chapter intro/outro capture
-│   └── page.html            # static page wrapper (header/body/title)
+│   ├── default.html         # base shell — head, scripts, footer
+│   └── home.html             # homepage layout (mounts the React app)
 ├── _includes/
-│   ├── site-data.html       # bridges Jekyll YAML → window.SITE / window.GS_DATA
-│   ├── page-context.html    # bridges per-page YAML → window.PAGE_CONTEXT
-│   ├── header.html          # static-page top header (HTML mirror of React <Header>)
-│   ├── footer.html          # static-page footer
-│   ├── chapter-card.html    # one TOC card
-│   └── head-extra.html      # pre-paint dark-mode setter
+│   ├── site-data.html       # bridges Jekyll YAML → window.SITE / GS_DATA / GS_PROSE
+│   └── head-extra.html      # add fonts, analytics, etc here
 ├── assets/
-│   ├── css/
-│   │   ├── scrolly.css      # design ground truth (fonts, palette, base typography, top-header, news-list, …)
-│   │   └── main.scss        # static-page layout patterns; compiles to main.css (loaded by both shells)
+│   ├── css/scrolly.css      # all visual styling (themes, typography, layout)
 │   └── js/
-│       ├── app.jsx          # main React app (header, hero, stepper, prose, drawer, news coda) — Babel-runtime JSX
-│       ├── tweaks-panel.jsx     # the in-page Tweaks panel framework — Babel-runtime JSX
-│       ├── islands/         # NEW: TypeScript islands source (built by esbuild)
-│       │   ├── index.ts             # bundle entry: registry + window globals
-│       │   ├── mount.ts             # generic [data-island] hydrator
-│       │   ├── types.ts             # GsData / SiteData / PageContext / Step / Part
-│       │   ├── ScrollyNetwork.tsx   # network SVG (replaces former scrolly-network.jsx)
-│       │   ├── QcEfiMatrix.tsx      # the unifying matrix island (Observable Plot)
-│       │   ├── Scroller.tsx         # react-scrollama scroll-step coordinator
-│       │   ├── SmoothScrollLink.tsx # react-scroll smooth-scroll link helper
-│       │   └── charts/              # per-part chart islands (FreeFallChart real, others placeholder)
-│       └── dist/
-│           └── islands.js   # compiled bundle (committed; loaded by _layouts/scrolly.html)
-├── index.md                 # / (page_kind: home, page_id: home → uses scrolly layout)
-├── _chapters/               # collection: 00-preface.md … 08-boulder-again.md (page_kind: chapter from _config defaults)
-├── _landing/                # collection: landing-page items (book, author, register defs, news, resources, bartlett epigraphs, qc-efi-matrix). Order is set by `sort_order` in each file's frontmatter.
-├── pages/                   # static pages: about, contents, bibliography, news, draft-status
-└── .github/workflows/github-pages.yml
+│       ├── app.jsx          # main React app (header, hero, stepper, prose, drawer)
+│       ├── scrolly-network.jsx  # the era-stepped sketchy network SVG
+│       └── tweaks-panel.jsx     # the in-page Tweaks panel framework
+├── index.html               # entrypoint, just front-matter (uses home layout)
+├── Gemfile                  # github-pages gem
+└── .github/workflows/pages.yml  # GH Actions build + deploy
 ```
 
 The pipeline:
 
-1. Jekyll reads `_config.yml`, every `_data/*.yml` file (including `_data/prose/*.yml` and `_data/scrolly/*.yml`), and every item in `_landing/*.md`.
-2. `_layouts/scrolly.html` includes:
-   - `_includes/site-data.html` — emits `window.SITE` (config + landing items from `_landing/`, sorted by `sort_order`) and `window.GS_DATA` (entities + news), page-invariant. The landing items render in `sort_order` ascending; `nav_reading` is navigation-only and has zero effect on order.
-   - `_includes/page-context.html` — emits `window.PAGE_CONTEXT` for the current page (steps, prose, hero, stepper config, network/registers visibility, coda, intro, outro), looking up `_data/scrolly/{key}.yml` and `_data/prose/{key}.yml` keyed off `page.page_id`.
-   - For chapter pages: a Liquid block that captures the chapter header/abstract (intro) and excerpt + prev/next nav (outro) and grafts them onto `window.PAGE_CONTEXT` as HTML strings.
+1. Jekyll reads `_config.yml` and every `_data/*.yml` file.
+2. `_layouts/default.html` includes `_includes/site-data.html`, which serializes
+   the YAML to JSON inside a `<script>` tag as `window.SITE`, `window.GS_DATA`,
+   and `window.GS_PROSE`.
 3. `assets/js/app.jsx` reads those globals and renders the page with React.
-4. Static pages use `_layouts/default.html` + `_includes/header.html` (a plain HTML mirror of the React `<Header>`) so the chrome matches without loading React.
+4. The Tweaks panel (toolbar toggle in the host) lets a viewer change the theme
+   live, persisted via `__edit_mode_set_keys`.
 
-Because all interpretation happens client-side on scrollytelling pages, you
-never have to touch JS to edit content. Everything that *changes* what the
-site says lives in YAML.
-
-### Page kinds
-
-`page_kind` (set in frontmatter, or defaulted by `_config.yml` for the chapter
-collection) tells the React app what to render:
-
-| `page_kind` | What's rendered | Where set |
-|------------|----------------|-----------|
-| `home`     | hero, QC|parts|EFI stepper, register def-bars, scrolly figure + prose, coda (incl. live News) | `index.md` |
-| `chapter`  | chapter intro (header + abstract) → stepper (part pinned to `highlight_part`) → coda → outro (excerpt + prev/next nav) | `_config.yml` `defaults` for `type: chapters` |
-| `static`   | (default) — page is rendered through `_layouts/default.html` instead of React | implicit |
+Because all interpretation happens client-side, you never have to touch JS to
+edit content. Everything that *changes* what the site says lives in YAML.
 
 ---
 
@@ -176,6 +116,12 @@ edit:
 
 Used in `<title>`, header, SEO meta, and footer.
 
+```yaml
+title: "The Greatest Shortcoming"
+subtitle: "a network reading"
+description: "..."
+```
+
 ### `hero`
 
 Drives the homepage hero block.
@@ -187,119 +133,47 @@ hero:
   scroll_cue: "scroll to begin"
 ```
 
-### `nav` / `nav_reading`
+### `nav`
 
-`nav` is the static-page top nav (links to /contents/, /about/, etc.).
-`nav_reading` is the in-app nav rendered by the React `<Header>` on home and
-chapter pages — items are either anchor links (`url: "#book"`), external
-URLs, or the special `{ kind: "parts-menu" }` which renders a dropdown of
-every step-kind part. The dropdown's button label is whatever you set on
-`label:` — keep it as `"Eras"` for this site, or rename to `"Parts"`,
-`"Acts"`, `"Chapters"`, etc.
-
-### Landing-page items (`_landing/`)
-
-The blocks that flow down the homepage between the hero and the bottom —
-Bartlett epigraphs, the Quantitative-Chauvinism and Ecofascist-Imaginaries
-register definitions, the QC×EFI matrix, the Book/Author cards, the
-latest News, the Resources list — each live in their own Markdown file at
-**`_landing/<id>.md`**. The filename slug is the item id and the DOM
-anchor: `_landing/book.md` becomes `#book`, addressable from
-`nav_reading` or any in-page link.
-
-Each file's frontmatter:
+The header nav. Items are either anchor links (`url: "#book"`) or the special
+`{ kind: "eras-menu" }` which renders a dropdown of all eras.
 
 ```yaml
----
-kind: coda | register | news | epigraphs | island   # picks the renderer
-sort_order: 360                                     # integer; SOLE order source
-home_only: true                                     # optional; hide on chapter pages
-kicker: "about"                                     # small overline (optional)
-title: "The Book"                                   # heading (optional for news/epigraphs)
-items:                                              # epigraphs only
-  - quote: "..."
-    cite:  "..."
-island: QcEfiMatrix                                 # for kind: island, the window global to render
----
-Markdown body goes here. HTML is allowed (Kramdown passes through inline
-tags). For multi-paragraph bodies, separate with blank lines and they
-render as proper `<p>` elements wrapped in `<div class="section-body">`.
+nav:
+  - { label: "Eras",      kind: "eras-menu" }
+  - { label: "Book",      url: "#book" }
+  - { label: "Author",    url: "#author" }
+  - { label: "Resources", url: "#resources" }
 ```
 
-**Order is determined entirely by `sort_order`.** The integer is the only
-input. Lower numbers render first. There is no slot field, no
-nav_reading-driven fallback, no alphabetical tie-break that matters in
-practice — give every item a unique number and the page renders in that
-exact order.
+To link to a separate page instead of an anchor: `url: "/about/"`.
 
-#### Reserved sort_order values
+### `registers`
 
-The React app interleaves two structural elements between landing items:
+The two definition bars beneath the hero. Each has an `id` (anchored from the
+hero kicker), a `kicker` overline, a `title`, and an HTML `body`. Add or remove
+freely — the hero kicker auto-rebuilds links to whatever is here.
 
-| Element | sort_order |
-|---|---|
-| Eras stepper (the QC \| parts \| EFI navbar) | **200** |
-| Scrolly figure (the network SVG) | **300** |
+### `coda`
 
-Items with `sort_order < 200` render before the stepper. Items between
-201 and 299 render between the stepper and the scrolly figure. Items
-≥ 301 render below the figure.
-
-The current homepage layout uses these numbers:
-
-| Item | sort_order | Renders |
-|---|---|---|
-| `bartlett.md` | 100 | before stepper |
-| `quant-chauvinism.md` | 150 | before stepper (home_only) |
-| **STEPPER** | **200** | structural |
-| `ecofascist-imaginaries.md` | 250 | between stepper and figure (home_only) |
-| **SCROLLY FIGURE** | **300** | structural |
-| `qc-efi-matrix.md` | 350 | after figure |
-| `book.md` | 360 | after matrix |
-| `author.md` | 370 | after book |
-| `news.md` | 400 | bottom |
-| `resources.md` | 410 | bottom |
-
-Number new items in steps of 10 (or 50) so future inserts can slot in
-without renumbering existing items.
-
-#### nav_reading is navigation-only
-
-The `nav_reading` list in `_config.yml` is the navbar dropdown. Anchor
-entries (`{ label: "Book", url: "#book", nav_only: true }`) are pure
-jump-to-id links. They have **zero effect on page-flow ordering** — that
-is set entirely by `sort_order` in each `_landing/<id>.md`. The
-`nav_only: true` flag is documentation; the composer in
-`_includes/site-data.html` no longer reads `nav_reading` for ordering.
-
-#### home_only
-
-A landing item with `home_only: true` in its frontmatter is filtered out
-on chapter pages by app.jsx. Used today for the QC and EFI register
-def-bars (the analytical apparatus belongs on the home/reading view, not
-inside chapter content). Default false.
-
-#### Pipeline
-
-The collection is composed into a JSON array `window.SITE.landing` (the
-Liquid composition lives in `_includes/site-data.html`). Each item has
-the shape `{id, kind, sort_order, home_only, kicker, title, body, items,
-island, props}`. `app.jsx` reads it, applies the `home_only` filter for
-chapter pages, sorts ascending by `sort_order`, and interleaves the
-stepper at 200 + the scrolly figure at 300. Bodies are rendered Markdown
-HTML wrapped in a `<div class="section-body">` so multi-paragraph bodies
-don't create invalid nested `<p>` tags.
+Sections at the bottom of the page (Book / Author / Resources by default). Same
+shape as `registers`. Add an entry → it appears as a section AND as a nav target.
 
 ### `theme_defaults`
 
-Initial values for the Tweaks panel. Override per-visitor and persist while
-editing.
+Initial values for the Tweaks panel. Tweaks override these per visitor and
+persist while editing.
 
-### `defaults`
+```yaml
+theme_defaults:
+  theme: "cool"        # "warm" | "ivory" | "cool"
+  net: "rough"         # "rough" | "clean"
+  fontSize: 18
+```
 
-Per-collection layout defaults. Chapter pages get `layout: scrolly` and
-`page_kind: chapter` here so individual `_chapters/*.md` files don't need to
-declare it.
+### `footer`
+
+Two strings, left and right.
 
 ---
 
@@ -311,136 +185,98 @@ shape:
 ```yaml
 - id: bartlett                      # required, must be unique across all files
   name: "Albert Bartlett"           # display name
-  role: "Nuclear physicist"         # optional
+  role: "Nuclear physicist"         # optional — appears under the name in drawer
   dates: "1923–2013"                # optional
+  era: [free_fall, quarantine]      # optional — eras this entity is active in
   blurb: "..."                      # short paragraph in drawer
-  links: [mckelvey, plan_boulder]   # other entity ids — surface as cross-refs
+  links: [mckelvey, plan_boulder]   # other entity ids to surface as cross-refs
 ```
 
-`kind` is inferred from the file (`people.yml` → person, `orgs.yml` → org,
-etc.).
-
-The `links` field is bidirectional in spirit but unidirectional in storage —
-list links from one side and the drawer surfaces them. List from both sides
-if you want them to show up in both drawers.
-
-### Parts (`_data/parts.yml`)
-
-Parts drive both the navbar stepper and the scrolly figure. Each entry
-takes one of two `kind` values:
-
-- `kind: step` — a chapter-level part. Carries `title`, `start`/`end`
-  (the year range, used to derive the navbar subtitle), `num`, `kicker`,
-  `blurb`, and an optional `chapter_slug` for cross-chapter navigation.
-- `kind: bracket` — a flanking marker (Quantitative Chauvinism, Ecofascist
-  Imaginaries). Carries `label`, `short_label`, and the visual flags below.
-
-Per-stop visual customization (works on both kinds; all optional):
+Documents add two more fields:
 
 ```yaml
-color: tufte-red          # CSS color token (no `--` prefix); becomes
-                          # the stop's accent. Default: ink for step,
-                          # tufte-red for bracket.
-bracket_line: true        # render the small connecting line ornament.
-underline_active: true    # underline the label when the stop is the
-                          # active scroll position. Default: true.
+  excerpt: "…direct quote…"         # rendered as italicized pull text
+  pages: "p. 65"                    # citation hint
 ```
 
-Step-kind example:
+`kind` is inferred from the file (`people.yml` → person, `orgs.yml` → org, etc.)
+and from `kind:` in `themes.yml` (default `theme`, but you can use `instrument`
+if a theme is also a measurement instrument — see `carrying_capacity`).
 
-```yaml
-- id: free_fall
-  kind: step
-  title: "Free Fall"
-  start: 1968
-  end: 1994                          # subtitle "1968 – 1994" derived from these
-  num: "01"
-  kicker: "The Will to Simplify"
-  blurb: "..."
-  chapter_slug: 02-the-free-fall    # → /chapters/02-the-free-fall/
-  underline_active: true
-```
-
-Bracket-kind example:
-
-```yaml
-- id: quant-chauvinism
-  kind: bracket
-  label: "Quantitative chauvinism"
-  short_label: "QC"
-  color: tufte-red
-  bracket_line: true
-  underline_active: true
-```
-
-When a reader is on a chapter page, step-kind stops in the stepper become
-`<a>` tags pointing to the mapped chapter's URL. Brackets link to
-`/#<id>` on the homepage where the matching register def-bar lives.
+**The `links` field is bidirectional in spirit but unidirectional in storage** —
+list links from one side and the drawer surfaces them. List from both sides if
+you want them to show up in both drawers.
 
 ---
 
-## Customizing the prose (`_data/prose/*.yml`)
+## Customizing the prose (`_data/prose.yml`)
 
-Each scrollytelling target has its own prose file, keyed by part id. The
-homepage ships with one:
-
-- `_data/prose/home.yml` — book-summary register (one short paragraph per part)
-
-Chapter pages don't carry their own prose file — their abstract and excerpt
-come from the chapter's `.md` frontmatter and body. To add prose for a
-future scrollytelling target, create `_data/prose/<key>.yml` and point a
-page at it via `page.prose_key` (or by setting `page.page_id: <key>`).
-
-The HTML markup conventions:
+The body text of each scrollytelling step lives here, keyed by era id. Each
+value is an HTML string with three special bits of markup:
 
 ### Entity references
 
 `<span class="ent" data-ent="ID">label</span>` renders as a styled inline
 reference. Click it → the entity drawer opens.
 
+```html
+The work of <span class="ent" data-ent="bartlett">Albert Bartlett</span>…
+```
+
 ### Inline document vignette
 
-`{{ DOC:document_id }}` (on its own line) renders as a full-width document
-card with the excerpt and metadata pulled from `_data/documents.yml`.
+`{{ DOC:document_id }}` (on its own line) renders as a full-width document card
+with the excerpt and metadata pulled from `_data/documents.yml`.
 
 ### Pull quote
 
-`{{ QUOTE:cite | body }}` renders as a styled pull quote. Pipe-separated; both
-halves can contain HTML.
+`{{ QUOTE:cite | body }}` renders as a styled pull quote. Pipe-separated, and
+both halves can contain HTML.
+
+```yaml
+quarantine: |
+  <p>…paragraph…</p>
+  {{ QUOTE:Theodore Porter, <i>Trust in Numbers</i> | Numerical objectivity… }}
+  <p>…next paragraph…</p>
+```
 
 ### Other markup
 
-- `<p class="dropcap">…</p>` — dropcap on the first paragraph.
-- `<span class="hl">…</span>` — highlighted phrase (subtle background tint).
-- Plain HTML is fine.
+* `<p class="dropcap">…</p>` — first paragraph gets a dropcap.
+* `<span class="hl">…</span>` — highlighted phrase (subtle background tint).
+* Plain HTML is fine: `<em>`, `<strong>`, `<i>`, `<b>`, etc.
 
 ---
 
 ## Customizing the look (`assets/css/scrolly.css`)
 
-All visual decisions for both the React surface and the static surface live
-in `scrolly.css`. Three things you'll most likely change:
+All visual decisions live in one file. Three things you'll most likely change:
 
 ### Theme tokens
 
-CSS custom properties at the top of the file, keyed off `[data-theme="…"]`
-on `<html>`. Tweak ink colors, paper colors, accent red, etc.
+The three themes are defined by CSS custom properties at the top of the file,
+keyed off `[data-theme="…"]` on `<html>`. Tweak ink colors, paper colors, accent
+red, etc:
 
 ```css
 :root {
-  --paper: #fffff8;
-  --ink: #111111;
-  --ink-soft: #4a463c;
-  --rule: #d8d2bf;
-  --tufte-red: #c83c3c;
-  --highlight: #fff0a8;
-  --serif: 'et-book', 'EB Garamond', Georgia, serif;
+  --paper: #f4f1e8;
+  --ink: #1a1a1a;
+  --ink-soft: #6b665c;
+  --rule: #d6cfb8;
+  --tufte-red: #b3001b;
+  --highlight: #ffe066;
+  --serif: 'EB Garamond', Georgia, serif;
   --mono: 'JetBrains Mono', monospace;
 }
+
+[data-theme="cool"]  { --paper: #eef2f5; --ink: #1c2530; … }
+[data-theme="ivory"] { --paper: #faf7ee; --ink: #2a2620; … }
 ```
 
-Dark-mode overrides are in `_sass/tgs.scss`. Update both files when changing
-a token.
+Add a new theme by adding a `[data-theme="moss"] { … }` block, then adding it to
+the `<TweakRadio>` options in `assets/js/app.jsx` (or just set the default in
+`_config.yml`).
 
 ### Typography
 
@@ -449,176 +285,57 @@ are all separate selectors — search for `font-family:` and `font-size:`.
 
 ### Layout
 
-The scrollytelling stage is two columns: a sticky left figure
-(`.sticky-figure`) and a right prose column (`.prose`). The split ratio and
-breakpoints are in the `.scrolly { display: grid; grid-template-columns: … }`
-rule.
+The scrollytelling stage is two columns: a sticky left figure (`.sticky-figure`)
+and a right prose column (`.prose`). The split ratio and breakpoints are in the
+`.scrolly { display: grid; grid-template-columns: … }` rule.
 
 ---
 
-## Customizing behavior (`assets/js/*.jsx` and `assets/js/islands/*.tsx`)
+## Customizing behavior (`assets/js/*.jsx`)
 
 You shouldn't need to touch these for content edits. If you want to change
 *how* the page works:
 
-### Babel-runtime JSX (loaded directly from `assets/js/*.jsx`)
-
-- **`app.jsx`** — composition of header, hero, stepper, prose, drawer, news
-  coda. Reads `window.SITE`, `window.GS_DATA`, `window.PAGE_CONTEXT`. Add
-  or remove components here. JSX is compiled at runtime by Babel-standalone
-  (loaded from CDN in `_layouts/scrolly.html`).
-- **`tweaks-panel.jsx`** — the in-page Tweaks UI framework. Same Babel-CDN
-  delivery as `app.jsx`.
-
-### TypeScript islands (compiled by esbuild → `assets/js/dist/islands.js`)
-
-The scrolly figure (formerly `scrolly-network.jsx`), the unifying matrix,
-the per-part charts, the scroll-step coordinator, and the smooth-scroll
-nav helper all live in **`assets/js/islands/`** as strict-mode TypeScript.
-They build into a single `assets/js/dist/islands.js` bundle that
-`_layouts/scrolly.html` loads with a regular `<script defer>` tag. The
-bundle:
-
-1. Sets `window.ScrollyNetwork` and `window.NodeShape` so `app.jsx`
-   continues to render the figure inline (the integration seam).
-2. Auto-mounts any `[data-island="<name>"]` element on
-   `DOMContentLoaded`, hydrating it with the matching React component.
-
-#### File map
-
-| File | Purpose |
-|---|---|
-| `islands/index.ts` | Bundle entry. Registers component names → components, sets `window.*` globals, calls `bootMount`. |
-| `islands/mount.ts` | Generic `[data-island]` hydrator. Reads `data-props` JSON, calls `createRoot().render()`. |
-| `islands/types.ts` | TypeScript types for `window.GS_DATA`, `window.SITE`, `window.PAGE_CONTEXT`, parts, steps, entities, sections. |
-| `islands/declarations.d.ts` | Module declarations for `react-scrollama` (which doesn't ship `@types`). |
-| `islands/ScrollyNetwork.tsx` | The part-banded sketchy network SVG. Faithful TS port of the legacy `scrolly-network.jsx`; same behavior, same `window.ScrollyNetwork` / `window.NodeShape` API. |
-| `islands/QcEfiMatrix.tsx` | NEW: the unifying QC × EFI matrix. Reads `window.GS_DATA.parts`, renders date-range bars per part via Observable Plot. |
-| `islands/Scroller.tsx` | NEW: scroll-step coordinator built on `react-scrollama`. CSS `position: sticky` for the sticky pane (per the [scrollytelling skill](https://github.com/doodledood/claude-code-plugins/blob/main/claude-plugins/frontend-design/skills/scrollytelling/SKILL.md)). Honors `prefers-reduced-motion` (mandatory per WCAG SC 2.3.3). |
-| `islands/SmoothScrollLink.tsx` | NEW: smooth-scroll `<Link>` helper built on `react-scroll`. Honors `prefers-reduced-motion`. |
-| `islands/charts/FreeFallChart.tsx` | NEW: real Bartlett-curve visualization via Observable Plot. Template for the other per-part charts. |
-| `islands/charts/PlaceholderCharts.tsx` | NEW: scaffolds for Boulder, Quarantine, Swarm, Portfolio, Evacuation. Render a `placeholder` badge until a real chart replaces them. |
-| `islands/charts/PartChartShell.tsx` | NEW: shared frame/typography for per-part chart islands. |
-
-#### Build pipeline
-
-```bash
-npm install              # one-time: install React, Plot, D3, Scrollama, react-scroll, esbuild, TypeScript
-npm run build            # bundle assets/js/islands/ → assets/js/dist/islands.js
-npm run build:watch      # same, but rebuilds on change
-npm run typecheck        # tsc --noEmit (strict mode)
-```
-
-The compiled `assets/js/dist/islands.js` is **committed to git** because
-GitHub Pages builds with the github-pages gem and never runs npm. Run
-`npm run build` locally before committing changes to anything under
-`assets/js/islands/`. `node_modules/` and `package-lock.json` are
-gitignored.
-
-#### Adding a new island
-
-1. Add `assets/js/islands/MyThing.tsx`:
-   ```tsx
-   export const MyThing = ({ greeting }: { greeting: string }) => (
-     <p>{greeting}</p>
-   );
-   ```
-2. Register it in `islands/index.ts`:
-   ```ts
-   import { MyThing } from './MyThing';
-   const registry: IslandRegistry = {
-     // …existing entries…
-     'my-thing': MyThing,
-   };
-   ```
-3. Mount it from any Liquid template:
-   ```html
-   <div data-island="my-thing" data-props='{"greeting":"hi"}'></div>
-   ```
-4. Run `npm run build` and commit `assets/js/dist/islands.js` along
-   with the source.
+* **`app.jsx`** — composition of header, hero, stepper, prose, drawer, coda.
+  Reads `window.SITE`, `window.GS_DATA`, `window.GS_PROSE`. Add or remove
+  components here.
+* **`scrolly-network.jsx`** — the SVG network drawing. The `STEPS` const at the
+  top of the file controls *which nodes appear in which era*. If you add a new
+  entity to `_data/people.yml`, you also need to add its id to the appropriate
+  `STEPS[i].nodes` array here, otherwise it won't appear on the chart (it will
+  still be reachable as a drawer cross-reference).
+* **`tweaks-panel.jsx`** — the in-page Tweaks UI framework. Don't edit unless
+  you want to change how Tweaks themselves render.
 
 ---
 
-## Adding a new part
+## Adding a new era
 
-1. Add an entry to `_data/parts.yml` with `kind: step`:
+1. Add an entry to `_data/eras.yml`:
    ```yaml
    - id: aftermath
-     kind: step
      title: "Aftermath"
+     subtitle: "2069 — 2090"
      start: 2069
      end: 2090
      num: "06"
      kicker: "Ledger"
      blurb: "The accounting that follows."
-     chapter_slug: 09-aftermath   # optional — only if there's a chapter for it
-     underline_active: true
    ```
-2. Add a matching key to `_data/prose/home.yml` (and any other scrollytelling
-   target's prose file you may have added):
+2. Add a matching prose key in `_data/prose.yml`:
    ```yaml
    aftermath: |
      <p class="dropcap">…</p>
    ```
-3. Add a matching `id` entry to `_data/scrolly/home.yml` with the entity ids
-   that should appear in this part's network slice:
-   ```yaml
-   - id: aftermath
-     nodes: ['…ids of entities to introduce…']
-     focus: ['…ids to highlight…']
-   ```
-4. (If the new part maps to a chapter) create `_data/scrolly/<chapter-slug>.yml`
-   so the chapter page knows which part to pin in the stepper:
-   ```yaml
-   highlight_part: aftermath
-   network: { show: false }
-   steps_inherit: home
+3. Add a matching `STEPS` entry in `assets/js/scrolly-network.jsx` so the
+   network knows which nodes to add in this era:
+   ```js
+   { id: 'aftermath', title: 'Aftermath', subtitle: '2069 — 2090',
+     nodes: ['…ids of entities to introduce…'],
+     focus: ['…ids to highlight while reader is in this era…'] }
    ```
 
-That's it — the stepper navbar, network, prose column, and (if
-`chapter_slug` is set) cross-chapter navigation all rebuild from the data.
-
----
-
-## Customizing the stepper
-
-The stepper navbar is rendered by one component and one DOM element
-pattern (`.stepper__stop`). Every visual difference between stops — color,
-underline-on-active, the connecting bracket line — is data-driven from
-`_data/parts.yml`.
-
-To add a new bracket-kind stop (e.g. an analytical lens between QC and
-the parts), insert an entry with `kind: bracket` at the right position
-in the YAML:
-
-```yaml
-- id: my-lens
-  kind: bracket
-  label: "My new lens"
-  short_label: "ML"
-  color: tufte-red       # or any other CSS color token
-  bracket_line: true
-  underline_active: true
-```
-
-To suppress the active-underline on a particular stop, set
-`underline_active: false`. To recolor a step-kind part (e.g. tint the
-prelude red to match QC), add `color: tufte-red` to that part. The
-`--stop-color` CSS custom property carries the value through hover and
-active states.
-
-The dropdown menu button is currently labeled "Eras" for this site, which
-is the deliberate choice. To override it, edit `nav_reading` in
-`_config.yml`:
-
-```yaml
-nav_reading:
-  - { label: "Acts", kind: "parts-menu" }   # example only; default is "Eras"
-```
-
-The `kind: parts-menu` plumbing is what populates the dropdown; the
-`label` is just the visible button text.
+That's it — nav, stepper, hero kicker, and section anchors all rebuild.
 
 ---
 
@@ -627,49 +344,25 @@ The `kind: parts-menu` plumbing is what populates the dropdown; the
 1. Add it to the appropriate `_data/*.yml` file with a unique `id`.
 2. Reference it from prose with `<span class="ent" data-ent="my_id">label</span>`.
 3. List it under `links:` from any related entity.
-4. Add the id to the `nodes` array of one or more parts in
-   `_data/scrolly/<key>.yml` (whichever scrollytelling targets you want it
-   to appear on).
-
----
-
-## Adding a news item
-
-Append to `_data/news.yml`:
-
-```yaml
-- date: "2026-06-15"
-  kind: "talk"        # talk | review | event | press | release
-  title: "Title of the talk or event"
-  blurb: "One sentence about it."
-  link: "https://…"   # optional
-```
-
-It surfaces automatically in the homepage Coda (latest 3) and on the full
-`/news/` page.
+4. Optionally add the id to the `nodes` list of one or more eras in
+   `assets/js/scrolly-network.jsx` so it appears on the network diagram.
 
 ---
 
 ## Adding a new page
 
-Drop a Markdown or HTML file in `pages/` with frontmatter:
+Drop a Markdown or HTML file at the project root (or in a `pages/` subfolder)
+with front-matter:
 
 ```yaml
 ---
+layout: default
 title: "About"
 permalink: /about/
 ---
 
 Body content here, in Markdown or HTML.
 ```
-
-The default layout (set via `_config.yml` defaults for `path: "pages"`) is
-`page`, which gives you the header, footer, and stylesheet. Write any HTML
-inside.
-
-To make a new page render through the React scrollytelling shell instead,
-set `layout: scrolly` and `page_kind: home`, then point at prose/steps via
-`page_id` (or explicit `prose_key` / `scrolly_key`).
 
 Link it from `_config.yml`:
 
@@ -678,81 +371,34 @@ nav:
   - { label: "About", url: "/about/" }
 ```
 
----
-
-## Adding or reordering a landing-page item
-
-To **add a new item** (e.g. a "Press" coda block):
-
-1. Drop a file in `_landing/`, e.g. `_landing/press.md`:
-   ```markdown
-   ---
-   kind: coda          # coda | register | news | epigraphs | island
-   sort_order: 380     # integer; positions this item in the page flow
-   kicker: "in the news"
-   title: "Press"
-   ---
-   Markdown body. HTML allowed.
-   ```
-   Pick a `sort_order` based on where you want it to land relative to the
-   structural elements (stepper at 200, scrolly figure at 300) and the
-   existing items (see the table in [Landing-page items](#landing-page-items-_landing) above).
-2. (Optional) Add a navbar jump-link entry in `_config.yml` `nav_reading`:
-   ```yaml
-   nav_reading:
-     - { label: "Press", url: "#press", nav_only: true }
-   ```
-   This puts a "Press" entry in the dropdown menu that scrolls to the new
-   item. The `nav_only: true` flag is documentation — `nav_reading` no
-   longer affects ordering anywhere.
-
-To **reorder existing items**, change their `sort_order:` integers. The
-React app re-sorts on every render. To swap two items, swap their
-numbers (or pick any value between their neighbors').
-
-To **hide an item from chapter pages**, set `home_only: true` in its
-frontmatter. Used today for the QC and EFI register def-bars (analytical
-apparatus belongs on the home/reading view, not chapter content).
-
-There is **no slot field**. Page placement is determined by
-`sort_order` alone, with the eras stepper pinned at 200 and the scrolly
-figure pinned at 300. Conventional ranges:
-
-- `sort_order < 200` — before the eras stepper (hero block area).
-- `200 < sort_order < 300` — between the stepper and the scrolly figure.
-- `sort_order > 300` — below the scrolly figure (the page footer area).
+The default layout gives you the header, footer, and stylesheet — write any
+HTML inside.
 
 ---
 
 ## Troubleshooting
 
 **Build fails on GitHub Actions with a Gem version error.**
-Bump locally with `bundle update github-pages` and re-test.
+Bump `Gemfile.lock` by running `bundle update github-pages` locally.
 
-**A new entity isn't showing on the network diagram.**
-You need to add its id to the appropriate part's `nodes` array in
-`_data/scrolly/<key>.yml` (one per scrollytelling page). The graph is
-intentionally curated, not auto-generated from the data files.
+**A new entity isn't showing on the network diagram, only in cross-references.**
+You also need to add its id to the appropriate era's `nodes` array in
+`assets/js/scrolly-network.jsx`. The network is intentionally curated, not
+auto-generated from the data files.
 
 **My Tweaks panel changes don't persist.**
 Tweaks persist into `_config.yml` only when running through the design host;
 on a deployed site they're per-session. To change defaults permanently, edit
 `theme_defaults:` in `_config.yml`.
 
-**Liquid `{{ DOC:foo }}` syntax is being interpreted by Jekyll.**
-That's expected — those macros live inside `_data/prose/*.yml`, which Jekyll
-treats as raw YAML data. They're only rendered by the client-side prose
-renderer in `app.jsx`. You're safe to use them in prose.
+**Liquid `{% raw %}{{ DOC:foo }}{% endraw %}` syntax is being interpreted by Jekyll.**
+That's expected — those macros are defined inside `_data/prose.yml`, which
+Jekyll treats as raw YAML data, not a template. They're only rendered by the
+client-side prose renderer in `app.jsx`. You're safe to use them in prose.
 
 **Anchor links in `nav` aren't scrolling.**
 Make sure the corresponding section has the same `id` (e.g. `url: "#book"`
-needs `id: "book"` in `coda`). On non-scrollytelling pages the link form is
-`/#book` (the static-page header rewrites accordingly).
-
-**A chapter page renders blank or with `null` headings.**
-The page expects to find `_data/scrolly/<page.slug>.yml`. Create the file
-(usually a 3-line stub with `highlight_part`, `network: { show: false }`, and
-`steps_inherit: home`).
+needs `id: "book"` in `coda`).
 
 ---
 

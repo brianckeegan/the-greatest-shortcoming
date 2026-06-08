@@ -1,3 +1,0 @@
-highlight_part: quarantine
-network: { show: false }
-steps_inherit: home

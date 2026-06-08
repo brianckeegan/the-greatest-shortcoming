@@ -1,4 +1,0 @@
-# Closing return to Boulder. No specific era pinned; stepper enables
-# cross-chapter navigation.
-network: { show: false }
-steps_inherit: home

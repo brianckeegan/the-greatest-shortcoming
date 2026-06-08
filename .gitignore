@@ -1,16 +1,15 @@
+# Jekyll
 _site/
 .sass-cache/
+.jekyll-cache/
 .jekyll-metadata
-*.gem
-.jekyll-cache
-.claude/
-.DS_Store
+Gemfile.lock
 
-# Node — Tailwind CSS is rebuilt fresh in CI via npm ci + vite build (see
-# .github/workflows/github-pages.yml), so package-lock.json IS committed and
-# assets/css/dist/ is gitignored. The islands bundle (assets/js/dist/islands.js)
-# is pre-built locally and committed because the network feature is gated off
-# and CI does not rebuild it; flip features.network in _config.yml to re-enable.
-node_modules/
-.npm/
-assets/css/dist/
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp

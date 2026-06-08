@@ -4,7 +4,9 @@
 {%- endcomment -%}
 {%- assign item = include.item -%}
 {%- assign kind = item.kind -%}
-{%- if kind == 'epigraphs' -%}
+{%- if kind == 'register' -%}
+  {% include register-card.html item=item %}
+{%- elsif kind == 'epigraphs' -%}
   <article class="deckle-card md:col-span-2">
     {% if item.kicker %}<p class="kicker">{{ item.kicker }}</p>{% endif %}
     {% if item.title %}<h3 class="mt-3 font-display text-2xl font-light italic text-ink">{{ item.title }}</h3>{% endif %}

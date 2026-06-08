@@ -1,5 +1,5 @@
 ---
-kind: coda
+kind: register
 sort_order: 250
 home_only: true
 kicker: "political register · ii"

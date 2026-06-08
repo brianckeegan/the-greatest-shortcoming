@@ -1,43 +1,26 @@
 {%- comment -%}
-  Chapter card used on the homepage and any TOC.
-  Params:
-    ch   (required) — a chapter object. Either a _chapters/*.md document
-                      or a _data/chapters.yml entry. Reads: slug, num, title,
-                      status (or abstract_status), url, pitch, abstract.
-    part (optional) — a _data/parts.yml entry. Reads: kicker, blurb, start, end.
+  Chapter card for the homepage grid — Bauhaus plate + teaser, links to the
+  Jekyll chapter page. Param: ch (required) a _chapters/*.md document.
 {%- endcomment -%}
 {%- assign ch = include.ch -%}
-{%- assign part = include.part -%}
-{%- assign status = ch.status | default: ch.abstract_status | default: 'drafted' -%}
-{%- assign slug = ch.slug -%}
-{%- if ch.url -%}{%- assign href = ch.url -%}{%- else -%}{%- assign href = '/chapters/' | append: slug | append: '/' -%}{%- endif -%}
-{%- assign drafted = false -%}
-{%- if status == "drafted" or status == "draft" or slug == "preface" or slug == "00-preface" -%}{%- assign drafted = true -%}{%- endif -%}
-<article class="deckle-card group flex h-full flex-col">
-  <div class="flex items-start justify-between gap-3">
-    <p class="kicker">Chapter {{ ch.num }}{% if part %} · {{ part.kicker }}{% endif %}</p>
-    <span class="hook-badge bg-clay/40 text-ink/80">{{ status | capitalize }}</span>
-  </div>
-  <h3 class="mt-4 font-display text-2xl font-light leading-tight text-ink">
-    {% if drafted %}
-      <a class="no-underline hover:text-accent" href="{{ href | relative_url }}">{{ ch.title | default: 'Untitled' }}</a>
-    {% else %}
-      {{ ch.title | default: 'Forthcoming' }}
-    {% endif %}
-  </h3>
-  {% if part and part.blurb %}
-    <p class="mt-3 text-sm leading-relaxed text-ink/70">{{ part.blurb }}</p>
-  {% elsif ch.pitch %}
-    <p class="mt-3 text-sm leading-relaxed text-ink/70">{{ ch.pitch }}</p>
+{%- if ch.url -%}{%- assign href = ch.url -%}{%- else -%}{%- assign href = '/chapters/' | append: ch.slug | append: '/' -%}{%- endif -%}
+{%- assign meta = site.data.cards[ch.slug] -%}
+{%- assign concept = ch.concept | default: meta.concept | default: ch.subtitle -%}
+{%- if concept == nil and ch.sections -%}{%- assign concept = ch.sections | first -%}{%- endif -%}
+{%- assign era = ch.era | default: meta.era | default: 'plate' -%}
+{%- assign teaser = ch.teaser | default: meta.teaser -%}
+<a class="ch-card reveal" href="{{ href | relative_url }}">
+  <figure class="plate">
+    <div class="plate-art">{% include plate.html slug=ch.slug %}</div>
+    <figcaption><span class="fig">Fig.&nbsp;{{ ch.num }}</span><span class="cyears">{{ era }}</span></figcaption>
+  </figure>
+  <span class="cnum">Chapter {{ ch.num }}</span>
+  <h3>{{ ch.title | default: 'Untitled' }}</h3>
+  {% if concept %}<div class="concept">{{ concept }}</div>{% endif %}
+  {% if teaser %}
+    <p class="teaser">{{ teaser }}</p>
   {% elsif ch.abstract %}
-    <p class="mt-3 text-sm leading-relaxed text-ink/70">{{ ch.abstract | markdownify | strip_html | truncatewords: 32 }}</p>
+    <p class="teaser">{{ ch.abstract | markdownify | strip_html | truncatewords: 26 }}</p>
   {% endif %}
-  <div class="mt-auto flex items-center gap-2 pt-6 text-xs text-mist">
-    {% if part %}
-      {%- if part.start and part.end -%}<span class="font-mono">{{ part.start }}–{{ part.end }}</span>{%- endif -%}
-    {% endif %}
-    {% if drafted %}
-      <span class="ml-auto font-mono text-accent group-hover:translate-x-0.5 transition">Read →</span>
-    {% endif %}
-  </div>
-</article>
+  <span class="more">Read chapter <span class="arw">→</span></span>
+</a>

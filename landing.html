@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Greatest Shortcoming</title>
+<meta name="description" content="Quantitative Chauvinism and Lebensraum Imaginaries — a book by Brian C. Keegan." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Josefin+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#ece4d2;
+    --canvas-2:#e4d9c0;
+    --ink:#1a1a1a;
+    --clay:#d3c9b2;
+    --mist:#555047;
+    --accent:#b0382a;      /* bauhaus red */
+    --accent-2:#285079;    /* bauhaus blue */
+    --alarm:#b0382a;
+    --yellow:#e0a52f;      /* bauhaus yellow */
+    --serif:'Josefin Sans',sans-serif;
+    --sans:'Archivo',system-ui,sans-serif;
+    --emph:'EB Garamond',Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--canvas);color:var(--ink);
+    font-family:var(--sans);font-weight:400;line-height:1.6;font-size:17px;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  .serif{font-family:var(--serif)}
+  .kicker{font-family:var(--serif);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--mist);font-feature-settings:'lnum' 1}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+  a{color:inherit}
+
+  /* ---------- progress bar ---------- */
+  .progress{position:fixed;top:0;left:0;height:2px;background:var(--accent);width:0;z-index:90;transition:width .1s linear}
+
+  /* ---------- top brand ---------- */
+  .brandbar{position:fixed;top:0;left:0;right:0;z-index:80;display:flex;justify-content:space-between;align-items:center;
+    padding:16px 28px;mix-blend-mode:difference;color:#fff;pointer-events:none;transition:opacity .4s}
+  .brandbar .b-title{font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:.01em}
+  .brandbar .b-cta{font-family:var(--sans);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;pointer-events:auto;white-space:nowrap}
+
+  /* ====================================================================
+     ACT 1 — PROVOCATION (sticky bottle stage + scrolling steps)
+  ==================================================================== */
+  .act1{position:relative}
+  .stage{position:sticky;top:0;height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;overflow:hidden}
+  .stage-visual{position:relative;height:100%;display:flex;align-items:center;justify-content:center}
+  .stage-steps{position:absolute;inset:0;pointer-events:none}
+
+  /* The flask */
+  .flask-wrap{position:relative;width:300px;height:440px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+  .clock{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-family:var(--serif);font-variant-numeric:tabular-nums;
+    font-size:30px;color:var(--ink);letter-spacing:.02em}
+  .clock small{display:block;text-align:center;font-family:var(--sans);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);margin-top:4px}
+  .flask{position:relative;width:236px;height:356px;margin-top:54px}
+  .flask svg{width:100%;height:100%;overflow:visible}
+  .flask .liquid-clip{transition:none}
+  .readout{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center}
+  .readout .pct{font-family:var(--serif);font-size:22px;font-variant-numeric:tabular-nums;color:var(--alarm);font-weight:500}
+  .readout .lbl{font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist)}
+  /* patent sheet (Act 1 provocation figure) */
+  .patent-sheet{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:14px}
+  .patent-sheet svg{width:auto;height:100%;max-height:88vh;max-width:100%;display:block;background:#f1ead7;
+    box-shadow:0 2px 0 rgba(0,0,0,.04),0 24px 60px -34px rgba(18,18,18,.5)}
+  .patent text{font-family:var(--serif)}
+
+  /* steps */
+  .pstep{position:absolute;left:50%;top:40%;width:min(46%,520px);padding:0 10px;opacity:0;transform:translateY(24px);
+    transition:opacity .6s ease,transform .6s ease}
+  .pstep.is-on{opacity:1;transform:none}
+  .pstep p{font-family:var(--serif);font-size:clamp(22px,2.5vw,32px);line-height:1.3;font-weight:300;color:var(--ink);margin:0}
+  .pstep .em{font-style:italic}
+  .pstep .alarm{color:var(--alarm)}
+  .pstep .small{font-family:var(--sans);font-size:14px;letter-spacing:.02em;color:var(--mist);margin-top:14px;line-height:1.6;font-weight:400}
+
+  /* spacers that drive the scroll for each step */
+  .pscene{height:100vh}
+
+  @media (max-width:860px){
+    .stage{grid-template-columns:1fr}
+    .stage-visual{position:sticky;top:0;height:46vh;background:linear-gradient(var(--canvas),var(--canvas-2))}
+    .flask-wrap{transform:scale(.74)}
+    .pstep{left:0;width:100%;padding:0 24px;bottom:8vh;top:auto}
+    .pstep p{font-size:clamp(20px,5.4vw,26px)}
+  }
+
+  /* ====================================================================
+     ACT 2 — THESIS
+  ==================================================================== */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+  .reveal.is-on{opacity:1;transform:none}
+  .thesis{padding:18vh 0;background:
+    radial-gradient(circle at 70% 20%,rgba(61,75,64,.06),transparent 55%),var(--canvas)}
+  .thesis .lead{font-family:var(--serif);font-weight:300;font-size:clamp(26px,3.6vw,46px);line-height:1.28;max-width:18ch}
+  .thesis .body{margin-top:30px;max-width:60ch;font-size:clamp(16px,1.4vw,19px);color:#2a2a2a}
+  .thesis .body b{font-weight:600}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:64px;border-top:1px solid var(--clay);border-bottom:1px solid var(--clay)}
+  .split>div{padding:34px 30px}
+  .split>div:first-child{border-right:1px solid var(--clay)}
+  .split .h{font-family:var(--serif);font-style:italic;font-size:24px;margin:0 0 8px}
+  .split .h.g{color:var(--accent)} .split .h.r{color:var(--alarm)}
+  .split p{margin:0;font-size:15px;color:#333}
+  @media(max-width:860px){.split{grid-template-columns:1fr}.split>div:first-child{border-right:none;border-bottom:1px solid var(--clay)}}
+
+  /* ====================================================================
+     ACT 3 — TITLE REVEAL
+  ==================================================================== */
+  .titlecard{min-height:108vh;background:var(--ink);color:var(--canvas);display:flex;align-items:center;position:relative;overflow:hidden}
+  .titlecard .epi{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(22px,3vw,38px);line-height:1.34;max-width:24ch;color:#e9e2d0}
+  .titlecard .epi .src{display:block;margin-top:18px;font-style:normal;font-family:var(--sans);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#9a9684}
+  .titlecard .bigtitle{margin-top:8vh;opacity:0;transform:translateY(30px);transition:opacity 1.1s ease,transform 1.1s ease}
+  .titlecard .bigtitle.is-on{opacity:1;transform:none}
+  .titlecard h1{font-family:var(--serif);font-weight:300;font-size:clamp(48px,11vw,150px);line-height:.94;letter-spacing:-.02em;margin:0}
+  .titlecard h1 em{font-style:italic}
+  .titlecard .sub{margin-top:22px;font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(18px,2.4vw,30px);color:#c9c2af}
+  .titlecard .byline{margin-top:26px;font-family:var(--sans);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#9a9684}
+  .titlecard .glow{position:absolute;width:760px;height:760px;border-radius:50%;
+    background:radial-gradient(circle,rgba(61,75,64,.5),transparent 62%);filter:blur(60px);right:-160px;top:-160px;pointer-events:none}
+
+  /* ====================================================================
+     ACT 4 — CONCEPTS
+  ==================================================================== */
+  .concepts{padding:16vh 0 8vh}
+  .concepts .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;border-bottom:3px double rgba(28,27,20,.32);padding-bottom:18px;margin-bottom:48px}
+  .concepts .sec-head h2{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(30px,4vw,52px);margin:0;line-height:1}
+  .register{display:grid;grid-template-columns:14rem 1fr;gap:40px;padding:40px 0;border-bottom:1px solid var(--clay)}
+  .register:last-child{border-bottom:none}
+  .register .rail .num{font-family:var(--serif);font-size:54px;font-weight:300;color:var(--accent);line-height:1}
+  .register .rail .k{margin-top:10px}
+  .register .rail .bracket{display:block;width:1px;height:42px;margin-top:18px;background:linear-gradient(var(--accent),transparent)}
+  .register h3{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.4vw,40px);margin:0 0 4px;font-style:italic}
+  .register .pos{font-family:var(--sans);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);margin-bottom:18px}
+  .register .def{font-size:clamp(17px,1.5vw,20px);line-height:1.6;max-width:60ch;color:#222}
+  .register .def b{font-weight:600}
+  .register .def .pull{color:var(--alarm);font-style:italic}
+  @media(max-width:860px){.register{grid-template-columns:1fr;gap:18px}.register .rail{display:flex;align-items:center;gap:16px}.register .rail .k{margin-top:0}.register .rail .bracket{display:none}}
+
+  /* ====================================================================
+     ACT 5 — CHAPTERS
+  ==================================================================== */
+  .chapters{padding:14vh 0 16vh;background:
+    radial-gradient(circle at 20% 30%,rgba(18,18,18,.025),transparent 60%),
+    radial-gradient(circle at 84% 76%,rgba(61,75,64,.05),transparent 55%),var(--canvas)}
+  .chapters .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;border-bottom:3px double rgba(28,27,20,.32);padding-bottom:18px;margin-bottom:14px}
+  .chapters .sec-head h2{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(30px,4vw,52px);margin:0;line-height:1}
+  .ch-intro{max-width:60ch;color:#333;margin:20px 0 44px;font-size:16px}
+  .ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media(max-width:980px){.ch-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px){.ch-grid{grid-template-columns:1fr}}
+  .ch-card{position:relative;text-align:left;background:rgba(237,230,212,.45);border:1px solid var(--clay);border-radius:10px;
+    padding:16px 16px 18px;cursor:pointer;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+    display:flex;flex-direction:column;min-height:300px;font:inherit;color:inherit;text-decoration:none}
+  .ch-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 18px 40px -26px rgba(18,18,18,.45)}
+  .plate{margin:0;border:1px solid var(--ink);background:#f3ecda;border-radius:4px;overflow:hidden}
+  .plate-art{aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;padding:10px 10px 4px}
+  .plate-art svg{width:100%;height:100%;display:block}
+  .plate figcaption{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--ink);
+    padding:6px 10px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+  .plate figcaption .fig{font-weight:600;color:var(--ink)}
+  .plate figcaption span{white-space:nowrap}
+  .ch-card .cnum{margin-top:16px;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+  .ch-card h3{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.04;margin:7px 0 0}
+  .ch-card .concept{margin-top:5px;font-style:italic;font-size:14px;color:var(--accent-2)}
+  .ch-card .teaser{margin-top:12px;font-size:15px;line-height:1.5;color:#363636;flex:1}
+  .ch-card .more{margin-top:16px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .ch-card .more .arw{transition:transform .25s} .ch-card:hover .more .arw{transform:translateX(4px)}
+
+  /* modal */
+  .scrim{position:fixed;inset:0;background:rgba(18,18,18,.55);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:100}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:101;top:50%;left:50%;transform:translate(-50%,-46%) scale(.98);opacity:0;pointer-events:none;
+    width:min(680px,92vw);max-height:86vh;overflow:auto;background:var(--canvas);border:1px solid var(--ink);border-radius:14px;
+    padding:38px 40px 40px;transition:opacity .3s,transform .3s;box-shadow:0 40px 90px -30px rgba(0,0,0,.5)}
+  .modal.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .modal .m-num{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+  .modal .m-years{float:right;font-family:var(--sans);font-size:11px;letter-spacing:.08em;color:var(--mist)}
+  .modal h3{font-family:var(--serif);font-weight:300;font-size:clamp(34px,5vw,52px);line-height:1;margin:14px 0 6px}
+  .modal .m-concept{font-family:var(--serif);font-style:italic;font-size:19px;color:var(--accent);margin-bottom:22px}
+  .modal .m-body{font-size:16.5px;line-height:1.66;color:#242424}
+  .modal .m-body b{font-weight:600}
+  .modal .m-q{margin-top:24px;padding:18px 20px;border-left:3px solid var(--alarm);background:rgba(158,59,46,.05);border-radius:0 8px 8px 0}
+  .modal .m-q .ql{font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--alarm);margin-bottom:8px}
+  .modal .m-q p{margin:0;font-family:var(--serif);font-style:italic;font-size:21px;line-height:1.35;color:var(--ink)}
+  .modal .m-foot{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}
+  .modal .m-read{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;background:var(--ink);color:var(--canvas);
+    padding:13px 20px;border-radius:8px;text-decoration:none;transition:background .2s}
+  .modal .m-read:hover{background:var(--accent)}
+  .modal .m-x{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--ink);background:transparent;cursor:pointer;font-size:17px;line-height:1;color:var(--ink)}
+  .modal .m-x:hover{background:var(--ink);color:var(--canvas)}
+  .modal .m-nav{display:flex;gap:8px;margin-left:auto;align-self:center}
+  .modal .m-nav button{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mist);
+    background:transparent;border:1px solid var(--clay);border-radius:8px;padding:11px 14px;cursor:pointer;transition:.2s}
+  .modal .m-nav button:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* footer */
+  .foot{background:var(--ink);color:#c9c2af;padding:64px 0 48px}
+  .foot .f-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-end}
+  .foot .f-title{font-family:var(--serif);font-style:italic;font-weight:300;font-size:30px;color:var(--canvas);line-height:1.1}
+  .foot .f-sub{margin-top:8px;font-size:13px;color:#9a9684}
+  .foot .f-cta{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--canvas);
+    border:1px solid #3d4b40;border-radius:8px;padding:14px 22px;text-decoration:none;transition:.2s}
+  .foot .f-cta:hover{background:var(--accent)}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal,.pstep,.titlecard .bigtitle{transition:none;opacity:1;transform:none}
+  }
+
+  /* clean bottle + liquid effects */
+  .flask svg{overflow:visible}
+  .wave{will-change:transform}
+  .wave-back{animation:waveBack 3s linear infinite}
+  .wave-front{animation:waveFront 4.4s linear infinite}
+  @keyframes waveBack{from{transform:translateX(0)}to{transform:translateX(-48px)}}
+  @keyframes waveFront{from{transform:translateX(0)}to{transform:translateX(48px)}}
+  .bub{animation:bubbleUp 4.2s ease-in infinite}
+  .b2{animation-duration:5.4s;animation-delay:1.2s}
+  .b3{animation-duration:3.4s;animation-delay:2.3s}
+  @keyframes bubbleUp{0%{transform:translateY(0);opacity:0}25%{opacity:.8}100%{transform:translateY(-110px);opacity:0}}
+  @media (prefers-reduced-motion: reduce){.wave-back,.wave-front,.bub{animation:none}}
+  #bottle3d{width:100%;height:100%;display:block}
+  h1,h2,h3{font-weight:500;letter-spacing:-0.005em}
+  .kicker{font-weight:700;letter-spacing:.24em}
+  /* old patterns breaking through — serif emphasis instead of bold/italic */
+  em,i,b,strong,.em,.pull-quote,.concept,.standfirst,.qbox p,.b-title,.def .pull,.thesis .lead,.titlecard .epi,.titlecard .sub,.topbar a.home{font-family:var(--emph) !important;font-style:italic !important;font-weight:700 !important;font-size:1.04em}
+  #bcanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+  .act1{position:relative;z-index:1;background:transparent}
+  .flask{background:transparent}
+  /* ACT 2 — the hedcut */
+  .act2{position:relative;z-index:1;height:480vh;background:transparent}
+  .act2 .a2-sticky{position:sticky;top:0;height:100vh;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+  .act2 .a2-text{max-width:920px;margin:0 auto 11vh;padding:0 28px;text-align:center;opacity:0;transform:translateY(20px);transition:opacity .9s ease,transform .9s ease}
+  .act2 .a2-text.is-on{opacity:1;transform:none}
+  .act2 .a2-text p{font-family:var(--serif);font-weight:300;font-size:clamp(22px,2.9vw,40px);line-height:1.32;color:var(--ink);margin:0;text-shadow:0 1px 0 var(--canvas),0 0 20px var(--canvas),0 0 20px var(--canvas),0 0 20px var(--canvas)}
+  .act2 .a2-quote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(82%,880px);text-align:center;pointer-events:none}
+  .act2 .a2-quote .epi-q{font-family:var(--emph);font-style:italic;font-weight:500;font-size:clamp(24px,3.4vw,50px);line-height:1.26;color:var(--ink);margin:0;text-shadow:0 0 22px var(--canvas),0 0 22px var(--canvas),0 0 22px var(--canvas)}
+  .act2 .a2-quote .w{display:inline-block;opacity:0;transform:translateY(16px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1)}
+  .act2 .a2-quote.is-on .w{opacity:1;transform:none}
+  .act2 .a2-quote .src{display:block;margin-top:24px;font-family:var(--sans);font-style:normal;font-weight:600;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist);opacity:0;transition:opacity .7s ease 1s}
+  .act2 .a2-quote.is-on .src{opacity:1}
+  /* ACT 3 — animated story text */
+  .act3{position:relative;z-index:1;height:640vh;background:var(--canvas)}
+  .act3 .a3-sticky{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .act3 .a3-line{position:absolute;width:min(82%,900px);padding:0 28px;text-align:center;opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+  .act3 .a3-line.is-on{opacity:1;transform:none}
+  .act3 .a3-line p{font-family:var(--serif);font-weight:300;font-size:clamp(28px,4vw,56px);line-height:1.2;color:var(--ink);margin:0;text-wrap:balance}
+  .act3 .a3-line p.big{font-size:clamp(46px,8.5vw,108px);font-weight:500;letter-spacing:-.01em}
+  /* brand lockup — serif "The Greatest" + geometric-sans italic bold "Shortcoming" */
+  .brand-1{font-family:var(--serif);font-style:normal;font-weight:500}
+  .brand-2{font-family:var(--emph);font-style:italic;font-weight:700}
+  .pstep p{text-shadow:0 1px 0 var(--canvas),0 0 16px var(--canvas),0 0 16px var(--canvas)}
+  .clock{text-shadow:0 0 14px var(--canvas),0 0 14px var(--canvas);opacity:0;transition:opacity .5s ease}
+  .pstep.finale{width:min(60%,640px)}
+  .pstep.finale p{font-size:clamp(20px,2.2vw,30px);line-height:1.32}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="brandbar" id="brandbar">
+  <span class="b-title"><span class="brand-1">The Greatest</span> <span class="brand-2">Shortcoming</span></span>
+  <a class="b-cta" href="#chapters">Chapters ↓</a>
+</div>
+
+<canvas id="bcanvas"></canvas>
+<!-- ============================ ACT 1 — PROVOCATION ============================ -->
+<section class="act1" id="act1">
+  <div class="stage">
+    <div class="stage-visual">
+      <div class="flask-wrap">
+        <div class="clock"><span id="clockTime">11:00</span><small>doubling every minute</small></div>
+        <div class="flask" id="flask">
+          <div class="readout"><div class="pct" id="pct">1%</div><div class="lbl">of the bottle</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage-steps" id="stageSteps">
+      <div class="pstep"><p>Picture a bottle.</p></div>
+      <div class="pstep"><p>At <b>eleven o'clock</b>…</p></div>
+      <div class="pstep"><p>…drop in a single bacterium.</p></div>
+      <div class="pstep"><p>It divides once a minute — <b>one becomes two</b>.</p></div>
+      <div class="pstep"><p><b>Two become four.</b></p></div>
+      <div class="pstep"><p>For most of the hour, the bottle looks <b>nearly empty</b>.</p><p class="small">11:55 — three percent full.</p></div>
+      <div class="pstep"><p>11:56 — the fill <b>doubles</b>.</p><p class="small">Six percent.</p></div>
+      <div class="pstep"><p>11:57 — and <b>doubles again</b>.</p><p class="small">Twelve percent.</p></div>
+      <div class="pstep"><p>11:58 — a <b>quarter</b> full.</p></div>
+      <div class="pstep"><p>11:59 — <b>half</b> full.</p></div>
+      <div class="pstep"><p><b>Noon.</b> The bottle is full.</p></div>
+      <div class="pstep"><p>12:01 — it begins to <b>spill out</b>.</p></div>
+      <div class="pstep"><p>12:03 — the circles <b>fill the screen</b>.</p></div>
+    </div>
+  </div>
+  <!-- scroll-driving scenes -->
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+  <div class="pscene"></div>
+</section>
+
+<!-- ============================ ACT 2 — THE HEDCUT ============================ -->
+<section class="act2" id="act2">
+  <div class="a2-sticky">
+    <div class="a2-quote" id="a2quote">
+      <p class="epi-q"><span class="w" style="transition-delay:0ms">"The</span> <span class="w" style="transition-delay:60ms">greatest</span> <span class="w" style="transition-delay:120ms">shortcoming</span> <span class="w" style="transition-delay:180ms">of</span> <span class="w" style="transition-delay:240ms">the</span> <span class="w" style="transition-delay:300ms">human</span> <span class="w" style="transition-delay:360ms">race</span> <span class="w" style="transition-delay:420ms">is</span> <span class="w" style="transition-delay:480ms">our</span> <span class="w" style="transition-delay:540ms">inability</span> <span class="w" style="transition-delay:600ms">to</span> <span class="w" style="transition-delay:660ms">understand</span> <span class="w" style="transition-delay:720ms">the</span> <span class="w" style="transition-delay:780ms">exponential</span> <span class="w" style="transition-delay:840ms">function."</span></p>
+      <span class="src">— Albert Bartlett, 1972</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT 3 — THE STORY (animated text) ===================== -->
+<section class="act3" id="act3">
+  <div class="a3-sticky">
+    <div class="a3-line"><p>For over <b>half a century,</b></p></div>
+    <div class="a3-line"><p>Al Bartlett's <b>bacteria-in-a-bottle</b> thought experiment</p></div>
+    <div class="a3-line"><p>influenced a movement of <b>scientists and environmental activists</b> worried about</p></div>
+    <div class="a3-line"><p class="big"><b>overpopulation.</b></p></div>
+    <div class="a3-line"><p>When Bartlett <b>died in 2013,</b></p></div>
+    <div class="a3-line"><p>he was eulogized in <b>white&nbsp;nationalist journals</b></p></div>
+    <div class="a3-line"><p>for his advocacy to <b>end immigration</b> into the United States.</p></div>
+    <div class="a3-line"><p>This is the story of how quantitative tools and arguments about <b>conservation</b></p></div>
+    <div class="a3-line"><p>repeatedly become tools of <b>exclusion&nbsp;and&nbsp;dominance.</b></p></div>
+  </div>
+</section>
+
+<!-- ============================ ACT 3 — TITLE ============================ -->
+<section class="titlecard" id="titlecard">
+  <div class="glow"></div>
+  <div class="wrap">
+    <div class="bigtitle" id="bigtitle">
+      <h1><span class="brand-1">The Greatest</span><br><span class="brand-2">Shortcoming</span></h1>
+      <p class="sub">Quantitative Chauvinism and Lebensraum Imaginaries</p>
+      <p class="byline">Brian C. Keegan · First Edition</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ACT 4 — CONCEPTS ============================ -->
+<section class="concepts" id="concepts">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>Two names for one machine</h2>
+      <span class="kicker">the argument</span>
+    </div>
+
+    <div class="register reveal">
+      <div class="rail">
+        <div class="num">i</div>
+        <p class="kicker k" style="color:var(--accent)">epistemic register</p>
+        <span class="bracket"></span>
+      </div>
+      <div>
+        <h3>Quantitative Chauvinism</h3>
+        <p class="pos">how the numbers seize power</p>
+        <p class="def">A style of reasoning that hands a single metric <b>jurisdiction over political judgment</b> — collapsing messy social complexity into one aggregated trajectory, then sealing the result inside portable artifacts that travel as if they were neutral facts. It is the use of numerical form <span class="pull">to close political questions before they can be opened</span>, to present a simplification as the whole picture, and to reframe dissent as a failure to understand the data.</p>
+      </div>
+    </div>
+
+    <div class="register reveal">
+      <div class="rail">
+        <div class="num">ii</div>
+        <p class="kicker k" style="color:var(--accent)">political register</p>
+        <span class="bracket"></span>
+      </div>
+      <div>
+        <h3>Lebensraum Imaginaries</h3>
+        <p class="pos">what the numbers are recruited to justify</p>
+        <p class="def">A recurring architecture — narratives of the future, organizational habits, rhetorical moves — through which <b>ecological emergency is converted into demographic hierarchy</b>, and coercive governance is presented as the reluctant, responsible management of natural limits. Named for Friedrich Ratzel's <i>Lebensraum</i>, a concept that crossed from biology into the territorial doctrine of the Third Reich — and whose afterlives remain <span class="pull">recognizable from the Cold War to the coming climate century.</span></p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================ ACT 5 — CHAPTERS ============================ -->
+<section class="chapters" id="chapters">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>Nine chapters</h2>
+      <span class="kicker">an inheritance, five eras, a reckoning</span>
+    </div>
+    <p class="ch-intro reveal">One architecture, traced across a century and into the next — from a barren mesa in Boulder to an autonomous machine deciding who gets evacuated. Tap any chapter.</p>
+    <div class="ch-grid" id="chGrid"></div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap f-grid">
+    <div>
+      <div class="f-title"><span class="brand-1">The Greatest</span> <span class="brand-2">Shortcoming</span></div>
+      <div class="f-sub">Quantitative Chauvinism and Lebensraum Imaginaries · Brian C. Keegan</div>
+    </div>
+    <a class="f-cta" href="#act1">Back to the top ↑</a>
+  </div>
+</footer>
+
+<!-- (chapter cards link to standalone pages in /chapters) -->
+
+<script>
+/* ---------------- Chapter data (mirrors _data/chapters.yml, new structure) ---------------- */
+const CHAPTERS = [
+  { n:"01", slug:"01-boulder", title:"Boulder", years:"the case", concept:"Quantitative chauvinism & lebensraum imaginaries",
+    teaser:"A progressive city builds the most elaborate growth-control machinery in America — and ends up whiter than the state around it.",
+    body:"Boulder introduces the book's two operating concepts through a hundred years of its own institutional history: the Colorado Chautauqua of 1898, the Olmsted Report of 1910, the Blue Line of 1959, the carrying-capacity ordinances of the 1970s. A nominally progressive community built one of the most elaborate growth-management apparatuses in the country — and produced a city that was, by 2020, <b>83% non-Hispanic white</b> in a state two-thirds so. Boulder isn't exceptional; it's legible. The slide from conservation into exclusion was gradual enough that each step looked, from the inside, like responsible stewardship.",
+    q:"How did the quantitative tools of environmental governance come to share a grammar with the journals of white nationalists?" },
+  { n:"02", slug:"02-the-inheritance", title:"The Inheritance", years:"1900 – 1968", concept:"The architecture, already built",
+    teaser:"Before Bartlett ever picked up the chalk, the apparatus, the vocabulary, and the audience were already in place.",
+    body:"Bartlett's lecture was not an original act of creation; it entered a formation assembled across the first half of the twentieth century. Four currents converge: the <b>institutional eugenics apparatus</b> at Cold Spring Harbor, codified through sterilization regimes after <i>Buck v. Bell</i>; the German science of <b>Lebensraum</b> (Friedrich Ratzel → Rudolf Kjellén → Karl Haushofer); the <b>American conservation movement</b>, sharing donors and personnel with eugenics through Madison Grant and Henry Fairfield Osborn; and the postwar <b>population-concern community</b> — the Population Council, Paul Ehrlich, Garrett Hardin, the Club of Rome.",
+    q:"What did Bartlett's lecture inherit?" },
+  { n:"03", slug:"03-the-bottle", title:"The Bottle", years:"1968 – 1994", concept:"Domesticated scientism",
+    teaser:"He gave the same lecture 1,742 times. Each time, arithmetic quietly became obligation.",
+    body:"In the late 1960s the Cold War's ambient dread found a new target. Ehrlich's <i>Population Bomb</i> sold three million copies; Hardin's lifeboat ethics argued some must drown so others survive. Bartlett's contribution worked at a different register — it didn't predict famine, it <b>taught arithmetic</b>, and made the math feel like insight and the insight feel like obligation. This chapter names the mechanism — <b>domesticated scientism</b> — by which exponential arithmetic was naturalized as ecology, and ends on the 1995 exchange where the movement's exclusionary logic first surfaced as a dispute.",
+    q:"How did exponential arithmetic become environmental common sense?" },
+  { n:"04", slug:"04-the-quarantine", title:"The Quarantine", years:"1995 – 2008", concept:"Agnotological infrastructuring",
+    teaser:"After Cairo, the movement lost its license — so it built a new one out of footnotes.",
+    body:"The 1994 Cairo conference replaced coercive population control with women's reproductive autonomy. For the population-concern community it was a catastrophe — but the anxieties didn't vanish, they migrated. With fertility control delegitimized, <b>immigration restriction</b> became the residual lever. John Tanton built a network that laundered nativist conclusions through the aesthetics of neutral policy expertise: fiscal impact statements that turned \u201cshould we admit these people?\u201d into \u201cwhat do these people cost?\u201d The chapter calls the method <b>agnotological infrastructuring</b> — the manufacture of ignorance through parallel institutions.",
+    q:"How did these ideas survive their own delegitimation — and shed their association with racism?" },
+  { n:"05", slug:"05-the-swarm", title:"The Swarm", years:"2009 – 2024", concept:"Demographic engineering",
+    teaser:"A federal press release became one of the most-cited numbers in a mass-shooter's manifesto.",
+    body:"In 2008 the Census Bureau announced that non-Hispanic whites would become a minority by 2042, with a chart of converging lines. The projection was conditional; the chart was not. Stripped of caveats by screenshots and memes, the <b>crossover chart</b> traveled from a federal agency to chan-boards to the \u201cgreat replacement\u201d narrative and into manifestos. Federal demographers had produced, with unimpeachable authority, exactly the object restrictionists could never have manufactured themselves. The chapter calls the operation <b>demographic engineering</b>.",
+    q:"How did a federal projection become the epistemic infrastructure of replacement politics once it left its makers?" },
+  { n:"06", slug:"06-the-portfolio", title:"The Portfolio", years:"2025 – 2048", concept:"Fine-tuning & temporal gerrymandering",
+    teaser:"Overpopulation panic flips into its mirror image: where did all the babies go?",
+    body:"As replacement anxiety crested, the headline inverted — from \u201cminorities will be the majority\u201d to \u201cwhere have all the babies gone?\u201d Pronatalism recruited the very same quantitative infrastructure: fiscal-burden analysis became <b>demographic return-on-investment</b>, and wombs became policy levers. A 2024 legal complaint treated each prevented birth as an implied cost, each birth as a fiscal return. The chapter develops two concepts — <b>fine-tuning</b> (financial optimization applied to demography) and <b>temporal gerrymandering</b> (manipulating time horizons to manufacture urgency) — and shows that zero population growth and pronatalism are structurally the same project.",
+    q:"Why are zero population growth and pronatalism the same project?" },
+  { n:"07", slug:"07-the-evacuation", title:"The Evacuation", years:"2049 – 2068", concept:"Regenerative sovereignty",
+    teaser:"When the bottle is finally full, the question stops being who stays and becomes who gets rescued.",
+    body:"The final era is speculative; its mechanisms are not. Cascading climate catastrophe shifts the governing question from who belongs to <b>who gets rescued</b>. The instrument is no longer a curve but a model of the shocks themselves — <b>shock-spillover modeling</b>, where a disruption in one region is forecast as a cascade carried by the displaced into the regions that receive them. The chapter follows that apparatus to an <b>autonomous decision system</b> issuing evacuation determinations faster than any human review, and shows how a bioregional, restorative vocabulary — <b>regenerative sovereignty</b> — becomes the progressive idiom in which Hardin's lifeboat returns.",
+    q:"When the decision is handed to a system no one in the water can argue with, whose survival counts?" },
+  { n:"08", slug:"08-the-long-term", title:"The Long Term", years:"the reclamation", concept:"Intersectional longtermism",
+    teaser:"The future has been ceded to people who use it as a warrant for present cruelty. Take it back.",
+    body:"Long-term thinking has been surrendered to longtermisms that treat the future as a license for present coercion. This chapter reclaims it — drawing <b>intersectional longtermism</b> from communities that have already survived long-term projects of erasure and had to think in generations to do it: <b>Black ecologies, Indigenous continuance, disability justice, reproductive justice, and antifascist organizing</b>. From them it distills a constructive program — <b>quantitative egalitarianism</b>, which demotes the number from verdict to evidence, and <b>solidarity infrastructuring</b>, the work of carrying these traditions across generations.",
+    q:"Who owns the long term — and what does it look like to wield quantitative tools without recruiting them for exclusion?" },
+  { n:"09", slug:"09-boulder-again", title:"Boulder Again", years:"the return", concept:"What the valley owes",
+    teaser:"What the model strips from bacteria — memory, feedback, survival — is what these imaginaries strip from us.",
+    body:"The book returns to where it opened. Bartlett's bacteria-in-a-bottle is read as a <b>micro-macro isomorphism</b>: what the model deletes from real bacteria — feedback, coordination, memory, survival — is exactly what lebensraum imaginaries delete from human communities. The chapter brings the argument down to Boulder's own ground — the Cheyenne and Arapaho, the <b>Sand Creek Massacre</b> as the local precedent for what the architecture produces under stress, and a deep-time future of water, fire, and heat — and turns the nativist question of who belongs into the question of <b>what the valley owes the people in a rapidly warming world.</b>",
+    q:"What does the valley owe the people in a warming world?" }
+];
+const CH_BASE = "/chapters/"; // chapter page base; standalone preview links are illustrative
+
+/* ---------------- Midcentury textbook plate illustrations (per metaphor) ---------------- */
+const ART = {
+  "01-boulder": "<svg viewBox=\"0 0 160 116\"><rect x=\"6\" y=\"88\" width=\"148\" height=\"20\" fill=\"#285079\" fill-opacity=\"0.16\"/><circle cx=\"28\" cy=\"30\" r=\"13\" fill=\"#e0a52f\"/><circle cx=\"28\" cy=\"30\" r=\"13\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><polygon points=\"46,88 96,88 88,30\" fill=\"#1a1a1a\"/><polygon points=\"66,88 116,88 108,22\" fill=\"#b0382a\" fill-opacity=\"0.92\"/><polygon points=\"86,88 136,88 128,38\" fill=\"#e0a52f\"/><polygon points=\"86,88 136,88 128,38\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><line x1=\"6\" y1=\"88\" x2=\"154\" y2=\"88\" stroke=\"#1a1a1a\" stroke-width=\"3\"/></svg>",
+  "02-the-inheritance": "<svg viewBox=\"0 0 160 116\"><line x1=\"64\" y1=\"18\" x2=\"96\" y2=\"18\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><circle cx=\"64\" cy=\"18\" r=\"8\" fill=\"#285079\"/><rect x=\"88\" y=\"10\" width=\"16\" height=\"16\" fill=\"#b0382a\"/><line x1=\"80\" y1=\"18\" x2=\"80\" y2=\"36\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"46\" y1=\"36\" x2=\"114\" y2=\"36\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"46\" y1=\"36\" x2=\"46\" y2=\"52\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"80\" y1=\"36\" x2=\"80\" y2=\"52\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"114\" y1=\"36\" x2=\"114\" y2=\"52\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><rect x=\"38\" y=\"52\" width=\"16\" height=\"16\" fill=\"#e0a52f\"/><circle cx=\"80\" cy=\"60\" r=\"8\" fill=\"#1a1a1a\"/><polygon points=\"114,52 123,68 105,68\" fill=\"#285079\"/><line x1=\"80\" y1=\"60\" x2=\"80\" y2=\"84\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"62\" y1=\"84\" x2=\"98\" y2=\"84\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"62\" y1=\"84\" x2=\"62\" y2=\"98\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"98\" y1=\"84\" x2=\"98\" y2=\"98\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><circle cx=\"62\" cy=\"105\" r=\"7\" fill=\"#b0382a\"/><rect x=\"91\" y=\"98\" width=\"14\" height=\"14\" fill=\"#e0a52f\"/></svg>",
+  "03-the-bottle": "<svg viewBox=\"0 0 160 116\"><line x1=\"22\" y1=\"10\" x2=\"22\" y2=\"98\" stroke=\"#1a1a1a\" stroke-width=\"2.5\"/><line x1=\"22\" y1=\"98\" x2=\"152\" y2=\"98\" stroke=\"#1a1a1a\" stroke-width=\"2.5\"/><rect x=\"114\" y=\"18\" width=\"38\" height=\"80\" fill=\"#b0382a\" fill-opacity=\"0.10\"/><path d=\"M30 94 C70 92 96 84 116 60 C130 42 138 26 144 14\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\" stroke-dasharray=\"3 3\"/><circle cx=\"32\" cy=\"93\" r=\"3.5\" fill=\"#285079\"/><circle cx=\"50\" cy=\"92\" r=\"4\" fill=\"#1a1a1a\"/><circle cx=\"68\" cy=\"89\" r=\"5\" fill=\"#e0a52f\"/><circle cx=\"86\" cy=\"83\" r=\"6\" fill=\"#285079\"/><circle cx=\"104\" cy=\"72\" r=\"7.5\" fill=\"#1a1a1a\"/><circle cx=\"122\" cy=\"54\" r=\"9.5\" fill=\"#b0382a\"/><circle cx=\"140\" cy=\"28\" r=\"12\" fill=\"#b0382a\"/><circle cx=\"140\" cy=\"28\" r=\"12\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/></svg>",
+  "04-the-quarantine": "<svg viewBox=\"0 0 160 116\"><rect x=\"10\" y=\"12\" width=\"140\" height=\"92\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><circle cx=\"58\" cy=\"54\" r=\"30\" fill=\"#285079\" fill-opacity=\"0.9\"/><rect x=\"100\" y=\"20\" width=\"22\" height=\"22\" fill=\"#e0a52f\"/><line x1=\"36\" y1=\"30\" x2=\"124\" y2=\"92\" stroke=\"#1a1a1a\" stroke-width=\"10\" stroke-linecap=\"square\"/><line x1=\"124\" y1=\"30\" x2=\"36\" y2=\"92\" stroke=\"#b0382a\" stroke-width=\"10\" stroke-linecap=\"square\"/><line x1=\"10\" y1=\"100\" x2=\"150\" y2=\"100\" stroke=\"#1a1a1a\" stroke-width=\"3\"/><rect x=\"10\" y=\"100\" width=\"42\" height=\"4\" fill=\"#b0382a\"/></svg>",
+  "05-the-swarm": "<svg viewBox=\"0 0 160 116\"><line x1=\"96\" y1=\"8\" x2=\"96\" y2=\"108\" stroke=\"#1a1a1a\" stroke-width=\"3\"/><polygon points=\"18,30 27,48 9,48\" fill=\"#1a1a1a\"/><polygon points=\"36,20 43,34 29,34\" fill=\"#b0382a\"/><polygon points=\"28,54 39,76 17,76\" fill=\"#285079\"/><polygon points=\"14,66 22,82 6,82\" fill=\"#e0a52f\"/><polygon points=\"46,52 59,78 33,78\" fill=\"#1a1a1a\"/><polygon points=\"58,30 66,46 50,46\" fill=\"#b0382a\"/><polygon points=\"70,56 80,76 60,76\" fill=\"#285079\"/><polygon points=\"50,86 59,104 41,104\" fill=\"#e0a52f\"/><polygon points=\"31,86 43,108 19,108\" fill=\"#1a1a1a\"/><polygon points=\"72,88 80,104 64,104\" fill=\"#b0382a\"/><polygon points=\"82,40 90,56 74,56\" fill=\"#285079\"/><polygon points=\"60,98 70,112 50,112\" fill=\"#e0a52f\"/><circle cx=\"122\" cy=\"40\" r=\"13\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"2.5\"/><circle cx=\"142\" cy=\"72\" r=\"10\" fill=\"none\" stroke=\"#285079\" stroke-width=\"2.5\"/><circle cx=\"118\" cy=\"86\" r=\"8.5\" fill=\"none\" stroke=\"#b0382a\" stroke-width=\"2.5\"/></svg>",
+  "06-the-portfolio": "<svg viewBox=\"0 0 160 116\"><rect x=\"60\" y=\"12\" width=\"20\" height=\"20\" fill=\"#e0a52f\" fill-opacity=\"0.5\"/><line x1=\"72\" y1=\"32\" x2=\"80\" y2=\"62\" stroke=\"#1a1a1a\" stroke-width=\"1\"/><line x1=\"30\" y1=\"50\" x2=\"130\" y2=\"66\" stroke=\"#1a1a1a\" stroke-width=\"3\"/><circle cx=\"30\" cy=\"50\" r=\"15\" fill=\"#b0382a\"/><circle cx=\"30\" cy=\"50\" r=\"15\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><rect x=\"116\" y=\"52\" width=\"26\" height=\"26\" fill=\"#285079\"/><line x1=\"30\" y1=\"50\" x2=\"30\" y2=\"36\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><line x1=\"129\" y1=\"66\" x2=\"129\" y2=\"52\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><polygon points=\"80,64 70,94 90,94\" fill=\"#1a1a1a\"/><rect x=\"20\" y=\"96\" width=\"120\" height=\"6\" fill=\"#e0a52f\"/></svg>",
+  "07-the-evacuation": "<svg viewBox=\"0 0 160 116\"><rect x=\"12\" y=\"14\" width=\"136\" height=\"88\" fill=\"#285079\" fill-opacity=\"0.10\" stroke=\"#1a1a1a\" stroke-width=\"2\"/><line x1=\"24\" y1=\"40\" x2=\"148\" y2=\"40\" stroke=\"#1a1a1a\" stroke-width=\"0.6\" stroke-dasharray=\"2 4\"/><line x1=\"24\" y1=\"80\" x2=\"148\" y2=\"80\" stroke=\"#1a1a1a\" stroke-width=\"0.6\" stroke-dasharray=\"2 4\"/><path d=\"M12 64 Q48 48 84 62 T148 54\" fill=\"none\" stroke=\"#285079\" stroke-width=\"2\"/><circle cx=\"44\" cy=\"74\" r=\"6\" fill=\"none\" stroke=\"#b0382a\" stroke-width=\"1.5\"/><circle cx=\"44\" cy=\"74\" r=\"12\" fill=\"none\" stroke=\"#b0382a\" stroke-width=\"1\"/><line x1=\"40\" y1=\"78\" x2=\"138\" y2=\"30\" stroke=\"#b0382a\" stroke-width=\"2.5\" stroke-dasharray=\"7 6\"/><polygon points=\"48,72 56,84 40,84\" fill=\"#1a1a1a\"/><rect x=\"74\" y=\"48\" width=\"13\" height=\"13\" fill=\"#e0a52f\"/><circle cx=\"104\" cy=\"44\" r=\"7\" fill=\"#285079\"/><polygon points=\"128,30 137,44 119,44\" fill=\"#1a1a1a\"/><path d=\"M138 30 l-9 1 m9 -1 l-2 9\" stroke=\"#b0382a\" stroke-width=\"2\" fill=\"none\"/></svg>",
+  "08-the-long-term": "<svg viewBox=\"0 0 160 116\"><circle cx=\"76\" cy=\"58\" r=\"32\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"3\" stroke-dasharray=\"140 60\" transform=\"rotate(-28 76 58)\"/><circle cx=\"62\" cy=\"44\" r=\"5\" fill=\"#285079\"/><line x1=\"76\" y1=\"58\" x2=\"76\" y2=\"34\" stroke=\"#1a1a1a\" stroke-width=\"3\"/><line x1=\"76\" y1=\"58\" x2=\"96\" y2=\"66\" stroke=\"#b0382a\" stroke-width=\"3\"/><circle cx=\"76\" cy=\"58\" r=\"3.5\" fill=\"#1a1a1a\"/><rect x=\"12\" y=\"14\" width=\"20\" height=\"20\" fill=\"#b0382a\"/><polygon points=\"134,14 152,14 143,2\" fill=\"#e0a52f\"/><circle cx=\"22\" cy=\"96\" r=\"11\" fill=\"#285079\"/><polygon points=\"128,92 146,92 137,108\" fill=\"#1a1a1a\"/><rect x=\"120\" y=\"64\" width=\"16\" height=\"16\" fill=\"#e0a52f\" fill-opacity=\"0.6\"/></svg>",
+  "09-boulder-again": "<svg viewBox=\"0 0 160 116\"><rect x=\"6\" y=\"30\" width=\"148\" height=\"22\" fill=\"#285079\" fill-opacity=\"0.14\"/><circle cx=\"40\" cy=\"32\" r=\"15\" fill=\"#e0a52f\"/><circle cx=\"40\" cy=\"32\" r=\"15\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><polygon points=\"14,44 70,44 42,88\" fill=\"#1a1a1a\"/><polygon points=\"50,34 122,34 86,90\" fill=\"#b0382a\" fill-opacity=\"0.92\"/><polygon points=\"100,54 152,54 126,90\" fill=\"#e0a52f\"/><polygon points=\"100,54 152,54 126,90\" fill=\"none\" stroke=\"#1a1a1a\" stroke-width=\"1.5\"/><line x1=\"6\" y1=\"44\" x2=\"154\" y2=\"44\" stroke=\"#1a1a1a\" stroke-width=\"3\"/><path d=\"M120 20 A40 40 0 0 1 134 60\" fill=\"none\" stroke=\"#285079\" stroke-width=\"2.5\"/><path d=\"M134 60 l-6 -3 m6 3 l2 -7\" stroke=\"#285079\" stroke-width=\"2.5\" fill=\"none\"/></svg>"
+};
+
+/* ---------------- Build chapter cards ---------------- */
+const grid = document.getElementById('chGrid');
+CHAPTERS.forEach((c,i)=>{
+  const card = document.createElement('a');
+  card.className='ch-card reveal';
+  card.href = 'chapters/'+c.slug+'.html';
+  card.style.transitionDelay = (i%3*60)+'ms';
+  card.innerHTML = `<figure class="plate"><div class="plate-art">${ART[c.slug]||''}</div>
+    <figcaption><span class="fig">Fig. ${c.n}</span><span class="cyears">${c.years}</span></figcaption></figure>
+    <span class="cnum">Chapter ${c.n}</span>
+    <h3>${c.title}</h3><div class="concept">${c.concept}</div>
+    <p class="teaser">${c.teaser}</p>
+    <span class="more">Read chapter <span class="arw">→</span></span>`;
+  grid.appendChild(card);
+});
+
+/* ---------------- Scroll reveals ---------------- */
+const io=new IntersectionObserver((es)=>{
+  es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('is-on'); io.unobserve(en.target);} });
+},{threshold:.18});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ---------------- Title reveal ---------------- */
+const bigtitle=document.getElementById('bigtitle');
+new IntersectionObserver((es)=>{
+  es.forEach(en=>{ if(en.isIntersecting) bigtitle.classList.add('is-on'); });
+},{threshold:.4}).observe(document.getElementById('titlecard'));
+
+/* ---------------- ACT 1 scroll engine: bottle fill + steps ---------------- */
+const act1=document.getElementById('act1');
+const act2=document.getElementById('act2');
+const a2text=document.getElementById('a2text');
+const a2quote=document.getElementById('a2quote');
+const act3=document.getElementById('act3');
+const a3lines=[...document.querySelectorAll('.a3-line')];
+const steps=[...document.querySelectorAll('.pstep')];
+const pctEl=document.getElementById('pct');
+const clockEl=document.getElementById('clockTime');
+function fmtClock(m){
+  m=Math.round(m);
+  if(m>=60) return '12:'+String(Math.min(99,m-60)).padStart(2,'0');
+  return '11:'+String(Math.max(0,m)).padStart(2,'0');
+}
+// Act 1 storyboard — one keyframe per narrated beat
+const KF=[
+  {min:0,  fill:0,      over:0},   // 0  picture a bottle (vessel fades in)
+  {min:0,  fill:0,      over:0},   // 1  at eleven o'clock (clock appears)
+  {min:0,  fill:1/190,  over:0},   // 2  a single bacterium
+  {min:0,  fill:2/190,  over:0},   // 3  one becomes two
+  {min:0,  fill:4/190,  over:0},   // 4  two become four
+  {min:55, fill:0.03,   over:0},   // 5  11:55  3%
+  {min:56, fill:0.06,   over:0},   // 6  11:56  6%
+  {min:57, fill:0.12,   over:0},   // 7  11:57  12%
+  {min:58, fill:0.25,   over:0},   // 8  11:58  quarter
+  {min:59, fill:0.50,   over:0},   // 9  11:59  half
+  {min:60, fill:1.0,    over:0},   // 10 12:00  full
+  {min:61, fill:1.0,    over:0.18},// 11 12:01  spills out
+  {min:63, fill:1.0,    over:1.0}, // 12 12:03  fills the screen
+  {min:63, fill:1.0,    over:1.0}  // 13 clear view -> the line
+];
+function onScroll(){
+  const rect=act1.getBoundingClientRect();
+  const total=Math.max(1,act1.offsetHeight-window.innerHeight);
+  const p=Math.min(1,Math.max(0,(-rect.top)/total));
+  const N=KF.length, bi=p*(N-1);
+  const i0=Math.min(N-1,Math.floor(bi)), i1=Math.min(N-1,i0+1), fr=bi-i0;
+  const ease=fr*fr*(3-2*fr);
+  const a=KF[i0], b=KF[i1];
+  let fill=a.fill+(b.fill-a.fill)*ease;
+  let over=a.over+(b.over-a.over)*ease;
+  const minutes=a.min+(b.min-a.min)*fr;
+
+  // ACT 2 — the circles reorganize into the Bartlett hedcut
+  const r2=act2.getBoundingClientRect();
+  const t2=Math.max(1,act2.offsetHeight-window.innerHeight);
+  const p2=Math.min(1,Math.max(0,(-r2.top)/t2));
+  let morph=0;
+  if(p2>0){ let x=Math.min(1,p2/0.45); morph=x*x*(3-2*x); }
+  if(morph>0) over=1;                 // keep every circle for the portrait
+  window.__fill=fill; window.__over=over; window.__morph=morph;
+  pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
+  clockEl.textContent=fmtClock(minutes);
+  if(clockEl.parentElement) clockEl.parentElement.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+  if(a2quote) a2quote.classList.toggle('is-on', p2>0.7);
+
+  // ACT 3 — sequential animated story lines
+  if(act3){
+    const r3=act3.getBoundingClientRect();
+    const t3=Math.max(1,act3.offsetHeight-window.innerHeight);
+    const p3=Math.min(1,Math.max(0,(-r3.top)/t3));
+    const inv3=r3.top<window.innerHeight && r3.bottom>0;
+    const idx3=Math.min(a3lines.length-1, Math.floor(p3*a3lines.length));
+    a3lines.forEach((el,k)=>el.classList.toggle('is-on', inv3 && k===idx3));
+  }
+
+  // canvas spans Act 1 + Act 2; fades in at the very start, out as Act 2 ends
+  const cvEl=document.getElementById('bcanvas');
+  if(cvEl){
+    const a1vis=rect.bottom>0 && rect.top<window.innerHeight;
+    const a2vis=r2.bottom>0 && r2.top<window.innerHeight;
+    let op=Math.min(1,Math.max(0,bi/0.8));
+    if(p2>0.58) op=Math.min(op, Math.max(0,1-(p2-0.58)/0.16)); // portrait fades, quote replaces it
+    cvEl.style.display=(a1vis||a2vis)?'block':'none';
+    cvEl.style.opacity=String(op);
+  }
+
+  const idx=Math.min(N-1,Math.max(0,Math.round(bi)));
+  steps.forEach((st,k)=>st.classList.toggle('is-on',k===idx));
+  const docH=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('progress').style.width=(window.scrollY/docH*100)+'%';
+  const tc=document.getElementById('titlecard').getBoundingClientRect();
+  document.getElementById('brandbar').style.opacity=(tc.top<60 && tc.bottom>60)?'0':'1';
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('resize',onScroll);
+onScroll();
+// init first step
+steps[0].classList.add('is-on');
+</script>
+
+<script>
+(function(){
+  const cv=document.getElementById('bcanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const flask=document.getElementById('flask');
+  const RED=[176,56,42], BLACK=[17,17,17];
+  let W=0,H=0,dpr=1;
+  function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); W=window.innerWidth; H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); buildTargets(); }
+
+  /* ---- Act 2: stipple targets sampled from the Bartlett portrait ---- */
+  const IMG=new Image(); let imgReady=false;
+  IMG.onload=()=>{ imgReady=true; buildTargets(); };
+  IMG.src='assets/img/bartlett.jpg';
+  const off=document.createElement('canvas'); const octx=off.getContext('2d');
+  let TARGETS=[], assigned=false;
+  function buildTargets(){
+    if(!imgReady||!W||!H) return;
+    const aspect=IMG.width/IMG.height;
+    const ph=H*0.94, pw=ph*aspect;
+    const px=(W-pw)/2, py=(H-ph)/2;
+    const rows=120, cols=Math.round(rows*aspect);
+    off.width=cols; off.height=rows;
+    octx.drawImage(IMG,0,0,cols,rows);
+    const data=octx.getImageData(0,0,cols,rows).data;
+    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.70;
+    // the face occupies roughly this normalized box of the portrait — give it extra ink
+    const faceCX=0.50, faceCY=0.30, faceRX=0.20, faceRY=0.22;
+    const T=[];
+    for(let j=0;j<rows;j++){
+      for(let i=0;i<cols;i++){
+        const idx=(j*cols+i)*4;
+        const r=data[idx], gC=data[idx+1], bC=data[idx+2];
+        const L=(0.299*r+0.587*gC+0.114*bC)/255;
+        const cx=px+(i+0.5)*sx, cy=py+(j+0.5)*sy;
+        const ndx=(cx-W/2)/(pw*0.55), ndy=(cy-H/2)/(ph*0.62);
+        const vig=Math.min(1,Math.max(0,1.16-Math.sqrt(ndx*ndx+ndy*ndy)));
+        // brass exponential trophy = saturated yellow-gold in the lower foreground → red dots
+        const warm=(j/rows)>0.42 && (r-bC)>52 && gC>92 && bC<gC*0.66 && r>138;
+        let ink, red=false;
+        if(warm){
+          ink=Math.min(1,0.5+(r-bC)/240);
+          red=false; // trophy rendered in black with the rest of the portrait
+        } else {
+          // extra contrast inside the face box so eyes/glasses/brow read.
+          // hi reaches into the highlights and a gamma lift recovers detail in
+          // the (otherwise blown-out) lit side of the face.
+          const fx=(i/cols-faceCX)/faceRX, fy=(j/rows-faceCY)/faceRY;
+          const inFace=(fx*fx+fy*fy)<1;
+          const hi=inFace?0.94:0.80, lo=inFace?0.0:0.08;
+          ink=Math.min(1,Math.max(0,(hi-L)/(hi-lo)))*vig;
+          if(inFace) ink=Math.pow(ink,0.68);
+        }
+        if(ink<0.07) continue;
+        T.push({x:cx+(Math.random()-0.5)*sx*0.45, y:cy+(Math.random()-0.5)*sy*0.45, r:Math.max(1.0,ink*maxR), red:red});
+      }
+    }
+    TARGETS=T; assigned=false;
+  }
+  resize(); window.addEventListener('resize',resize);
+
+  // Bauhaus U vessel geometry from the flask anchor (viewport px)
+  function geo(){
+    const r=flask.getBoundingClientRect();
+    const cx=r.left+r.width/2;
+    const w=Math.min(212, r.width*0.94);
+    const h=Math.min(300, r.height*0.84);
+    const top=r.top+r.height*0.10;
+    const th=Math.max(18, w*0.155);
+    return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
+  }
+
+  const NCAP=190, DOUB=4.6;     // bottle capacity, then ~4.6 doublings of overflow after noon
+  const P=[];
+  function seed(g){ return {x:g.cx,y:g.bot-12,vx:0,vy:0,r:6.5}; }
+  function child(par){ const a=Math.random()*6.283, off=par.r*0.5;
+    return {x:par.x+Math.cos(a)*off, y:par.y+Math.sin(a)*off, vx:Math.cos(a)*0.4, vy:Math.sin(a)*0.4-0.3, r:6+Math.random()*2.4}; }
+
+  // circle vs solid axis-aligned rectangle (the U is three such solids)
+  function collideRect(p,x0,y0,x1,y1){
+    const cx=Math.max(x0,Math.min(p.x,x1)), cy=Math.max(y0,Math.min(p.y,y1));
+    const dx=p.x-cx, dy=p.y-cy, d2=dx*dx+dy*dy;
+    if(d2<p.r*p.r){
+      if(d2>0.0001){ const d=Math.sqrt(d2), ov=p.r-d, nx=dx/d, ny=dy/d; p.x+=nx*ov; p.y+=ny*ov;
+        const vn=p.vx*nx+p.vy*ny; if(vn<0){ p.vx-=nx*vn*1.1; p.vy-=ny*vn*1.1; } }
+      else { const dl=p.x-x0, dr=x1-p.x, dt=p.y-y0, db=y1-p.y, m=Math.min(dl,dr,dt,db);
+        if(m===dl)p.x=x0-p.r; else if(m===dr)p.x=x1+p.r; else if(m===dt)p.y=y0-p.r; else p.y=y1+p.r; }
+    }
+  }
+
+  function step(){
+    const g=geo();
+    const morph=Math.max(0,Math.min(1, window.__morph||0));
+    // ---- ACT 2: morph the circles into the hedcut ----
+    if(morph>0.001 && TARGETS.length){
+      const desired=TARGETS.length;
+      // spawn the full population up-front so assignment captures valid homes (no NaN)
+      while(P.length<desired){ P.push(P.length?child(P[(Math.random()*P.length)|0]):seed(g)); }
+      if(P.length>desired) P.splice(desired, P.length-desired);
+      if(!assigned){
+        for(const p of P){ if(!isFinite(p.x)||!isFinite(p.y)){ p.x=W/2; p.y=H/2; } }
+        const pord=P.map((p,i)=>i).sort((a,b)=>(P[a].y-P[b].y)||(P[a].x-P[b].x));
+        const tord=TARGETS.map((t,i)=>i).sort((a,b)=>(TARGETS[a].y-TARGETS[b].y)||(TARGETS[a].x-TARGETS[b].x));
+        for(let k=0;k<pord.length;k++){ const p=P[pord[k]]; p.ti=tord[k]; p.hx=p.x; p.hy=p.y; p.hr=p.r; }
+        assigned=true;
+      }
+      const m=morph*morph*(3-2*morph);
+      ctx.clearRect(0,0,W,H);
+      for(const p of P){
+        const t=TARGETS[p.ti]||{x:p.hx,y:p.hy,r:p.hr};
+        p.x=p.hx+(t.x-p.hx)*m; p.y=p.hy+(t.y-p.hy)*m; p.r=p.hr+(t.r-p.hr)*m;
+        const md=(t&&t.red)?0:m;
+        const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
+        ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill();
+      }
+      requestAnimationFrame(step);
+      return;
+    }
+    assigned=false;
+    const fill=Math.max(0,Math.min(1, window.__fill||0));
+    const over=Math.max(0,Math.min(1, window.__over||0));
+    // Before noon the bottle fills; after noon the population genuinely DOUBLES
+    // by division — target grows as 2^(over) and each new circle buds from an
+    // existing one, at a per-frame rate proportional to the current count.
+    const target = over<=0 ? Math.max(1, Math.round(NCAP*fill))
+                           : Math.round(NCAP*Math.pow(2, over*DOUB));
+    let added=0;
+    const maxAdd=Math.max(30, Math.ceil(P.length*0.6));
+    while(P.length<target && added<maxAdd){
+      if(P.length===0) P.push(seed(g)); else P.push(child(P[(Math.random()*P.length)|0]));
+      added++;
+    }
+    if(P.length>target) P.splice(target, P.length-target);
+
+    const G=0.16;
+    for(const p of P){ p.vy+=G; p.x+=p.vx; p.y+=p.vy; }
+
+    // broadphase grid
+    const cell=28, grid=new Map();
+    const gkey=(x,y)=>x+'_'+y;
+    for(let i=0;i<P.length;i++){ const p=P[i]; const k=gkey((p.x/cell)|0,(p.y/cell)|0); let a=grid.get(k); if(!a){ a=[]; grid.set(k,a); } a.push(i); }
+
+    for(let pass=0; pass<8; pass++){
+      for(let i=0;i<P.length;i++){
+        const a=P[i]; const gx=(a.x/cell)|0, gy=(a.y/cell)|0;
+        for(let ox=-1; ox<=1; ox++){
+          for(let oy=-1; oy<=1; oy++){
+            const arr=grid.get(gkey(gx+ox,gy+oy)); if(!arr) continue;
+            for(let m=0;m<arr.length;m++){
+              const j=arr[m]; if(j<=i) continue; const b=P[j];
+              const dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy, rr=a.r+b.r;
+              if(d2<rr*rr && d2>0.0001){ const d=Math.sqrt(d2), ov=(rr-d)*0.5, nx=dx/d, ny=dy/d; a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov; }
+            }
+          }
+        }
+      }
+      for(let i=0;i<P.length;i++){
+        const p=P[i];
+        if(p.x<p.r){ p.x=p.r; if(p.vx<0)p.vx*=-0.3; }
+        if(p.x>W-p.r){ p.x=W-p.r; if(p.vx>0)p.vx*=-0.3; }
+        if(p.y>H-p.r){ p.y=H-p.r; if(p.vy>0)p.vy*=-0.16; }
+        // the bottle: two solid side bars + a solid base. Open at the top — so
+        // surplus particles climb over the rim and spill out under their own pressure.
+        collideRect(p, g.outL, g.rim, g.inL, g.outBot);
+        collideRect(p, g.inR,  g.rim, g.outR, g.outBot);
+        collideRect(p, g.outL, g.bot, g.outR, g.outBot);
+      }
+    }
+    for(const p of P){ p.vx*=0.84; p.vy*=0.9; if(Math.abs(p.vx)<0.03)p.vx=0; if(Math.abs(p.vy)<0.05 && p.y>H-p.r-1.5)p.vy=0; }
+
+    // DRAW — black U + identical red circles
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#111111'; drawU(ctx,g);
+    ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
+    for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
+    requestAnimationFrame(step);
+  }
+
+  function drawU(ctx,g){
+    const x=g.outL,y=g.rim,w=g.w,h=g.h,th=g.th;
+    const rad=Math.min(w*0.34, h*0.42), irad=Math.max(2,rad-th);
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x,y+h-rad); ctx.quadraticCurveTo(x,y+h,x+rad,y+h);
+    ctx.lineTo(x+w-rad,y+h); ctx.quadraticCurveTo(x+w,y+h,x+w,y+h-rad);
+    ctx.lineTo(x+w,y);
+    ctx.lineTo(x+w-th,y);
+    ctx.lineTo(x+w-th,y+h-th-irad); ctx.quadraticCurveTo(x+w-th,y+h-th,x+w-th-irad,y+h-th);
+    ctx.lineTo(x+th+irad,y+h-th); ctx.quadraticCurveTo(x+th,y+h-th,x+th,y+h-th-irad);
+    ctx.lineTo(x+th,y);
+    ctx.closePath(); ctx.fill();
+  }
+
+  window.__pcount=()=>P.length;
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

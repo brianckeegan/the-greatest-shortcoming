@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "npm run build:css",
-    "build:css": "vite build",
-    "dev:css": "vite",
+    "build:css": "tailwindcss -i assets/css/src/main.css -o assets/css/dist/main.css --minify",
+    "dev:css": "tailwindcss -i assets/css/src/main.css -o assets/css/dist/main.css --watch",
     "build:islands": "node esbuild.config.mjs",
     "build:islands:watch": "node esbuild.config.mjs --watch",
     "typecheck": "tsc --noEmit"
