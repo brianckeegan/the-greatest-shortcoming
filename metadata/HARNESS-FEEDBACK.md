@@ -24,7 +24,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P1 — do first (makes re-runs clean; supports the real filename convention)
 
-### [ ] #1 Re-running on an already-reconciled site fails the audit (stale `prev_*`)  — STABILITY, highest
+### [x] #1 Re-running on an already-reconciled site fails the audit (stale `prev_*`)  — STABILITY, highest
 - **Problem:** the committed `draft-metadata.json` is post-rename, but chapter
   `prev_slug` values still point at pre-rename files. The audit requires every
   `prev_slug` to exist on disk (`audit-site.py:192`), so a straight re-audit fails

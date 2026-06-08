@@ -45,6 +45,25 @@ python3 bin/apply-rename.py --apply
 Or, in Claude Code, the two slash commands wrap the stages: `/ingest-draft` then
 `/audit-constructs` (add `--apply` to execute).
 
+### Re-running on an already-reconciled site
+
+The audit is tolerant of **already-applied** renames: if a chapter's `prev_slug`
+file is gone *and* its new `slug` file is present (the committed steady state),
+the move is treated as done — it is not planned again and is not a coverage
+error. The same holds for construct `_landing/` moves. So a straight
+`audit → apply` second pass is clean with **no manual metadata surgery**.
+
+Optionally, after a real `--apply`, settle the committed metadata so it mirrors
+the site for the *next* draft:
+
+```bash
+python3 bin/apply-rename.py --apply --finalize   # rewrites prev_* == current, status → unchanged
+```
+
+`--finalize` keeps each construct's `aliases_deprecated` / `preserve_terms` as
+regression guards (they still protect after a rename settles) and clears the
+one-shot `extra_renames`. Without `--apply` it only previews the settling diff.
+
 ## The metadata interface
 
 `metadata/draft-metadata.json` (validated by `draft-metadata.schema.json`) is the

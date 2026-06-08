@@ -126,6 +126,46 @@ def regen_file(rel: str, meta: dict) -> str:
     raise ValueError(f"don't know how to regenerate {rel}")
 
 
+def finalize_metadata(meta: dict) -> tuple[dict, list[str]]:
+    """Return (settled_meta, change_notes). After a rename has been applied to the
+    site, the committed metadata should mirror the *current* site so the next
+    draft's audit starts clean (#1). This settles prev_* == current and resets
+    statuses to 'unchanged', while KEEPING aliases_deprecated/preserve_terms as
+    regression guards (those still protect after the rename settles, see #2), and
+    clears the one-shot extra_renames escape hatch. Pure transform; caller writes."""
+    import copy
+    m = copy.deepcopy(meta)
+    notes: list[str] = []
+
+    for c in m.get("constructs", []):
+        for prev, cur in (("prev_id", "id"), ("prev_name", "canonical_name"),
+                          ("prev_slug", "slug"), ("prev_short_label", "short_label")):
+            if prev in c and c.get(prev) not in (None, c.get(cur)):
+                c[prev] = c.get(cur)
+                notes.append(f"construct {c.get('id')}: {prev} → {c.get(cur)!r}")
+        if c.get("status") == "renamed":
+            c["status"] = "unchanged"
+            notes.append(f"construct {c.get('id')}: status renamed → unchanged "
+                         f"(aliases_deprecated kept as guard)")
+
+    for ch in m.get("chapters", []):
+        for prev, cur in (("prev_slug", "slug"), ("prev_title", "title"),
+                          ("prev_era_id", "era_id")):
+            if prev in ch and ch.get(prev) != ch.get(cur):
+                ch[prev] = ch.get(cur)
+                notes.append(f"chapter {ch.get('slug')}: {prev} → {ch.get(cur)!r}")
+        if ch.get("status") != "unchanged":
+            notes.append(f"chapter {ch.get('slug')}: status {ch.get('status')} → unchanged")
+            ch["status"] = "unchanged"
+
+    extra = m.get("extra_renames")
+    if extra and (extra.get("tokens") or extra.get("phrases")):
+        notes.append("extra_renames cleared (one-shot renames already applied)")
+        m["extra_renames"] = {"tokens": {}, "phrases": {}}
+
+    return m, notes
+
+
 def new_chapter_text(ch: dict, meta: dict) -> str:
     src = meta["draft"]["source_pdf"]
     date = meta["draft"]["ingested"]
@@ -139,6 +179,10 @@ def new_chapter_text(ch: dict, meta: dict) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="write changes (default: dry run)")
+    ap.add_argument("--finalize", action="store_true",
+                    help="after a successful apply, rewrite metadata so prev_*==current "
+                         "and settle statuses, making the committed metadata an honest "
+                         "mirror of the site for the next draft (only writes with --apply)")
     args = ap.parse_args()
     apply = args.apply
     mode = "APPLY" if apply else "DRY RUN"
@@ -239,6 +283,21 @@ def main() -> None:
         if patch_frontmatter(dest, sets, {}, apply):
             print(f"  {ch['slug']}: num={ch['num']}"
                   + (f" +redirect {mv['redirect_from']}" if mv and 'redirect_from' in mv else ""))
+
+    # 7. finalize (opt-in): settle the committed metadata to mirror the site
+    if args.finalize:
+        settled, fnotes = finalize_metadata(meta)
+        print(f"\n[finalize] {len(fnotes)} metadata setting(s) to settle prev_* → current")
+        for n in fnotes:
+            print(f"  {n}")
+        if not fnotes:
+            print("  metadata already settled (nothing to do)")
+        if apply and fnotes:
+            META.write_text(json.dumps(settled, indent=2, ensure_ascii=False) + "\n",
+                            encoding="utf-8")
+            print(f"  → wrote {META.relative_to(REPO)}")
+        elif fnotes:
+            print("  (dry run — pass --apply to write settled metadata)")
 
     print(f"\n=== {mode} complete ===")
     if not apply:
