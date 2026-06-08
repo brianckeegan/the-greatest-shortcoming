@@ -15,7 +15,7 @@
   "dependencies": {
     "@observablehq/plot": "^0.6.16",
     "d3": "^7.9.0",
-    "react": "^18.3.1",
+    "react": "^19.2.7",
     "react-dom": "^18.3.1",
     "react-scroll": "^1.9.3",
     "react-scrollama": "^2.4.2",
@@ -24,7 +24,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
     "@types/d3": "^7.4.3",
-    "@types/react": "^18.3.12",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^18.3.1",
     "@types/react-scroll": "^1.8.10",
     "autoprefixer": "^10.4.20",
