@@ -25,3 +25,7 @@ assets/css/dist/
 metadata/v*/
 metadata/rename-plan.json
 metadata/audit-report.md
+
+# Python — bytecode cache left by the bin/*.py harness scripts
+__pycache__/
+*.py[cod]
