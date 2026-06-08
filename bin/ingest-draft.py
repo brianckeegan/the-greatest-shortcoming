@@ -139,26 +139,59 @@ def parse_contents(pages: list[str]) -> list[dict]:
     return out
 
 
-def find_openings(pages: list[str], titles: list[str]) -> dict[str, int]:
+def find_openings(pages: list[str], chapters: list[dict]) -> dict[str, int]:
     """Map chapter title -> pdf page index of its opening page.
 
-    A chapter opening renders as ``<num> <Title> <SMALL-CAPS lead-in>`` at the
-    very top of a page; the small-caps lead distinguishes it from a running
-    header (which continues in lowercase).
+    A chapter opening renders at the very top of its page as
+    ``<chapter-number> <Title> <body lead-in>`` — the chapter's *own* number,
+    immediately followed by its title, then the first words of prose. That form
+    is unique to openings: the running headers are ``<page-number> Chapter <n>
+    <Title> …`` on verso pages and ``<page-number> <body> …`` on recto pages,
+    and a mid-chapter section header is ``<page-number> <Section Title> …`` —
+    none of which begins with the chapter's own number followed by its title.
+
+    So we key on the *exact* chapter number + title at the start of the
+    normalized page. An earlier heuristic instead matched any ``\\d{1,2}`` and
+    required a SMALL-CAPS lead-in (``[A-Z]{3,}``) right after the title to tell
+    an opening from a header. That silently missed chapters whose first words
+    aren't a small-caps run — e.g. ones opening on a quotation
+    (``3 The Bottle “I looked…``) or a short lead word
+    (``4 The Quarantine IN September…``). Their bodies were then absorbed into
+    the preceding chapter and they were mis-flagged "Contents-only".
+    See metadata/HARNESS-FEEDBACK.md (#10).
     """
-    # longest titles first so "Boulder Again" wins over "Boulder"
-    ordered = sorted(titles, key=len, reverse=True)
+    # Longest titles first so "Boulder Again" is considered before "Boulder";
+    # the per-chapter number already disambiguates, this is belt-and-braces.
+    ordered = sorted(chapters, key=lambda c: len(c["title"]), reverse=True)
     found: dict[str, int] = {}
     for i, raw in enumerate(pages):
-        head = _norm(raw)[:80]
-        for title in ordered:
+        head = _norm(raw)
+        for c in ordered:
+            title = c["title"]
             if title in found:
                 continue
-            m = re.match(rf"^\d{{1,2}}\s+{re.escape(title)}\s+(.{{0,40}})", head)
-            if m and re.search(r"[A-Z]{3,}", m.group(1)):
+            # exact chapter number, the title as a whole token, then body prose
+            if re.match(rf"^{int(c['num'])}\s+{re.escape(title)}\s+\S", head):
                 found[title] = i
                 break
     return found
+
+
+def chapter_ranges(openings: dict[str, int], body_end: int) -> dict[str, tuple[int, int]]:
+    """Half-open ``[start, end)`` pdf-page span for each opened chapter.
+
+    Each chapter runs from its opening page up to (but not including) the next
+    chapter's opening; the last opened chapter runs to ``body_end`` (the first
+    Notes/Bibliography page). A chapter whose opening was never found does not
+    appear here — correct boundary detection is therefore what keeps a missed
+    opening from silently extending the previous chapter over the gap.
+    """
+    present = sorted(((idx, t) for t, idx in openings.items()), key=lambda x: x[0])
+    ranges: dict[str, tuple[int, int]] = {}
+    for j, (idx, title) in enumerate(present):
+        end = present[j + 1][0] if j + 1 < len(present) else body_end
+        ranges[title] = (idx, end)
+    return ranges
 
 
 def section_start(pages: list[str], name: str) -> int | None:
@@ -216,12 +249,132 @@ def provenance_warnings(sha: str, version: int, this_dir: Path) -> list[str]:
     return warns
 
 
+def _self_test() -> int:
+    """Offline regression check for chapter-boundary detection.
+
+    Guards HARNESS-FEEDBACK #10. The hermetic half needs no PDF: it builds pages
+    that reproduce every opening shape this book uses — including the two that
+    the old small-caps heuristic missed, a quotation opening ("The Bottle") and
+    a short-lead-word opening ("The Quarantine") — interleaved with the running
+    headers and a mid-chapter section header that must NOT be mistaken for
+    openings, then asserts every chapter is found at its own page, no decoy is,
+    and the segmenter closes each chapter at the next opening (no absorption).
+    When ``source/20260607.pdf`` is present it also re-checks the exact evidence
+    from the bug report against the real draft.
+    """
+    fails: list[str] = []
+
+    # --- hermetic fixture -------------------------------------------------
+    toc = [
+        {"num": "01", "title": "Boulder"},
+        {"num": "02", "title": "The Inheritance"},
+        {"num": "03", "title": "The Bottle"},
+        {"num": "04", "title": "The Quarantine"},
+        {"num": "05", "title": "The Swarm"},
+        {"num": "06", "title": "The Portfolio"},
+        {"num": "07", "title": "The Evacuation"},
+        {"num": "08", "title": "The Long Term"},
+        {"num": "09", "title": "Boulder Again"},
+    ]
+    # opening lead-ins mirror the real draft's styling (PyMuPDF text order)
+    leadins = [
+        "BOULDER IS NOT A SAFE PLACE. Beneath the open space lies risk.",
+        "ALBERT BARTLETT DID NOT INVENT THE POPULATION question, but he framed it.",
+        "“I looked at the arithmetic I had known my whole professional life.",  # quotation
+        "IN September 1994, delegates from 179 nations gathered in Cairo.",      # short lead word
+        "ON AUGUST 14, 2008, the Population Division released its revision.",
+        "The Fertility Tables IN THE WINTER OF 2024, an actuary sat down.",      # subtitle, then small caps
+        "OPEN THE HUMAN MOBILITY CHAPTER of the latest assessment report.",
+        "“THE CHIEF CAUSE OF PROBLEMS IS SOLUTIONS” is the epigraph here.",      # quote + small caps
+        "TWO VERY DIFFERENT KINDS OF OBITUARIES circulated after his death.",
+    ]
+    contents = ("Contents Preface ix 1 Boulder 1 2 The Inheritance 17 3 The Bottle 43 "
+                "4 The Quarantine 67 5 The Swarm 101 6 The Portfolio 133 7 The Evacuation "
+                "167 8 The Long Term 199 9 Boulder Again 213 Notes 231 Bibliography 263")
+    pages = [contents]
+    expected: dict[str, int] = {}
+    book_page = 2
+    for c, lead in zip(toc, leadins):
+        n, title = int(c["num"]), c["title"]
+        expected[title] = len(pages)
+        pages.append(f"{n} {title} {lead}")                                       # opening
+        pages.append(f"{book_page} Chapter {n} {title} continues in lowercase body text")  # verso header
+        pages.append(f"{book_page + 1} more lowercase body spilling onto the recto page")  # recto header
+        book_page += 10
+    # mid-chapter section header: 2-digit page no. + words from a title — must not match
+    pages.append("91 The Quarantine Era’s Lebensraum Imaginary reads off the record. "
+                 "The Quarantine era was over by the chapter's close.")
+    notes_idx = len(pages)
+    pages.append("Notes 1. Albert A. Bartlett, “Arithmetic, Population and Energy.”")
+
+    parsed = parse_contents(pages)
+    if [c["title"] for c in parsed] != [c["title"] for c in toc]:
+        fails.append(f"parse_contents → {[c['title'] for c in parsed]!r}")
+
+    found = find_openings(pages, toc)
+    for title, idx in expected.items():
+        if found.get(title) != idx:
+            fails.append(f"opening {title!r}: expected page {idx}, got {found.get(title)}")
+    decoys = {i for i in range(len(pages)) if i not in expected.values() and i != 0}
+    for title, idx in found.items():
+        if idx in decoys:
+            fails.append(f"{title!r} matched non-opening page {idx} (running header / section head)")
+
+    ranges = chapter_ranges(found, notes_idx)
+    if ranges.get("The Inheritance", (0, -1))[1] != expected["The Bottle"]:
+        fails.append("ch2 does not close at ch3's opening — body absorbed across the gap")
+    if "The Bottle" not in ranges or "The Quarantine" not in ranges:
+        fails.append("ch3/ch4 produced no span — still flagged Contents-only")
+
+    # --- integration check against the real draft, when available ---------
+    real = SOURCE / "20260607.pdf"
+    if real.exists():
+        try:
+            import fitz  # noqa: F811
+            rpages = [p.get_text() for p in fitz.open(real)]
+            rtoc = parse_contents(rpages)
+            ropen = find_openings(rpages, rtoc)
+            notes_at = section_start(rpages, "Notes")
+            rranges = chapter_ranges(ropen, notes_at if notes_at is not None else len(rpages))
+            seg = {c["num"]: _norm("\n".join(rpages[slice(*rranges[c["title"]])]))
+                   for c in rtoc if c["title"] in rranges}
+            for num in ("03", "04"):
+                if len(seg.get(num, "")) < 20000:
+                    fails.append(f"[real] ch{num} body missing/short "
+                                 f"({len(seg.get(num, ''))} chars) — still mis-segmented")
+            ch2 = seg.get("02", "")
+            if "The Quarantine era was over" in ch2:
+                fails.append("[real] ch2 still contains ch4 prose ('The Quarantine era was over')")
+            if "3 The Bottle" in ch2:
+                fails.append("[real] ch2 still runs past the '3 The Bottle' boundary")
+            if len(ch2) > 120000:
+                fails.append(f"[real] ch2 is {len(ch2)} chars — absorbing later chapters (~75k expected)")
+        except ImportError:
+            print("  (PyMuPDF unavailable — skipped real-PDF integration check)")
+    else:
+        print("  (source/20260607.pdf absent — skipped real-PDF integration check)")
+
+    if fails:
+        print("✗ chapter-boundary self-test FAILED:")
+        for f in fails:
+            print(f"    - {f}")
+        return 1
+    print("✓ chapter-boundary self-test passed — every opening found (incl. quotation- "
+          "and short-lead openings), running headers ignored, no chapter absorbed.")
+    return 0
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Stage 1 — PDF → per-chapter extract")
     ap.add_argument("pdf", nargs="?", help="source PDF (default: newest source/*.pdf)")
     ap.add_argument("--force", action="store_true",
                     help="overwrite an existing metadata/v<N>/ even if its sha256 differs")
+    ap.add_argument("--self-test", action="store_true",
+                    help="run the offline chapter-boundary regression check and exit")
     args = ap.parse_args()
+
+    if args.self_test:
+        raise SystemExit(_self_test())
 
     pdf = pick_pdf(args.pdf)
     if not pdf.exists():
@@ -254,19 +407,14 @@ def main() -> None:
         print(f"⚠ {w}", file=sys.stderr)
 
     toc = parse_contents(pages)
-    titles = [c["title"] for c in toc]
-    openings = find_openings(pages, titles)
+    openings = find_openings(pages, toc)
     notes_at = section_start(pages, "Notes")
 
     # Body boundary = first Notes/Bibliography page (chapters end there).
     body_end = notes_at if notes_at is not None else len(pages)
 
-    # Build ordered list of (title, opening_idx) for present chapters.
-    present = sorted(((idx, t) for t, idx in openings.items()), key=lambda x: x[0])
-    ranges: dict[str, tuple[int, int]] = {}
-    for j, (idx, title) in enumerate(present):
-        end = present[j + 1][0] if j + 1 < len(present) else body_end
-        ranges[title] = (idx, end)
+    # Per-chapter [start, end) page spans for the chapters whose opening we found.
+    ranges = chapter_ranges(openings, body_end)
 
     chapters = []
     for c in toc:
@@ -282,7 +430,7 @@ def main() -> None:
 
     # Front matter (preface) as its own segment, if detectable.
     preface_idx = section_start(pages, "Preface")
-    first_ch = present[0][0] if present else body_end
+    first_ch = min(openings.values()) if openings else body_end
     preface_text = ""
     if preface_idx is not None and preface_idx < first_ch:
         preface_text = _norm("\n".join(pages[preface_idx:first_ch]))

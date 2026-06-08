@@ -154,6 +154,13 @@ apply, without the construct having to masquerade as `"renamed"` forever.
    chapter file, and that no deprecated id/slug/alias from a settled rename
    survives in a build-scope file. Exit 0 = clean; catches the cheap failures the
    CI Jekyll build would otherwise surface only after a push.
+0b. **Ingest boundary self-test** — `python3 bin/ingest-draft.py --self-test`. Offline
+   regression check for Stage-1 chapter-boundary detection (HARNESS-FEEDBACK #10):
+   asserts every chapter opening is found — including ones that open on a quotation or
+   a short lead word, not a small-caps run — that running headers and section heads are
+   never mistaken for openings, and that no chapter's body is absorbed into the
+   previous one. Runs without a PDF; also re-checks the real `source/20260607.pdf`
+   boundaries when that draft is present. Exit 0 = clean.
 1. **Validity** — `python3 -m json.tool metadata/*.json`; load every edited
    `_data/*.yml` and chapter front matter with a YAML parser.
 2. **Invariants** — after `--apply`: no `ecofascist imaginar*` / `ecofascist_imaginary`
