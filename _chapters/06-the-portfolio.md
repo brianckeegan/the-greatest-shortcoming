@@ -22,7 +22,7 @@ abstract: |
   reversal in *Dobbs*. The era&rsquo;s coalition is bipartisan in form,
   pronatalist in operation, and structurally indifferent to whether its
   partners agree about reproduction at all.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "The Fertility Tables"
   - "The Pronatalist Turn"

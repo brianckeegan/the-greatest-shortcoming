@@ -23,7 +23,7 @@ abstract: |
   normativity, decolonial ecologies, and antifascist solidarity
   infrastructures — that name the political horizons the counter-methods
   serve. It closes with a commitment, not a blueprint.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "Counter-Methods"
   - "Counter-Extrapolation: Scenario Planning That Preserves Optionality"

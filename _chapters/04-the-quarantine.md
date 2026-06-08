@@ -21,7 +21,7 @@ abstract: |
   chapter calls *the architecture of ignorance*: an institutional arrangement
   that survived delegitimation by embedding itself in the aesthetic of
   credentialed policy analysis.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "Cairo and the Doors That Remained Open"
   - "An Ophthalmologist Builds a Movement"

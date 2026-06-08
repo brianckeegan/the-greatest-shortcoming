@@ -18,7 +18,7 @@ abstract: |
   posing the book's central question — how the quantitative tools of
   environmental governance came to share a grammar with the journals of white
   nationalists.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "Quantitative chauvinism"
   - "Lebensraum Imaginaries"

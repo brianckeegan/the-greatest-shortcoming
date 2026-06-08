@@ -22,7 +22,7 @@ abstract: |
   sovereignty, resilience, and sociomaterial stewardship. It closes by
   asking what *infrastructuring solidarity* would look like in Boulder, the
   city where the book began.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "Return"
   - "The Primordial Soup"

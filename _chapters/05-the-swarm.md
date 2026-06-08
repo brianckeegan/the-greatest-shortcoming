@@ -21,7 +21,7 @@ abstract: |
   the era&rsquo;s mode of foreclosure *the politics of inevitability*: the
   conversion of a conditional projection into a destiny that no political
   arrangement can refuse.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "The Crossover Point"
   - "What Decomposition Does"

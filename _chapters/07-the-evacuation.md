@@ -21,7 +21,7 @@ abstract: |
   and emergency authorizes a different repertoire of governance — the
   suspension of procedure, the concentration of authority, the treatment of
   triage as a temporary necessity that becomes permanent infrastructure.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "A Triage Dashboard"
   - "The Speculative Register"

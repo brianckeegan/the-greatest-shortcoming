@@ -20,7 +20,7 @@ abstract: |
   *Population and Environment* exchange in which the Sierra Club&rsquo;s
   internal split over immigration restriction crystallized the
   era&rsquo;s contradictions.
-source_note: "Reconciled from source/The_Greatest_Shortcoming-1.pdf (2026-06-07)."
+source_note: "Reconciled from source/20260607.pdf (2026-06-07)."
 sections:
   - "A Physicist at the Lectern"
   - "What the Lecture Suppressed"
