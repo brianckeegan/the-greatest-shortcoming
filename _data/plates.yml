@@ -1,0 +1,170 @@
+# Plate art geometry - Bauhaus / constructivist chapter illustrations.
+# GENERATED from _includes/plate.html (then hand-editable). Each plate is an
+# ordered list of SVG primitives inside a relative 160x116 viewBox field, so
+# every coordinate is a ratio that scales with the rendered size. Rendered by
+# _includes/plate.html; callable from any page/element by chapter slug.
+
+preface:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: line, attrs: { x1: 64, y1: 18, x2: 96, y2: 18, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: circle, attrs: { cx: 64, cy: 18, r: 8, fill: "#285079" } }
+    - { el: rect, attrs: { x: 88, y: 10, width: 16, height: 16, fill: "#b0382a" } }
+    - { el: line, attrs: { x1: 80, y1: 18, x2: 80, y2: 36, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 46, y1: 36, x2: 114, y2: 36, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 46, y1: 36, x2: 46, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 80, y1: 36, x2: 80, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 114, y1: 36, x2: 114, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: rect, attrs: { x: 38, y: 52, width: 16, height: 16, fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 80, cy: 60, r: 8, fill: "#1a1a1a" } }
+    - { el: polygon, attrs: { points: "114,52 123,68 105,68", fill: "#285079" } }
+    - { el: line, attrs: { x1: 80, y1: 60, x2: 80, y2: 84, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 62, y1: 84, x2: 98, y2: 84, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 62, y1: 84, x2: 62, y2: 98, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 98, y1: 84, x2: 98, y2: 98, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: circle, attrs: { cx: 62, cy: 105, r: 7, fill: "#b0382a" } }
+    - { el: rect, attrs: { x: 91, y: 98, width: 14, height: 14, fill: "#e0a52f" } }
+
+01-boulder:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: rect, attrs: { x: 6, y: 88, width: 148, height: 20, fill: "#285079", fill-opacity: 0.16 } }
+    - { el: circle, attrs: { cx: 28, cy: 30, r: 13, fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 28, cy: 30, r: 13, fill: "none", stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: polygon, attrs: { points: "46,88 96,88 88,30", fill: "#1a1a1a" } }
+    - { el: polygon, attrs: { points: "66,88 116,88 108,22", fill: "#b0382a", fill-opacity: 0.92 } }
+    - { el: polygon, attrs: { points: "86,88 136,88 128,38", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "86,88 136,88 128,38", fill: "none", stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: line, attrs: { x1: 6, y1: 88, x2: 154, y2: 88, stroke: "#1a1a1a", stroke-width: 3 } }
+
+02-the-inheritance:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: circle, attrs: { cx: 24, cy: 22, r: 11, fill: "#285079" } }
+    - { el: rect, attrs: { x: 51, y: 11, width: 22, height: 22, fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "100,10 112,32 88,32", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "138,21 149,32 138,43 127,32", fill: "none", stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 24, y1: 33, x2: 24, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 62, y1: 33, x2: 62, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 100, y1: 32, x2: 100, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 138, y1: 43, x2: 138, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 24, y1: 52, x2: 138, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 80, y1: 52, x2: 80, y2: 72, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: polygon, attrs: { points: "80,72 96,81 96,99 80,108 64,99 64,81", fill: "#e0a52f", fill-opacity: 0.30, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: circle, attrs: { cx: 80, cy: 90, r: 5.5, fill: "#b0382a" } }
+
+03-the-bottle:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: line, attrs: { x1: 22, y1: 10, x2: 22, y2: 98, stroke: "#1a1a1a", stroke-width: 2.5 } }
+    - { el: line, attrs: { x1: 22, y1: 98, x2: 152, y2: 98, stroke: "#1a1a1a", stroke-width: 2.5 } }
+    - { el: rect, attrs: { x: 114, y: 18, width: 38, height: 80, fill: "#b0382a", fill-opacity: 0.10 } }
+    - { el: path, attrs: { d: "M30 94 C70 92 96 84 116 60 C130 42 138 26 144 14", fill: "none", stroke: "#1a1a1a", stroke-width: 1.5, stroke-dasharray: "3 3" } }
+    - { el: circle, attrs: { cx: 32, cy: 93, r: 3.5, fill: "#285079" } }
+    - { el: circle, attrs: { cx: 50, cy: 92, r: 4, fill: "#1a1a1a" } }
+    - { el: circle, attrs: { cx: 68, cy: 89, r: 5, fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 86, cy: 83, r: 6, fill: "#285079" } }
+    - { el: circle, attrs: { cx: 104, cy: 72, r: 7.5, fill: "#1a1a1a" } }
+    - { el: circle, attrs: { cx: 122, cy: 54, r: 9.5, fill: "#b0382a" } }
+    - { el: circle, attrs: { cx: 140, cy: 28, r: 12, fill: "#b0382a" } }
+    - { el: circle, attrs: { cx: 140, cy: 28, r: 12, fill: "none", stroke: "#1a1a1a", stroke-width: 1.5 } }
+
+04-the-quarantine:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: rect, attrs: { x: 10, y: 12, width: 140, height: 92, fill: "none", stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: circle, attrs: { cx: 58, cy: 54, r: 30, fill: "#285079", fill-opacity: 0.9 } }
+    - { el: rect, attrs: { x: 100, y: 20, width: 22, height: 22, fill: "#e0a52f" } }
+    - { el: line, attrs: { x1: 36, y1: 30, x2: 124, y2: 92, stroke: "#1a1a1a", stroke-width: 10, stroke-linecap: "square" } }
+    - { el: line, attrs: { x1: 124, y1: 30, x2: 36, y2: 92, stroke: "#b0382a", stroke-width: 10, stroke-linecap: "square" } }
+    - { el: line, attrs: { x1: 10, y1: 100, x2: 150, y2: 100, stroke: "#1a1a1a", stroke-width: 3 } }
+    - { el: rect, attrs: { x: 10, y: 100, width: 42, height: 4, fill: "#b0382a" } }
+
+05-the-swarm:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: line, attrs: { x1: 96, y1: 8, x2: 96, y2: 108, stroke: "#1a1a1a", stroke-width: 3 } }
+    - { el: polygon, attrs: { points: "18,30 27,48 9,48", fill: "#1a1a1a" } }
+    - { el: polygon, attrs: { points: "36,20 43,34 29,34", fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "28,54 39,76 17,76", fill: "#285079" } }
+    - { el: polygon, attrs: { points: "14,66 22,82 6,82", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "46,52 59,78 33,78", fill: "#1a1a1a" } }
+    - { el: polygon, attrs: { points: "58,30 66,46 50,46", fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "70,56 80,76 60,76", fill: "#285079" } }
+    - { el: polygon, attrs: { points: "50,86 59,104 41,104", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "31,86 43,108 19,108", fill: "#1a1a1a" } }
+    - { el: polygon, attrs: { points: "72,88 80,104 64,104", fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "82,40 90,56 74,56", fill: "#285079" } }
+    - { el: polygon, attrs: { points: "60,98 70,112 50,112", fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 122, cy: 40, r: 13, fill: "none", stroke: "#1a1a1a", stroke-width: 2.5 } }
+    - { el: circle, attrs: { cx: 142, cy: 72, r: 10, fill: "none", stroke: "#285079", stroke-width: 2.5 } }
+    - { el: circle, attrs: { cx: 118, cy: 86, r: 8.5, fill: "none", stroke: "#b0382a", stroke-width: 2.5 } }
+
+06-the-portfolio:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: rect, attrs: { x: 60, y: 12, width: 20, height: 20, fill: "#e0a52f", fill-opacity: 0.5 } }
+    - { el: line, attrs: { x1: 72, y1: 32, x2: 80, y2: 62, stroke: "#1a1a1a", stroke-width: 1 } }
+    - { el: line, attrs: { x1: 30, y1: 50, x2: 130, y2: 66, stroke: "#1a1a1a", stroke-width: 3 } }
+    - { el: circle, attrs: { cx: 30, cy: 50, r: 15, fill: "#b0382a" } }
+    - { el: circle, attrs: { cx: 30, cy: 50, r: 15, fill: "none", stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: rect, attrs: { x: 116, y: 52, width: 26, height: 26, fill: "#285079" } }
+    - { el: line, attrs: { x1: 30, y1: 50, x2: 30, y2: 36, stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: line, attrs: { x1: 129, y1: 66, x2: 129, y2: 52, stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: polygon, attrs: { points: "80,64 70,94 90,94", fill: "#1a1a1a" } }
+    - { el: rect, attrs: { x: 20, y: 96, width: 120, height: 6, fill: "#e0a52f" } }
+
+07-the-evacuation:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: rect, attrs: { x: 12, y: 12, width: 136, height: 92, fill: "#285079", fill-opacity: 0.08, stroke: "#1a1a1a", stroke-width: 2 } }
+    - { el: line, attrs: { x1: 12, y1: 46, x2: 148, y2: 46, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
+    - { el: line, attrs: { x1: 12, y1: 72, x2: 148, y2: 72, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
+    - { el: line, attrs: { x1: 58, y1: 12, x2: 58, y2: 104, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
+    - { el: line, attrs: { x1: 104, y1: 12, x2: 104, y2: 104, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
+    - { el: polygon, attrs: { points: "30,26 40,44 20,44", fill: "#285079" } }
+    - { el: rect, attrs: { x: 116, y: 22, width: 22, height: 22, fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 32, cy: 86, r: 12, fill: "#b0382a" } }
+    - { el: line, attrs: { x1: 38, y1: 42, x2: 68, y2: 56, stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "6 5" } }
+    - { el: line, attrs: { x1: 116, y1: 38, x2: 94, y2: 56, stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "6 5" } }
+    - { el: line, attrs: { x1: 42, y1: 80, x2: 70, y2: 68, stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "6 5" } }
+    - { el: polygon, attrs: { points: "81,48 97,62 81,76 65,62", fill: "none", stroke: "#b0382a", stroke-width: 2 } }
+    - { el: circle, attrs: { cx: 81, cy: 62, r: 4, fill: "#1a1a1a" } }
+    - { el: path, attrs: { d: "M68 56 l-7 -2 m7 2 l-2 -7", stroke: "#1a1a1a", stroke-width: 1.6, fill: "none" } }
+    - { el: path, attrs: { d: "M94 56 l7 -2 m-7 2 l2 -7", stroke: "#1a1a1a", stroke-width: 1.6, fill: "none" } }
+    - { el: path, attrs: { d: "M70 68 l-7 2 m7 -2 l-2 7", stroke: "#1a1a1a", stroke-width: 1.6, fill: "none" } }
+
+08-the-long-term:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: circle, attrs: { cx: 76, cy: 58, r: 32, fill: "none", stroke: "#1a1a1a", stroke-width: 3, stroke-dasharray: "140 60", transform: "rotate(-28 76 58)" } }
+    - { el: circle, attrs: { cx: 62, cy: 44, r: 5, fill: "#285079" } }
+    - { el: line, attrs: { x1: 76, y1: 58, x2: 76, y2: 34, stroke: "#1a1a1a", stroke-width: 3 } }
+    - { el: line, attrs: { x1: 76, y1: 58, x2: 96, y2: 66, stroke: "#b0382a", stroke-width: 3 } }
+    - { el: circle, attrs: { cx: 76, cy: 58, r: 3.5, fill: "#1a1a1a" } }
+    - { el: rect, attrs: { x: 12, y: 14, width: 20, height: 20, fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "134,14 152,14 143,2", fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 22, cy: 96, r: 11, fill: "#285079" } }
+    - { el: polygon, attrs: { points: "128,92 146,92 137,108", fill: "#1a1a1a" } }
+    - { el: rect, attrs: { x: 120, y: 64, width: 16, height: 16, fill: "#e0a52f", fill-opacity: 0.6 } }
+
+09-boulder-again:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: rect, attrs: { x: 6, y: 86, width: 148, height: 20, fill: "#285079", fill-opacity: 0.16 } }
+    - { el: circle, attrs: { cx: 28, cy: 30, r: 13, fill: "#e0a52f" } }
+    - { el: circle, attrs: { cx: 28, cy: 30, r: 13, fill: "none", stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: polygon, attrs: { points: "46,28 96,28 88,86", fill: "#1a1a1a" } }
+    - { el: polygon, attrs: { points: "66,20 116,20 108,86", fill: "#b0382a", fill-opacity: 0.92 } }
+    - { el: polygon, attrs: { points: "86,36 136,36 128,86", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "86,36 136,36 128,86", fill: "none", stroke: "#1a1a1a", stroke-width: 1.5 } }
+    - { el: line, attrs: { x1: 6, y1: 86, x2: 154, y2: 86, stroke: "#1a1a1a", stroke-width: 3 } }
+
+_default:
+  viewBox: "0 0 160 116"
+  els:
+    - { el: rect, attrs: { x: 10, y: 10, width: 140, height: 96, fill: "none", stroke: "#1a1a1a", stroke-width: 3 } }
+    - { el: circle, attrs: { cx: 56, cy: 46, r: 20, fill: "#285079" } }
+    - { el: rect, attrs: { x: 92, y: 56, width: 30, height: 30, fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "80,20 92,40 68,40", fill: "#e0a52f" } }
+

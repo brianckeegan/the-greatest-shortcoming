@@ -24,6 +24,11 @@
       {% if page.subtitle %}<p class="mt-4 font-display text-2xl font-light italic text-mist">{{ page.subtitle }}</p>{% endif %}
     </header>
 
+    <figure class="plate mb-14">
+      <div class="plate-art">{% include plate.html slug=page.slug %}</div>
+      {% if page.num %}<figcaption><span class="fig">Fig.&nbsp;{{ page.num }}</span><span>{{ site.data.cards[page.slug].era }}</span></figcaption>{% endif %}
+    </figure>
+
     {% if page.abstract %}
       <section class="mb-14 border-l-2 border-accent pl-6">
         <p class="kicker mb-3">Abstract</p>
