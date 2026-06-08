@@ -54,8 +54,7 @@ unstyled.
 ├── _data/                          # structured content consumed by includes
 │   ├── people.yml  orgs.yml  eras.yml  themes.yml
 │   ├── instruments.yml  documents.yml  parts.yml
-│   ├── cards.yml  prose.yml
-│   └── (chapters.yml — legacy; chapter pages now live in _chapters/)
+│   └── cards.yml  prose.yml
 ├── _chapters/                      # chapter pages (Markdown collection → /chapters/:name/)
 ├── _landing/                       # homepage prose snippets (Markdown collection, not output)
 ├── _layouts/
@@ -109,17 +108,9 @@ Actions**.
 Dependencies are kept current by `.github/dependabot.yml` (monthly grouped PRs
 for Actions, npm, and Bundler), each validated by the PR build before merge.
 
-## Archived files
-
-Several files are kept in the tree but **excluded from the build** (see the
-`exclude:` list in `_config.yml`) — they are from an earlier React-islands
-approach or are design-time scratch: the root `*.jsx` files, `assets/js/*.jsx`,
-`assets/css/scrolly.css`, `styles.css`, `data.js`, `landing.html`,
-`Wireframes.html`, `register-preview*.html`, and `_preview/`. They are not
-loaded by the live site.
-
 ## License
 
-The site code (layouts, includes, JS, CSS, config) is free to reuse. The
-chapter prose and entity data describe the content of *The Greatest
-Shortcoming* and are **not** licensed for reuse without permission.
+The site code (layouts, includes, JS, CSS, config) is released under the **MIT
+License**. The book content — chapter prose, entity data, and the manuscript in
+`uploads/` — is © 2026 Brian C. Keegan, **all rights reserved**, and is not
+licensed for reuse without permission. See [LICENSE](LICENSE).
