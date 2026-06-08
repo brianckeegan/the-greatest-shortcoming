@@ -24,14 +24,15 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 META = REPO / "metadata" / "draft-metadata.json"
 
 # Files the rename touches. Build-scope first; then tracked-but-excluded files we
-# keep consistent. chapters.yml/cards.yml are regenerated, so excluded from text
-# replacement. _preview/, node_modules/, _site/, metadata/, bin/ are never scanned.
+# keep consistent. cards.yml is regenerated, so excluded from text replacement.
+# _preview/, node_modules/, _site/, metadata/, bin/ are never scanned.
 SCAN_GLOBS = [
     "_config.yml",
     "_data/*.yml",
@@ -47,7 +48,9 @@ SCAN_GLOBS = [
     "data.js",
     "assets/js/landing.js",
 ]
-REGENERATED = {"_data/chapters.yml", "_data/cards.yml"}
+# cards.yml is generated from the metadata; never scanned for text replacement.
+# (There is intentionally no chapters.yml — it was a phantom regen target, #4.)
+REGENERATED = {"_data/cards.yml"}
 
 
 def rel(p: Path) -> str:
@@ -91,14 +94,22 @@ def derive_maps(meta: dict) -> tuple[dict, dict, list]:
     notes: list[str] = []
 
     for c in meta["constructs"]:
-        if c.get("status") != "renamed":
-            continue
-        for a, b in (("prev_id", "id"), ("prev_slug", "slug"),
-                     ("prev_short_label", "short_label")):
-            if c.get(a) and c.get(b) and c[a] != c[b]:
-                tokens[c[a]] = c[b]
+        # Token renames (id/slug/label) only apply to an in-flight rename; the
+        # prev_* != current guard already makes a settled construct emit none.
+        if c.get("status") == "renamed":
+            for a, b in (("prev_id", "id"), ("prev_slug", "slug"),
+                         ("prev_short_label", "short_label")):
+                if c.get(a) and c.get(b) and c[a] != c[b]:
+                    tokens[c[a]] = c[b]
+        # Alias→canonical phrases are emitted REGARDLESS of status (#2): they are a
+        # regression guard, so they must keep mapping a reintroduced deprecated
+        # spelling back to canonical even after the rename has settled to
+        # "unchanged". Skip any alias that already equals its canonical target
+        # (an idempotent no-op that would otherwise self-match the canonical name).
         for alias in c.get("aliases_deprecated", []):
-            phrases[alias] = target_for_alias(alias, c["canonical_name"])
+            tgt = target_for_alias(alias, c["canonical_name"])
+            if alias != tgt:
+                phrases[alias] = tgt
 
     for ch in meta["chapters"]:
         if ch.get("prev_slug") and ch["prev_slug"] != ch["slug"]:
@@ -181,11 +192,15 @@ def main() -> None:
     # ---- coverage checks -------------------------------------------------
     problems: list[str] = []
 
-    # every deprecated alias must be covered by a phrase key
+    # Every deprecated alias must be covered by a phrase key — regardless of the
+    # construct's status (#2), so a guard on a settled "unchanged" construct still
+    # audits clean. An alias that already equals its canonical target needs no
+    # replacement and counts as covered.
     for c in meta["constructs"]:
         for alias in c.get("aliases_deprecated", []):
-            if alias not in phrases:
-                problems.append(f"alias not covered by a replacement: {alias!r}")
+            if alias in phrases or alias == target_for_alias(alias, c["canonical_name"]):
+                continue
+            problems.append(f"alias not covered by a replacement: {alias!r}")
 
     # prev_slug files must exist; new slug files must be free (chapters).
     # Tolerate an already-applied rename: if the prev_slug file is gone AND the
@@ -225,15 +240,46 @@ def main() -> None:
 
     new_chapters = [ch["slug"] for ch in meta["chapters"] if ch.get("status") == "new"]
 
-    # ---- human-review flags ---------------------------------------------
+    # ---- human-review flags (derived from metadata, never hard-coded) ----
+    # Surface only the changes a human gate should actually eyeball: structural
+    # chapter changes, code-symbol renames in extra_renames, and unusually large
+    # edit fan-out. An all-"unchanged" metadata with empty extra_renames yields
+    # zero flags (#3).
+    HEAVY_FILE = 40  # replacements in a single file worth a second look
     flags = []
-    flags.append("Chapter split: old 'The Free Fall' maps to NEW 'The Inheritance' "
-                 "(new, pre-1968) + 'The Bottle' (renamed). Confirm this split.")
-    if "QcEfiMatrix" in tokens:
-        js_hits = [o for o in occurrences if o["old"] in ("QcEfiMatrix",)]
-        flags.append(f"JS code symbol QcEfiMatrix→QcLiMatrix touches "
-                     f"{len(js_hits)} site location(s) plus its JS definition — "
-                     "this is the only code (not data) identifier renamed.")
+
+    # structural chapter changes (new / renumbered / renamed+renumbered)
+    notable = {"new", "renamed+renumbered", "renumbered"}
+    for ch in meta["chapters"]:
+        st = ch.get("status", "")
+        if st in notable:
+            frm = ch.get("prev_slug") or "—"
+            flags.append(f"Chapter {st}: `{frm}` → `{ch['slug']}` ({ch['title']}). "
+                         f"Confirm order/redirects.")
+
+    # chapter split: two or more target chapters claim the same prev_slug
+    src_counts = Counter(ch["prev_slug"] for ch in meta["chapters"]
+                         if ch.get("prev_slug") and ch["prev_slug"] != ch.get("slug"))
+    for ps, n in src_counts.items():
+        if n > 1:
+            targets = [ch["slug"] for ch in meta["chapters"] if ch.get("prev_slug") == ps]
+            flags.append(f"Chapter split: `{ps}` maps to {n} chapters "
+                         f"({', '.join(targets)}). Confirm this split.")
+
+    # code-symbol renames carried via extra_renames.tokens (JS/CamelCase identifiers)
+    extra_tokens = meta.get("extra_renames", {}).get("tokens", {})
+    for k, v in extra_tokens.items():
+        if re.match(r"^[A-Za-z_$][A-Za-z0-9_$]*$", k) and re.search(r"[a-z][A-Z]", k):
+            hits = [o for o in occurrences if o["old"] == k]
+            flags.append(f"Code symbol rename `{k}` → `{v}` (extra_renames) touches "
+                         f"{len(hits)} site location(s) plus its definition — review by hand.")
+
+    # unusually large edit fan-out in any single file
+    per_file = Counter(o["file"] for o in occurrences)
+    for f, n in per_file.items():
+        if n >= HEAVY_FILE:
+            flags.append(f"Large edit fan-out: {n} replacements in `{f}` "
+                         f"(≥{HEAVY_FILE}) — spot-check the result.")
 
     apply_files = [rel(p) for p in files]
     plan = {
@@ -299,8 +345,12 @@ def main() -> None:
         md.append(f"- `{k}` → `{phrases[k]}`")
 
     md.append("\n## ⚠ Review flags")
-    for f in flags:
-        md.append(f"- {f}")
+    if flags:
+        for f in flags:
+            md.append(f"- {f}")
+    else:
+        md.append("_none — no structural chapter changes, code-symbol renames, "
+                  "or large edit fan-out._")
     if problems:
         md.append("\n## ❌ Coverage problems (resolve before apply)")
         for p in problems:
@@ -326,6 +376,9 @@ def main() -> None:
     print(f"  coverage problems: {len(problems)}")
     for p in problems:
         print(f"    ❌ {p}")
+    print(f"  review flags: {len(flags)}")
+    for f in flags:
+        print(f"    ⚠ {f}")
     print(f"  preserved-term sightings (left untouched): {len(preserved_hits)}")
     print(f"\n  → metadata/rename-plan.json")
     print(f"  → metadata/audit-report.md  (review this before applying)")

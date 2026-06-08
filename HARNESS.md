@@ -9,7 +9,7 @@ only *look* related (e.g. "ecofascism" the movement vs. "Lebensraum imaginaries"
 the construct).
 
 ```
-source/<Title>-<N>.pdf
+source/<Title>-<N>.pdf  ·or·  source/<YYYYMMDD>.pdf
    │  ① bin/ingest-draft.py            deterministic extract (PyMuPDF) — no LLM
    ▼
 metadata/v<N>/extract.{json,txt}       per-chapter text; flags partial drafts
@@ -29,6 +29,7 @@ edited _config.yml / _data/* / _chapters/* / _landing/* / _includes/* / _layouts
 ```bash
 # Stage 1 — extract (auto-picks newest source/*.pdf if no arg)
 python3 bin/ingest-draft.py source/The_Greatest_Shortcoming-1.pdf
+python3 bin/ingest-draft.py source/20260607.pdf   # date-stamped drafts also work
 
 # Stage 2 — populate the interface (run as the pdf-reader agent)
 /ingest-draft                      # in Claude Code; writes metadata/draft-metadata.json
@@ -44,6 +45,27 @@ python3 bin/apply-rename.py --apply
 
 Or, in Claude Code, the two slash commands wrap the stages: `/ingest-draft` then
 `/audit-constructs` (add `--apply` to execute).
+
+### Source filenames & version slots
+
+`ingest-draft.py` resolves a stable version ordinal `v<N>` from the filename:
+
+- `…-<N>.pdf` (e.g. `The_Greatest_Shortcoming-2.pdf`) → that explicit ordinal.
+- `<YYYYMMDD>.pdf` (e.g. `20260607.pdf`) → ranked **chronologically** among the
+  date-stamped PDFs in `source/`, so multiple dated drafts get distinct,
+  date-ordered `metadata/v<N>/` dirs (`20260530`→v1, `20260607`→v2, …).
+- anything else → a warned fallback to mtime rank (never a silent collapse to v1).
+
+`metadata/v<N>/` is git-ignored (a local working artifact); the authoritative
+`version` lives in `draft-metadata.json`, written by the Stage-2 agent. The
+extract records `sha256` + `ingested` for provenance. Re-ingest guards:
+
+- an **identical** PDF (same sha256) into an occupied slot → warned no-op;
+- a **different** PDF in an occupied slot → refused unless `--force`;
+- the same content already extracted under **another** version slot → warned
+  (looks like a re-ingest under a new name);
+- a resolved version **≤ the last reconciled** `version` in `draft-metadata.json`
+  → warned (the harness expects forward progress).
 
 ### Re-running on an already-reconciled site
 
@@ -73,13 +95,40 @@ only thing the audit/apply stages read. It is content + intent:
   values, every deprecated `aliases_deprecated` spelling, and `preserve_terms`
   (bare words that must **not** be renamed).
 - **`chapters[]`** — authoritative title/order, old→new `prev_slug`/`prev_title`/
-  `prev_era_id`, plus `concept` / `teaser` / `pitch` / `summary` (the new copy
-  written into the site) and `source` provenance.
+  `prev_era_id`, plus card copy (`concept` / `teaser` / `era_label`), the
+  `pitch` / `summary` / `key_terms` (see *rendered vs. metadata-only* below), and
+  `source` provenance.
 - **`extra_renames`** / **`definition_blocks`** — escape hatches for special cases.
 
 Because intent lives in this file, the apply step is a deterministic, idempotent
 executor with no hard-coded book content — re-running it on a new draft just needs
 a fresh metadata file.
+
+### Rendered vs. metadata-only fields
+
+Not every interface field reaches the deployed site. Editing a **metadata-only**
+field produces a metadata diff with **zero rendered effect** — by design, so the
+harness never overwrites hand-authored prose. `apply-rename.py` reports a
+**rendered-surface delta** (moves + rendered text replacements + `cards.yml`
+content-changed + new chapters) separate from provenance/interface churn, and
+`apply-rename.py --explain-fields` prints the full map. Summary:
+
+| field | rendered? | where it lands |
+|-------|-----------|----------------|
+| chapter `num` / `slug` / `title` | rendered | front matter + filename/URL + title phrase rename |
+| chapter `prev_*` / `era_id` | rendered | renames, file moves, redirects |
+| chapter `concept` / `teaser` / `era_label` | rendered | `_data/cards.yml` card fields |
+| chapter `pitch` | **metadata-only** | no live render target (`chapters.yml` is a phantom) |
+| chapter `summary` | **metadata-only** | written only into **new** chapter stubs; ignored for existing chapters |
+| chapter `key_terms` / `source` / `status` | **metadata-only** | provenance / drives the plan |
+| construct ids / slugs / labels / `canonical_name` | rendered | token + phrase renames |
+| construct `aliases_deprecated` | rendered (guard) | re-canonicalizes reintroduced spellings |
+| construct `preserve_terms` | audit-only | proves bare terms left untouched |
+| construct `definition` | **metadata-only** | **not** written to `_landing/<slug>.md` — landing prose is hand-authored |
+
+To actually change a landing definition or a chapter's published prose, edit the
+rendered file (`_landing/<slug>.md`, `_chapters/<slug>.md`) directly, or use a
+`definition_blocks` entry for a targeted anchored rewrite.
 
 ## Why not `sed s/old/new/`
 
@@ -91,8 +140,20 @@ audit's coverage check proves the bare movement terms were left untouched and th
 no deprecated alias survives. Renames run as a single longest-first pass so
 overlapping keys (e.g. `The Free Fall` vs `Free Fall`) never double-apply.
 
+`aliases_deprecated` is emitted as a phrase guard **regardless of a construct's
+`status`** — so once a rename settles you can keep the construct at
+`status: "unchanged"` and retain its deprecated spellings as a standing
+regression guard that re-canonicalizes any reintroduced spelling on the next
+apply, without the construct having to masquerade as `"renamed"` forever.
+
 ## Verification (local Jekyll build is broken — validate via CI + offline checks)
 
+0. **Offline lint gate** — `python3 bin/lint-site.py` (run before pushing). Parses
+   `_config.yml` + every `_data/*.yml`, checks chapter/landing front matter is
+   well-formed with required keys, that every `cards.yml` slug resolves to a
+   chapter file, and that no deprecated id/slug/alias from a settled rename
+   survives in a build-scope file. Exit 0 = clean; catches the cheap failures the
+   CI Jekyll build would otherwise surface only after a push.
 1. **Validity** — `python3 -m json.tool metadata/*.json`; load every edited
    `_data/*.yml` and chapter front matter with a YAML parser.
 2. **Invariants** — after `--apply`: no `ecofascist imaginar*` / `ecofascist_imaginary`
@@ -115,4 +176,5 @@ overlapping keys (e.g. `The Free Fall` vs `Free Fall`) never double-apply.
 | `.claude/agents/pdf-reader.md` | the PDF-reading agent |
 | `bin/audit-site.py` | Stage 3 — audit → `audit-report.md` + `rename-plan.json` |
 | `bin/apply-rename.py` | Stage 4 — idempotent reconcile (dry-run by default) |
+| `bin/lint-site.py` | offline pre-push gate — YAML / front-matter / slug-xref / reverse-drift lint |
 | `.claude/commands/ingest-draft.md`, `audit-constructs.md` | slash-command triggers |

@@ -22,6 +22,8 @@ Only dependency is PyMuPDF (``fitz``), already present in this environment.
 """
 from __future__ import annotations
 
+import argparse
+import datetime
 import hashlib
 import json
 import re
@@ -51,10 +53,58 @@ def pick_pdf(arg: str | None) -> Path:
     return pdfs[0]
 
 
-def parse_version(name: str) -> int:
-    """`The_Greatest_Shortcoming-1.pdf` -> 1; default 1."""
-    m = re.search(r"-(\d+)\.pdf$", name)
-    return int(m.group(1)) if m else 1
+DATE_RE = re.compile(r"(?:^|[^\d])(\d{8})\.pdf$")
+ORDINAL_RE = re.compile(r"-(\d+)\.pdf$")
+
+
+def _date_key(name: str) -> str | None:
+    """Return the YYYYMMDD date stamp embedded in a filename, or None."""
+    m = DATE_RE.search(name)
+    if not m:
+        return None
+    d = m.group(1)
+    # sanity: plausible calendar date (year 19xx–20xx, month 01–12, day 01–31)
+    if re.match(r"(?:19|20)\d\d(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])$", d):
+        return d
+    return None
+
+
+def parse_version(pdf: Path, sources: list[Path] | None = None) -> tuple[int, str, str | None]:
+    """Resolve a stable, monotonic version ordinal for ``pdf``.
+
+    Returns ``(version, kind, warning)`` where *kind* is one of
+    ``"ordinal"`` (``…-N.pdf``), ``"date"`` (``…YYYYMMDD.pdf``, ranked
+    chronologically among the date-stamped PDFs in ``source/``), or
+    ``"fallback"`` (no recognized pattern). *warning* is a human message when
+    the name matched no version pattern, else ``None``.
+
+    Date-stamped drafts are ordered by their calendar date so two dated PDFs map
+    to distinct, date-ordered version dirs; explicit ``-N`` ordinals are honored
+    verbatim. We never silently collapse an unrecognized name to v1 — we warn.
+    """
+    name = pdf.name
+    m = ORDINAL_RE.search(name)
+    if m:
+        return int(m.group(1)), "ordinal", None
+
+    if sources is None:
+        sources = sorted(SOURCE.glob("*.pdf"))
+    dated = sorted({_date_key(p.name) for p in sources if _date_key(p.name)})
+    dk = _date_key(name)
+    if dk:
+        # 1-based chronological rank among all date-stamped drafts present
+        return dated.index(dk) + 1, "date", None
+
+    # no recognized pattern — order by mtime rank rather than defaulting to 1
+    others = sorted(sources, key=lambda p: p.stat().st_mtime)
+    try:
+        rank = others.index(pdf) + 1
+    except ValueError:
+        rank = len(others) + 1
+    return rank, "fallback", (
+        f"filename {name!r} matches no version pattern (-N.pdf or YYYYMMDD.pdf); "
+        f"falling back to mtime rank v{rank}. Rename to a versioned/dated form "
+        f"to make ordering explicit.")
 
 
 def parse_contents(pages: list[str]) -> list[dict]:
@@ -120,15 +170,88 @@ def section_start(pages: list[str], name: str) -> int | None:
     return None
 
 
+def _today() -> str:
+    return datetime.date.today().isoformat()
+
+
+def existing_sha(out_dir: Path) -> str | None:
+    """sha256 recorded by a prior extract in ``out_dir`` (None if absent)."""
+    ej = out_dir / "extract.json"
+    if not ej.exists():
+        return None
+    try:
+        return json.loads(ej.read_text()).get("draft", {}).get("sha256")
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def provenance_warnings(sha: str, version: int, this_dir: Path) -> list[str]:
+    """Re-ingest provenance guard (#8): warn if this PDF's sha was already
+    extracted under a *different* version slot, and if the resolved version is
+    not newer than the last reconciled draft recorded in draft-metadata.json."""
+    warns: list[str] = []
+
+    # same content already seen under another metadata/v<N>/ dir?
+    meta_root = REPO / "metadata"
+    for d in sorted(meta_root.glob("v*")):
+        if d == this_dir or not d.is_dir():
+            continue
+        if existing_sha(d) == sha:
+            warns.append(f"identical content (sha {sha[:12]}) was already ingested as "
+                         f"{d.relative_to(REPO)}/ — this looks like a re-ingest under a "
+                         f"different name/version.")
+
+    # version not advancing past the last reconciled draft?
+    dm = meta_root / "draft-metadata.json"
+    if dm.exists():
+        try:
+            last = json.loads(dm.read_text()).get("draft", {})
+            last_v, last_sha = last.get("version"), last.get("sha256")
+        except (json.JSONDecodeError, OSError):
+            last_v = last_sha = None
+        if isinstance(last_v, int) and last_sha != sha and version <= last_v:
+            warns.append(f"resolved version v{version} ≤ last reconciled v{last_v} "
+                         f"(draft-metadata.json) — ingesting an older/equal draft; "
+                         f"the reconcile harness expects forward progress.")
+    return warns
+
+
 def main() -> None:
-    pdf = pick_pdf(sys.argv[1] if len(sys.argv) > 1 else None)
+    ap = argparse.ArgumentParser(description="Stage 1 — PDF → per-chapter extract")
+    ap.add_argument("pdf", nargs="?", help="source PDF (default: newest source/*.pdf)")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite an existing metadata/v<N>/ even if its sha256 differs")
+    args = ap.parse_args()
+
+    pdf = pick_pdf(args.pdf)
     if not pdf.exists():
         sys.exit(f"not found: {pdf}")
 
     doc = fitz.open(pdf)
     pages = [p.get_text() for p in doc]
     sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
-    version = parse_version(pdf.name)
+    version, vkind, vwarn = parse_version(pdf)
+    if vwarn:
+        print(f"⚠ {vwarn}", file=sys.stderr)
+
+    # Overwrite guard: refuse to clobber a prior extract for this version slot
+    # whose source differs, unless --force. An identical sha is a warned no-op.
+    out_dir = REPO / "metadata" / f"v{version}"
+    prior = existing_sha(out_dir)
+    if prior is not None and prior != sha and not args.force:
+        sys.exit(
+            f"refusing to overwrite {out_dir.relative_to(REPO)}/ — it holds a "
+            f"different draft (sha {prior[:12]} ≠ {sha[:12]}). This version slot "
+            f"is already taken; re-run with --force to replace it, or rename the "
+            f"PDF so it resolves to a free version.")
+    if prior == sha:
+        print(f"⚠ {out_dir.relative_to(REPO)}/ already holds this exact draft "
+              f"(sha {sha[:12]}); re-extracting (no-op for provenance).",
+              file=sys.stderr)
+
+    # Re-ingest provenance guard (#8): same content under another slot / non-advancing version
+    for w in provenance_warnings(sha, version, out_dir):
+        print(f"⚠ {w}", file=sys.stderr)
 
     toc = parse_contents(pages)
     titles = [c["title"] for c in toc]
@@ -164,15 +287,16 @@ def main() -> None:
     if preface_idx is not None and preface_idx < first_ch:
         preface_text = _norm("\n".join(pages[preface_idx:first_ch]))
 
-    out_dir = REPO / "metadata" / f"v{version}"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     extract = {
         "draft": {
             "source_pdf": str(pdf.relative_to(REPO)),
             "version": version,
+            "version_kind": vkind,
             "pages": len(pages),
             "sha256": sha,
+            "ingested": _today(),
             "title_page": _norm(pages[0])[:200] if pages else "",
         },
         "preface_text": preface_text,
@@ -199,7 +323,7 @@ def main() -> None:
 
     drafted = sum(c["present"] for c in chapters)
     print(f"✓ ingested {pdf.name}  →  {out_dir.relative_to(REPO)}/")
-    print(f"  version {version} · {len(pages)} pp · sha {sha[:12]}")
+    print(f"  version {version} ({vkind}) · {len(pages)} pp · sha {sha[:12]}")
     print(f"  {len(chapters)} chapters in TOC · {drafted} with a drafted body in this PDF")
     for c in chapters:
         mark = "●" if c["present"] else "○"

@@ -43,7 +43,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 - **Files:** `bin/audit-site.py` (coverage check + `file_moves`), optionally
   `bin/apply-rename.py`, `HARNESS.md`.
 
-### [ ] #2 Construct guards can't coexist with `status: "unchanged"`  — STABILITY
+### [x] #2 Construct guards can't coexist with `status: "unchanged"`  — STABILITY
 - **Problem:** the alias-coverage check loops over **all** constructs
   (`audit-site.py:185`) but `derive_maps` only emits alias→canonical phrases for
   `status=="renamed"` (`audit-site.py:93`). Keeping `aliases_deprecated` as a
@@ -58,7 +58,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   phrase map that would catch a reintroduced deprecated spelling.
 - **Files:** `bin/audit-site.py`.
 
-### [ ] #5 Date-stamped filenames silently collapse to v1  — FUNCTIONALITY
+### [x] #5 Date-stamped filenames silently collapse to v1  — FUNCTIONALITY
 - **Problem:** `parse_version` only matches `-(\d+)\.pdf$` (`ingest-draft.py:54`),
   so `20260607.pdf` parses as **v1** and overwrites `metadata/v1/`, clobbering the
   prior extract. The naming convention actually in use (dates) is unsupported.
@@ -75,7 +75,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P2 — trust/clarity (prevents misleading "republishes")
 
-### [ ] #3 Stale, hard-coded, book-specific review flags  — STABILITY
+### [x] #3 Stale, hard-coded, book-specific review flags  — STABILITY
 - **Problem:** `audit-site.py:223` unconditionally appends the "Chapter split:
   'The Free Fall' → 'The Inheritance' + 'The Bottle'" flag; it fired this run with
   **zero** chapter changes, telling the human gate to review a split that isn't
@@ -87,7 +87,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   emits **zero** review flags.
 - **Files:** `bin/audit-site.py`.
 
-### [ ] #6 Interface copy edits silently don't publish  — FUNCTIONALITY
+### [x] #6 Interface copy edits silently don't publish  — FUNCTIONALITY
 - **Problem:** `summary` only renders into *new* chapter stubs
   (`apply-rename.py:135`); `pitch` targets the non-existent `chapters.yml`; construct
   `definition` is never written to `_landing/`. Stage-2 copy refreshes produced a
@@ -102,7 +102,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 - **Files:** `bin/apply-rename.py`, `HARNESS.md` (+ a managed-region marker
   convention in `_landing/*.md` if propagating definitions).
 
-### [ ] #7 No "did this change the site?" signal  — FUNCTIONALITY
+### [x] #7 No "did this change the site?" signal  — FUNCTIONALITY
 - **Problem:** apply output didn't distinguish provenance/interface churn from
   rendered-surface change, so "republish" looked substantive but wasn't.
 - **Fix:** have `apply-rename.py` print a **rendered-surface delta** summary (moves +
@@ -115,7 +115,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 
 ## P3 — cleanup / hardening
 
-### [ ] #4 `chapters.yml` is a phantom regen target  — STABILITY
+### [x] #4 `chapters.yml` is a phantom regen target  — STABILITY
 - **Problem:** `REGENERATED` lists `_data/chapters.yml` (`audit-site.py:50`) but the
   file doesn't exist, so the `pitch` written by `regen_file` (`apply-rename.py:115`)
   goes nowhere. Dead path / latent inconsistency.
@@ -123,13 +123,13 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   `REGENERATED` and remove the dead `regen_file` branch. Decide alongside #6.
 - **Files:** `bin/audit-site.py`, `bin/apply-rename.py`.
 
-### [ ] #8 No re-ingest provenance guard  — FUNCTIONALITY
+### [x] #8 No re-ingest provenance guard  — FUNCTIONALITY
 - **Problem:** re-ingesting the same or an older PDF overwrites silently.
 - **Fix:** record `sha256`/`ingested`; warn/skip on an already-seen sha; warn when
   the version ≤ the last reconciled one. (Overlaps the #5 overwrite guard.)
 - **Files:** `bin/ingest-draft.py`.
 
-### [ ] #9 Everything rides on CI  — STABILITY
+### [x] #9 Everything rides on CI  — STABILITY
 - **Problem:** local Jekyll build is broken; breakage is only caught after it hits
   `master`.
 - **Fix:** add a lightweight pre-push offline check — containerized `jekyll build`,
