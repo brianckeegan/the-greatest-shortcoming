@@ -22,6 +22,7 @@ No edits are made here. Read-only.
 from __future__ import annotations
 
 import json
+import math
 import re
 import sys
 from collections import Counter
@@ -151,76 +152,104 @@ def classify(file_rel: str, line: str, old: str, kind: str) -> str:
     return "MACHINE_ID/ref"
 
 
-def content_drift(meta: dict) -> tuple[list[str], str | None]:
-    """Flag chapters whose RENDERED body carries proper nouns that are absent
-    from that chapter's text in the current DRAFT — stale prose left over from an
-    earlier conception of the chapter (e.g. a Ratzel/Lebensraum section surviving
-    in ch09 after the draft moved that material to ch02, or ch08 keeping its old
-    "counter-methods" body after the draft reframed it around longtermism).
+# staleness thresholds — a chapter trips review when its published prose shares
+# too few distinctive terms with its draft chapter (content), or its section
+# titles barely overlap the draft chapter (sections). Calibrated so every in-sync
+# chapter clears them and a stale shell (pre-fix ch08/ch09) does not.
+STALE_COS_MIN = 0.24   # TF-IDF cosine of rendered prose vs draft chapter
+STALE_SEC_MIN = 0.40   # fraction of section-title words found in the draft chapter
+STALE_TOKEN = re.compile(r"[a-z]{3,}")
+STALE_STOP = set(
+    "the a an and or of to in on for with as is are was were be been by that this it "
+    "its at from into their his her they them we our you your he she but not no than "
+    "then so such can will would more most one two three what how within whose under "
+    "over against about could should has have had been being".split())
 
-    The rename pass stamps every chapter ``source_note: "Reconciled from <pdf>"``
-    and fixes num/slug/redirect, but never touches the abstract/sections/body — so
-    a renumbered chapter can advertise a reconciliation that never happened. This
-    check closes that gap: it is the content half of "is the site in sync?".
 
-    Needs the full draft text (``metadata/v<N>/extract.json``), which is
-    git-ignored; when absent (e.g. CI) the check is skipped with a note rather
-    than failing. A term flags only on a strong signal — prominent in the rendered
-    chapter (>=3x) and entirely absent from that chapter's draft text — so an
-    incidental cross-reference ("as Chapter 3 showed") does not trip it. We report
-    where the term actually lives (another chapter, or nowhere) as the diagnosis.
+def _stale_toks(text: str, minlen: int = 3) -> list[str]:
+    text = re.sub(r"&[a-z]+;", " ", text)
+    return [w for w in re.findall(rf"[a-z]{{{minlen},}}", text.lower()) if w not in STALE_STOP]
+
+
+def chapter_staleness(meta: dict) -> tuple[list[dict], list[str], str | None]:
+    """Substantive per-chapter staleness review — the work the harness owes on a
+    new PDF push, beyond merely confirming the chapter numbers exist in the metadata.
+
+    For every chapter it compares the published ``_chapters/<slug>.md`` (abstract +
+    body, and its ``sections:`` titles) against the chapter's text in the current
+    draft (``extract.json``) with two cheap proxies — no heavy NLP:
+
+      * **content** — a plain TF-IDF cosine of the rendered prose against the draft
+        chapter, with IDF taken over all draft chapters, so the score rewards
+        sharing the chapter's *distinctive* terms. A stale shell scores low.
+      * **sections** — the fraction of the chapter's section-title words that occur
+        in the draft chapter (a section-title overlap / Jaccard-style proxy).
+
+    A chapter is **stale** when content cosine < ``STALE_COS_MIN`` or section overlap
+    < ``STALE_SEC_MIN``. For a stale chapter we also name the draft chapter its prose
+    matches best, which pinpoints relocated content (ch09's old Ratzel body matches
+    draft ch02, not ch09). This is how a renumbered shell — stamped "Reconciled from
+    <pdf>" but never re-bodied — gets caught instead of silently passing.
+
+    Needs the full draft text (``extract.json``, git-ignored); skips with a note
+    when absent (e.g. CI). Returns (per-chapter rows, stale problems, skip note).
     """
     version = meta["draft"]["version"]
     ext = REPO / "metadata" / f"v{version}" / "extract.json"
     if not ext.exists():
-        return [], (f"content-drift check skipped: {ext.relative_to(REPO)} absent "
-                    f"(draft text is git-ignored — run bin/ingest-draft.py first)")
+        return [], [], (f"staleness check skipped: {ext.relative_to(REPO)} absent "
+                        f"(draft text is git-ignored — run bin/ingest-draft.py first)")
     draft = {c["num"]: c["text"] for c in json.loads(ext.read_text()).get("chapters", [])}
 
-    # Proper-noun signal: a distinctive name (Capitalized word ≥5 chars, or an
-    # ALL-CAPS acronym ≥4 chars). Generic words that merely happen to be
-    # capitalized are excluded by the stoplist and the "lives elsewhere" gate.
-    STOP = {"Chapter", "Section", "Figure", "Boulder", "American", "Indigenous",
-            "Climate", "Census", "Bureau", "United", "States", "Black", "Western",
-            "National", "Reconciled", "August", "September", "January"}
-    NAME = re.compile(r"\b[A-Z][a-z]{4,}\b|\b[A-Z]{4,}\b")
+    nums = [c["num"] for c in meta["chapters"] if c["num"] != "00" and c["num"] in draft]
+    N = max(1, len(nums))
+    df = Counter()
+    for k in nums:
+        df.update(set(_stale_toks(draft[k])))
+    idf = {w: math.log(N / (1 + df[w])) + 1.0 for w in df}
 
-    def ci(term: str, text: str) -> int:                # case-insensitive, word-anchored
-        return len(re.findall(rf"\b{re.escape(term)}\b", text, re.I))
+    def vec(text: str) -> dict:
+        c = Counter(_stale_toks(text))
+        v = {w: c[w] * idf.get(w, math.log(N) + 1.0) for w in c}
+        nrm = math.sqrt(sum(x * x for x in v.values())) or 1.0
+        return {w: x / nrm for w, x in v.items()}
 
+    def cosine(a: dict, b: dict) -> float:
+        return sum(a[w] * b.get(w, 0.0) for w in a)
+
+    draft_vec = {k: vec(draft[k]) for k in nums}
+    rows: list[dict] = []
     problems: list[str] = []
     for ch in meta["chapters"]:
         num = ch["num"]
-        if num == "00" or num not in draft:
+        if num not in draft_vec:
             continue
         f = REPO / "_chapters" / f"{ch['slug']}.md"
         if not f.exists():
             continue
-        rendered = re.sub(r"&[a-z]+;", " ", f.read_text(encoding="utf-8", errors="replace"))
-        drifted = []
-        for term in {m.group(0) for m in NAME.finditer(rendered)}:
-            if term in STOP:
-                continue
-            rc = ci(term, rendered)
-            if rc < 3 or ci(term, draft[num]):      # not prominent here, or present in this draft chapter
-                continue
-            # only flag when the name clearly belongs to a DIFFERENT draft chapter
-            # (relocated content). Wholesale-cut prose is not asserted here — it
-            # would need a fuzzier signal and risks false positives.
-            best, bn = max(((k, ci(term, t)) for k, t in draft.items() if k != num),
-                           key=lambda kv: kv[1], default=(None, 0))
-            if bn >= 5:
-                drifted.append((term, rc, best, bn))
-        if drifted:
-            drifted.sort(key=lambda x: -x[1])
-            lead = "; ".join(f"{t!r} ({rc}× here, {bn}× in draft ch{b})" for t, rc, b, bn in drifted[:3])
-            home = drifted[0][2]
+        raw = f.read_text(encoding="utf-8", errors="replace")
+        sections = re.findall(r'^\s*-\s*"(.+?)"\s*$', raw, re.M)
+        am = re.search(r"\nabstract:\s*\|(.*?)\nsource_note:", raw, re.S)
+        prose = (am.group(1) if am else "") + " " + re.split(r"\n---\n", raw, maxsplit=1)[-1]
+
+        pv = vec(prose)
+        cos = cosine(pv, draft_vec[num])
+        title_words = {w for s in sections for w in _stale_toks(s, 4)}
+        sec = (sum(bool(re.search(rf"\b{re.escape(w)}", draft[num], re.I)) for w in title_words)
+               / len(title_words)) if title_words else 1.0
+        best = max(nums, key=lambda k: cosine(pv, draft_vec[k]))
+        stale = cos < STALE_COS_MIN or sec < STALE_SEC_MIN
+        rows.append({"num": num, "slug": ch["slug"], "cos": cos, "sec": sec,
+                     "best": best, "stale": stale})
+        if stale:
+            where = (f"; its prose matches draft ch{best} more closely than its own"
+                     if best != num else "")
             problems.append(
-                f"content drift — _chapters/{ch['slug']}.md (ch{num}) body carries {lead}, "
-                f"absent from draft ch{num}: stale prose whose subject now lives in draft "
-                f"ch{home}. Reconcile the chapter's abstract/sections/body to the draft "
-                f"(its source_note already claims reconciliation), or fix the chapter mapping.")
-    return problems, None
+                f"stale chapter — _chapters/{ch['slug']}.md (ch{num}): content cosine "
+                f"{cos:.2f} (min {STALE_COS_MIN}), section-title overlap {sec:.2f} "
+                f"(min {STALE_SEC_MIN}) vs the current draft{where}. Review and update its "
+                f"abstract/sections/body to the draft — its source_note claims reconciliation.")
+    return rows, problems, None
 
 
 def main() -> None:
@@ -289,11 +318,12 @@ def main() -> None:
             if ch.get("status") == "new" and new.exists():
                 problems.append(f"new chapter would overwrite existing file: {new.name}")
 
-    # ---- content drift: rendered chapter body vs. the current draft ------
-    # The rename pass syncs num/slug/redirect and stamps "Reconciled from <pdf>",
-    # but not the body. This catches a chapter whose prose is stale relative to
-    # the draft (e.g. Ratzel surviving in ch09 after the draft moved it to ch02).
-    drift, drift_note = content_drift(meta)
+    # ---- content staleness: rendered chapter vs. the current draft -------
+    # On a new PDF push the harness owes a substantive per-chapter review, not just
+    # a chapter-number check. chapter_staleness compares each published chapter to
+    # its draft text (TF-IDF cosine + section-title overlap) and flags stale shells
+    # (e.g. Ratzel surviving in ch09 after the draft moved it to ch02).
+    stale_rows, drift, drift_note = chapter_staleness(meta)
 
     # ---- file moves ------------------------------------------------------
     # Only plan a move whose source still exists. If the source is gone and the
@@ -374,7 +404,12 @@ def main() -> None:
         "counts": {"occurrences": len(occurrences), "files_scanned": len(files),
                    "moves": len(file_moves)},
         "coverage_problems": problems,
-        "content_drift": drift,
+        "chapter_staleness": [{"num": r["num"], "slug": r["slug"],
+                               "content_cosine": round(r["cos"], 3),
+                               "section_overlap": round(r["sec"], 3),
+                               "best_match": r["best"], "stale": r["stale"]}
+                              for r in stale_rows],
+        "stale_chapters": drift,
         "review_flags": flags,
     }
     (REPO / "metadata" / "rename-plan.json").write_text(json.dumps(plan, indent=2, ensure_ascii=False))
@@ -438,15 +473,22 @@ def main() -> None:
         md.append("\n## ✓ Coverage: no problems — every alias covered, "
                   "all prev_slugs present, all new slugs free.")
 
+    md.append("\n## Chapter staleness review (published chapter vs. current draft)")
+    if drift_note:
+        md.append(f"_{drift_note}_")
+    elif stale_rows:
+        md.append("| # | content cosine | section overlap | best draft match | verdict |")
+        md.append("|---|----------------|-----------------|------------------|---------|")
+        for r in stale_rows:
+            mark = "❌ STALE" if r["stale"] else "✓ ok"
+            bm = f"ch{r['best']}" + (" ⚠" if r["stale"] and r["best"] != r["num"] else "")
+            md.append(f"| {r['num']} | {r['cos']:.2f} | {r['sec']:.2f} | {bm} | {mark} |")
+        md.append(f"\n_Thresholds: stale when content cosine < {STALE_COS_MIN} or "
+                  f"section-title overlap < {STALE_SEC_MIN}._")
     if drift:
-        md.append("\n## ❌ Content drift (rendered chapter body ≠ current draft)")
+        md.append("\n### ❌ Stale chapters — review & update before apply")
         for p in drift:
             md.append(f"- {p}")
-    elif drift_note:
-        md.append(f"\n## Content drift\n_{drift_note}_")
-    else:
-        md.append("\n## ✓ Content: every chapter body's proper nouns match its "
-                  "draft chapter — no stale prose from an earlier draft.")
 
     md.append("\n## Occurrences by file")
     for f in sorted(by_file):
@@ -465,9 +507,18 @@ def main() -> None:
     print(f"  coverage problems: {len(problems)}")
     for p in problems:
         print(f"    ❌ {p}")
-    print(f"  content drift: {len(drift)}" + (f"  ({drift_note})" if drift_note else ""))
-    for p in drift:
-        print(f"    ❌ {p}")
+    if drift_note:
+        print(f"  chapter staleness: skipped ({drift_note})")
+    else:
+        print(f"  chapter staleness review ({len(stale_rows)} chapters, "
+              f"{len(drift)} stale; content cosine / section overlap):")
+        for r in stale_rows:
+            mark = "❌" if r["stale"] else "✓"
+            bm = (f"  → prose matches draft ch{r['best']}"
+                  if r["stale"] and r["best"] != r["num"] else "")
+            print(f"    {mark} {r['num']} {r['cos']:.2f} / {r['sec']:.2f}{bm}")
+        for p in drift:
+            print(f"    ❌ {p}")
     print(f"  review flags: {len(flags)}")
     for f in flags:
         print(f"    ⚠ {f}")

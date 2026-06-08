@@ -37,24 +37,31 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   ch02 (`Ratzel` 21×); `_chapters/08-the-long-term.md` (formerly `07-the-alternatives`)
   kept its old "counter-cross-tabulation/EJSCREEN" body, whose subject now lives in
   draft ch04. Both were renumbered shells with bodies never updated.
-- **Fix:** add a **content-drift check** to the audit (`content_drift` in
-  `audit-site.py`): for each chapter, flag a distinctive proper noun that is prominent
-  in the rendered body (≥3×, case-insensitive) yet **absent** from that chapter's draft
-  text **and** central to a *different* draft chapter (≥5×) — i.e. relocated content.
-  It contributes to coverage problems (audit exits 1), so a renumbered shell can no
-  longer pass while its body is stale, which makes the "Reconciled" source_note honest.
-  The check needs the full draft text (`metadata/v<N>/extract.json`, git-ignored); it
-  skips with a note when absent (e.g. CI). Reconcile the two flagged chapters' bodies
-  to the draft to clear it.
-- **Scope/limit:** the check targets the *relocated-content* class (the reported
-  ch09/Ratzel case) with zero false positives across ch01–07; *wholesale-cut* prose
-  (content reframed and dropped entirely, using shared vocabulary) is fuzzier and not
-  asserted, to avoid false positives that would destabilize the steady-state gate.
-- **Acceptance:** with a chapter body referencing another chapter's signature entity,
-  `audit-site.py` exits 1 and names the file, the entity, and the chapter it belongs to;
-  once the body is reconciled, the audit exits 0 and the apply dry run still reports
-  rendered-surface changes: 0.
-- **Files:** `bin/audit-site.py` (new `content_drift`), `_chapters/08-the-long-term.md`
+- **Fix:** a substantive **per-chapter staleness review** in the audit
+  (`chapter_staleness` in `audit-site.py`) that runs on every push — not just a check
+  that chapter numbers exist. For **every** chapter it compares the published
+  `_chapters/<slug>.md` (abstract + body, and its `sections:` titles) against the
+  chapter's draft text with two cheap proxies (no heavy NLP, no deps):
+  - **content** — plain TF-IDF cosine of the rendered prose vs the draft chapter, IDF
+    over all draft chapters, so the score rewards sharing the chapter's *distinctive*
+    terms; and
+  - **sections** — fraction of section-title words found in the draft chapter (a
+    section-title overlap / Jaccard-style proxy).
+  A chapter is **stale** when content cosine `< 0.24` or section overlap `< 0.40`; it
+  contributes to coverage problems (audit exits 1) and the report prints a per-chapter
+  table (cosine / overlap / best-matching draft chapter). For a stale chapter it names
+  the draft chapter its prose matches best, which pinpoints relocated content (ch09's
+  old Ratzel body matches draft ch02). Needs the full draft text
+  (`metadata/v<N>/extract.json`, git-ignored); skips with a note when absent (e.g. CI).
+- **Calibration:** thresholds sit cleanly between every in-sync chapter (cosine
+  0.27–0.55, overlap 0.71–1.00) and the stale shells (pre-fix ch08 = 0.15, ch09 = 0.18)
+  — zero false positives across ch01–07. Thresholds are module constants
+  (`STALE_COS_MIN` / `STALE_SEC_MIN`), tunable as the manuscript grows.
+- **Acceptance:** restoring a chapter's pre-reconcile body makes `audit-site.py` exit 1,
+  name the file, and report which draft chapter its prose matches; once the body is
+  reconciled the audit exits 0 and the apply dry run still reports rendered-surface
+  changes: 0. (Verified by replaying the pre-fix ch09 — flagged at cosine 0.18 → ch02.)
+- **Files:** `bin/audit-site.py` (new `chapter_staleness`), `_chapters/08-the-long-term.md`
   + `_chapters/09-boulder-again.md` (bodies reconciled to v3), `HARNESS.md`.
 
 ### [x] #10 Missed chapter openings silently absorb the next chapters' bodies  — FUNCTIONALITY, highest
