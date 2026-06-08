@@ -151,6 +151,78 @@ def classify(file_rel: str, line: str, old: str, kind: str) -> str:
     return "MACHINE_ID/ref"
 
 
+def content_drift(meta: dict) -> tuple[list[str], str | None]:
+    """Flag chapters whose RENDERED body carries proper nouns that are absent
+    from that chapter's text in the current DRAFT — stale prose left over from an
+    earlier conception of the chapter (e.g. a Ratzel/Lebensraum section surviving
+    in ch09 after the draft moved that material to ch02, or ch08 keeping its old
+    "counter-methods" body after the draft reframed it around longtermism).
+
+    The rename pass stamps every chapter ``source_note: "Reconciled from <pdf>"``
+    and fixes num/slug/redirect, but never touches the abstract/sections/body — so
+    a renumbered chapter can advertise a reconciliation that never happened. This
+    check closes that gap: it is the content half of "is the site in sync?".
+
+    Needs the full draft text (``metadata/v<N>/extract.json``), which is
+    git-ignored; when absent (e.g. CI) the check is skipped with a note rather
+    than failing. A term flags only on a strong signal — prominent in the rendered
+    chapter (>=3x) and entirely absent from that chapter's draft text — so an
+    incidental cross-reference ("as Chapter 3 showed") does not trip it. We report
+    where the term actually lives (another chapter, or nowhere) as the diagnosis.
+    """
+    version = meta["draft"]["version"]
+    ext = REPO / "metadata" / f"v{version}" / "extract.json"
+    if not ext.exists():
+        return [], (f"content-drift check skipped: {ext.relative_to(REPO)} absent "
+                    f"(draft text is git-ignored — run bin/ingest-draft.py first)")
+    draft = {c["num"]: c["text"] for c in json.loads(ext.read_text()).get("chapters", [])}
+
+    # Proper-noun signal: a distinctive name (Capitalized word ≥5 chars, or an
+    # ALL-CAPS acronym ≥4 chars). Generic words that merely happen to be
+    # capitalized are excluded by the stoplist and the "lives elsewhere" gate.
+    STOP = {"Chapter", "Section", "Figure", "Boulder", "American", "Indigenous",
+            "Climate", "Census", "Bureau", "United", "States", "Black", "Western",
+            "National", "Reconciled", "August", "September", "January"}
+    NAME = re.compile(r"\b[A-Z][a-z]{4,}\b|\b[A-Z]{4,}\b")
+
+    def ci(term: str, text: str) -> int:                # case-insensitive, word-anchored
+        return len(re.findall(rf"\b{re.escape(term)}\b", text, re.I))
+
+    problems: list[str] = []
+    for ch in meta["chapters"]:
+        num = ch["num"]
+        if num == "00" or num not in draft:
+            continue
+        f = REPO / "_chapters" / f"{ch['slug']}.md"
+        if not f.exists():
+            continue
+        rendered = re.sub(r"&[a-z]+;", " ", f.read_text(encoding="utf-8", errors="replace"))
+        drifted = []
+        for term in {m.group(0) for m in NAME.finditer(rendered)}:
+            if term in STOP:
+                continue
+            rc = ci(term, rendered)
+            if rc < 3 or ci(term, draft[num]):      # not prominent here, or present in this draft chapter
+                continue
+            # only flag when the name clearly belongs to a DIFFERENT draft chapter
+            # (relocated content). Wholesale-cut prose is not asserted here — it
+            # would need a fuzzier signal and risks false positives.
+            best, bn = max(((k, ci(term, t)) for k, t in draft.items() if k != num),
+                           key=lambda kv: kv[1], default=(None, 0))
+            if bn >= 5:
+                drifted.append((term, rc, best, bn))
+        if drifted:
+            drifted.sort(key=lambda x: -x[1])
+            lead = "; ".join(f"{t!r} ({rc}× here, {bn}× in draft ch{b})" for t, rc, b, bn in drifted[:3])
+            home = drifted[0][2]
+            problems.append(
+                f"content drift — _chapters/{ch['slug']}.md (ch{num}) body carries {lead}, "
+                f"absent from draft ch{num}: stale prose whose subject now lives in draft "
+                f"ch{home}. Reconcile the chapter's abstract/sections/body to the draft "
+                f"(its source_note already claims reconciliation), or fix the chapter mapping.")
+    return problems, None
+
+
 def main() -> None:
     meta = json.loads(META.read_text())
     tokens, phrases, notes = derive_maps(meta)
@@ -216,6 +288,12 @@ def main() -> None:
             new = REPO / "_chapters" / f"{ch['slug']}.md"
             if ch.get("status") == "new" and new.exists():
                 problems.append(f"new chapter would overwrite existing file: {new.name}")
+
+    # ---- content drift: rendered chapter body vs. the current draft ------
+    # The rename pass syncs num/slug/redirect and stamps "Reconciled from <pdf>",
+    # but not the body. This catches a chapter whose prose is stale relative to
+    # the draft (e.g. Ratzel surviving in ch09 after the draft moved it to ch02).
+    drift, drift_note = content_drift(meta)
 
     # ---- file moves ------------------------------------------------------
     # Only plan a move whose source still exists. If the source is gone and the
@@ -296,6 +374,7 @@ def main() -> None:
         "counts": {"occurrences": len(occurrences), "files_scanned": len(files),
                    "moves": len(file_moves)},
         "coverage_problems": problems,
+        "content_drift": drift,
         "review_flags": flags,
     }
     (REPO / "metadata" / "rename-plan.json").write_text(json.dumps(plan, indent=2, ensure_ascii=False))
@@ -359,6 +438,16 @@ def main() -> None:
         md.append("\n## ✓ Coverage: no problems — every alias covered, "
                   "all prev_slugs present, all new slugs free.")
 
+    if drift:
+        md.append("\n## ❌ Content drift (rendered chapter body ≠ current draft)")
+        for p in drift:
+            md.append(f"- {p}")
+    elif drift_note:
+        md.append(f"\n## Content drift\n_{drift_note}_")
+    else:
+        md.append("\n## ✓ Content: every chapter body's proper nouns match its "
+                  "draft chapter — no stale prose from an earlier draft.")
+
     md.append("\n## Occurrences by file")
     for f in sorted(by_file):
         md.append(f"\n### `{f}` ({len(by_file[f])})")
@@ -376,13 +465,16 @@ def main() -> None:
     print(f"  coverage problems: {len(problems)}")
     for p in problems:
         print(f"    ❌ {p}")
+    print(f"  content drift: {len(drift)}" + (f"  ({drift_note})" if drift_note else ""))
+    for p in drift:
+        print(f"    ❌ {p}")
     print(f"  review flags: {len(flags)}")
     for f in flags:
         print(f"    ⚠ {f}")
     print(f"  preserved-term sightings (left untouched): {len(preserved_hits)}")
     print(f"\n  → metadata/rename-plan.json")
     print(f"  → metadata/audit-report.md  (review this before applying)")
-    if problems:
+    if problems or drift:
         sys.exit(1)
 
 

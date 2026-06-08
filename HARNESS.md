@@ -169,6 +169,11 @@ apply, without the construct having to masquerade as `"renamed"` forever.
    every chapter slug referenced by `_data` / `_includes` exists on disk.
 3. **Idempotence** — a second `bin/apply-rename.py --apply` yields an empty `git diff`.
 4. **Reverse-drift** — re-running `bin/audit-site.py` reports zero drift vs. the metadata.
+   This now includes a **content-drift** check: a chapter whose rendered body carries a
+   distinctive proper noun absent from its draft chapter but central to a *different*
+   draft chapter (e.g. Ratzel surviving in ch09 after the draft moved it to ch02) fails
+   the audit, so a renumbered chapter cannot keep stale prose under a "Reconciled from
+   <pdf>" source_note. Needs `metadata/v<N>/extract.json` present (skips with a note in CI).
 5. **Build** — push the branch; the `.github/workflows/github-pages.yml` Actions build
    is the real Jekyll validation.
 
