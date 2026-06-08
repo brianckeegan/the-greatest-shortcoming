@@ -87,7 +87,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   emits **zero** review flags.
 - **Files:** `bin/audit-site.py`.
 
-### [ ] #6 Interface copy edits silently don't publish  — FUNCTIONALITY
+### [x] #6 Interface copy edits silently don't publish  — FUNCTIONALITY
 - **Problem:** `summary` only renders into *new* chapter stubs
   (`apply-rename.py:135`); `pitch` targets the non-existent `chapters.yml`; construct
   `definition` is never written to `_landing/`. Stage-2 copy refreshes produced a
@@ -102,7 +102,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
 - **Files:** `bin/apply-rename.py`, `HARNESS.md` (+ a managed-region marker
   convention in `_landing/*.md` if propagating definitions).
 
-### [ ] #7 No "did this change the site?" signal  — FUNCTIONALITY
+### [x] #7 No "did this change the site?" signal  — FUNCTIONALITY
 - **Problem:** apply output didn't distinguish provenance/interface churn from
   rendered-surface change, so "republish" looked substantive but wasn't.
 - **Fix:** have `apply-rename.py` print a **rendered-surface delta** summary (moves +

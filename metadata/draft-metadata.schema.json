@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://the-greatest-shortcoming/metadata/draft-metadata.schema.json",
   "title": "Draft metadata interface",
-  "description": "The contract the PDF-reading agent (Stage 2) fills in from a draft's extract.json. Stage 3 (audit) derives a rename plan from `constructs`, `chapters`, and `extra_renames`; Stage 4 (apply) executes it. Content fields (definition, summary, concept, teaser) double as the new copy written into the site, so the metadata is the single source of truth.",
+  "description": "The contract the PDF-reading agent (Stage 2) fills in from a draft's extract.json. Stage 3 (audit) derives a rename plan from `constructs`, `chapters`, and `extra_renames`; Stage 4 (apply) executes it. RENDERED fields reach the deployed site via apply (chapter num/slug/title/era_*/concept/teaser → front matter + _data/cards.yml; construct ids/slugs/labels/aliases → renames). METADATA-ONLY fields are the source of truth but are NOT propagated to the site: chapter `summary` (written only into NEW chapter stubs), `pitch`, `key_terms`; construct `definition` (the _landing prose is hand-authored). See HARNESS.md and `apply-rename.py --explain-fields`.",
   "type": "object",
   "required": ["draft", "constructs", "chapters"],
   "additionalProperties": false,
@@ -44,7 +44,7 @@
             "type": "array", "items": { "type": "string" },
             "description": "bare words that LOOK related but must NOT be renamed (e.g. 'ecofascism' the movement)"
           },
-          "definition": { "type": "string", "description": "canonical definition, verbatim from the draft" },
+          "definition": { "type": "string", "description": "canonical definition, verbatim from the draft. METADATA-ONLY: not written to _landing/<slug>.md (the landing prose is hand-authored); apply does not propagate it." },
           "status": { "enum": ["unchanged", "renamed", "new", "removed"] }
         }
       }
@@ -65,11 +65,11 @@
           "era_id": { "type": ["string", "null"], "description": "scrolly-step id, if this chapter is a timeline step" },
           "prev_era_id": { "type": ["string", "null"] },
           "era_label": { "type": ["string", "null"], "description": "small caption (year range or phrase)" },
-          "concept": { "type": ["string", "null"], "description": "mechanism named in the chapter" },
-          "teaser": { "type": ["string", "null"], "description": "one-line hook" },
-          "pitch": { "type": ["string", "null"], "description": "1–2 sentence pitch for the TOC card" },
-          "summary": { "type": "string", "description": "paragraph summary" },
-          "key_terms": { "type": "array", "items": { "type": "string" } },
+          "concept": { "type": ["string", "null"], "description": "mechanism named in the chapter. RENDERED → _data/cards.yml card 'concept'." },
+          "teaser": { "type": ["string", "null"], "description": "one-line hook. RENDERED → _data/cards.yml card 'teaser'." },
+          "pitch": { "type": ["string", "null"], "description": "1–2 sentence pitch for the TOC card. METADATA-ONLY: no live render target (chapters.yml is a phantom)." },
+          "summary": { "type": "string", "description": "paragraph summary. METADATA-ONLY for existing chapters: written only into NEW chapter stubs by apply." },
+          "key_terms": { "type": "array", "items": { "type": "string" }, "description": "METADATA-ONLY: not written to any rendered file." },
           "source": { "enum": ["pdf", "landing.js", "pdf+landing.js", "manuscript"], "description": "provenance of the summary" },
           "status": { "enum": ["unchanged", "renamed", "renumbered", "renamed+renumbered", "new"] }
         }

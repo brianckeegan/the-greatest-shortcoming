@@ -90,13 +90,40 @@ only thing the audit/apply stages read. It is content + intent:
   values, every deprecated `aliases_deprecated` spelling, and `preserve_terms`
   (bare words that must **not** be renamed).
 - **`chapters[]`** — authoritative title/order, old→new `prev_slug`/`prev_title`/
-  `prev_era_id`, plus `concept` / `teaser` / `pitch` / `summary` (the new copy
-  written into the site) and `source` provenance.
+  `prev_era_id`, plus card copy (`concept` / `teaser` / `era_label`), the
+  `pitch` / `summary` / `key_terms` (see *rendered vs. metadata-only* below), and
+  `source` provenance.
 - **`extra_renames`** / **`definition_blocks`** — escape hatches for special cases.
 
 Because intent lives in this file, the apply step is a deterministic, idempotent
 executor with no hard-coded book content — re-running it on a new draft just needs
 a fresh metadata file.
+
+### Rendered vs. metadata-only fields
+
+Not every interface field reaches the deployed site. Editing a **metadata-only**
+field produces a metadata diff with **zero rendered effect** — by design, so the
+harness never overwrites hand-authored prose. `apply-rename.py` reports a
+**rendered-surface delta** (moves + rendered text replacements + `cards.yml`
+content-changed + new chapters) separate from provenance/interface churn, and
+`apply-rename.py --explain-fields` prints the full map. Summary:
+
+| field | rendered? | where it lands |
+|-------|-----------|----------------|
+| chapter `num` / `slug` / `title` | rendered | front matter + filename/URL + title phrase rename |
+| chapter `prev_*` / `era_id` | rendered | renames, file moves, redirects |
+| chapter `concept` / `teaser` / `era_label` | rendered | `_data/cards.yml` card fields |
+| chapter `pitch` | **metadata-only** | no live render target (`chapters.yml` is a phantom) |
+| chapter `summary` | **metadata-only** | written only into **new** chapter stubs; ignored for existing chapters |
+| chapter `key_terms` / `source` / `status` | **metadata-only** | provenance / drives the plan |
+| construct ids / slugs / labels / `canonical_name` | rendered | token + phrase renames |
+| construct `aliases_deprecated` | rendered (guard) | re-canonicalizes reintroduced spellings |
+| construct `preserve_terms` | audit-only | proves bare terms left untouched |
+| construct `definition` | **metadata-only** | **not** written to `_landing/<slug>.md` — landing prose is hand-authored |
+
+To actually change a landing definition or a chapter's published prose, edit the
+rendered file (`_landing/<slug>.md`, `_chapters/<slug>.md`) directly, or use a
+`definition_blocks` entry for a targeted anchored rewrite.
 
 ## Why not `sed s/old/new/`
 
