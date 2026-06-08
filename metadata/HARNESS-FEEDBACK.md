@@ -58,7 +58,7 @@ dry run shows **no rendered-surface change** (0 moves, 0 text replacements,
   phrase map that would catch a reintroduced deprecated spelling.
 - **Files:** `bin/audit-site.py`.
 
-### [ ] #5 Date-stamped filenames silently collapse to v1  — FUNCTIONALITY
+### [x] #5 Date-stamped filenames silently collapse to v1  — FUNCTIONALITY
 - **Problem:** `parse_version` only matches `-(\d+)\.pdf$` (`ingest-draft.py:54`),
   so `20260607.pdf` parses as **v1** and overwrites `metadata/v1/`, clobbering the
   prior extract. The naming convention actually in use (dates) is unsupported.

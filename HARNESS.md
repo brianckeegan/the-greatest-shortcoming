@@ -9,7 +9,7 @@ only *look* related (e.g. "ecofascism" the movement vs. "Lebensraum imaginaries"
 the construct).
 
 ```
-source/<Title>-<N>.pdf
+source/<Title>-<N>.pdf  ·or·  source/<YYYYMMDD>.pdf
    │  ① bin/ingest-draft.py            deterministic extract (PyMuPDF) — no LLM
    ▼
 metadata/v<N>/extract.{json,txt}       per-chapter text; flags partial drafts
@@ -29,6 +29,7 @@ edited _config.yml / _data/* / _chapters/* / _landing/* / _includes/* / _layouts
 ```bash
 # Stage 1 — extract (auto-picks newest source/*.pdf if no arg)
 python3 bin/ingest-draft.py source/The_Greatest_Shortcoming-1.pdf
+python3 bin/ingest-draft.py source/20260607.pdf   # date-stamped drafts also work
 
 # Stage 2 — populate the interface (run as the pdf-reader agent)
 /ingest-draft                      # in Claude Code; writes metadata/draft-metadata.json
@@ -44,6 +45,22 @@ python3 bin/apply-rename.py --apply
 
 Or, in Claude Code, the two slash commands wrap the stages: `/ingest-draft` then
 `/audit-constructs` (add `--apply` to execute).
+
+### Source filenames & version slots
+
+`ingest-draft.py` resolves a stable version ordinal `v<N>` from the filename:
+
+- `…-<N>.pdf` (e.g. `The_Greatest_Shortcoming-2.pdf`) → that explicit ordinal.
+- `<YYYYMMDD>.pdf` (e.g. `20260607.pdf`) → ranked **chronologically** among the
+  date-stamped PDFs in `source/`, so multiple dated drafts get distinct,
+  date-ordered `metadata/v<N>/` dirs (`20260530`→v1, `20260607`→v2, …).
+- anything else → a warned fallback to mtime rank (never a silent collapse to v1).
+
+`metadata/v<N>/` is git-ignored (a local working artifact); the authoritative
+`version` lives in `draft-metadata.json`, written by the Stage-2 agent.
+Re-ingesting an **identical** PDF (same sha256) into an occupied slot is a warned
+no-op; a **different** PDF in an occupied slot is refused unless you pass
+`--force`.
 
 ### Re-running on an already-reconciled site
 
