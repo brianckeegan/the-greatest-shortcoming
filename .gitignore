@@ -13,3 +13,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Node / build output
+node_modules/
+assets/css/dist/
