@@ -1,10 +1,10 @@
 ---
-title: "Website design"
+title: "Colophon"
 permalink: /colophon/
 description: "A colophon — how the chapter plate art is built, and why its Bauhaus vocabulary is a deliberate choice."
 ---
 
-# Website design
+# Colophon
 
 Every chapter opens with a small **plate** — a geometric figure in the
 constructivist manner, built from four colours (an ink black, a slate blue, a
