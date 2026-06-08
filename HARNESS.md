@@ -46,6 +46,34 @@ python3 bin/apply-rename.py --apply
 Or, in Claude Code, the two slash commands wrap the stages: `/ingest-draft` then
 `/audit-constructs` (add `--apply` to execute).
 
+### Reviewing a new draft — chapter staleness
+
+A new PDF rarely changes only the chapter *numbering*; it revises chapter *content*,
+and the harness must update the metadata and site to match — not merely confirm the
+chapter numbers still exist. The book has been restructured before (chapters renamed
+and renumbered), and a renumbered chapter that kept an *older* draft's body slipped
+through as a "Reconciled from <pdf>" shell (ch09 carried a Ratzel/Lebensraum section
+the draft had moved to ch02).
+
+So Stage 3 runs a **per-chapter staleness review** (`chapter_staleness` in
+`audit-site.py`). For every chapter it compares the published `_chapters/<slug>.md`
+(abstract + body, and its `sections:` titles) against that chapter's text in the
+current draft, using two cheap proxies — no heavy NLP:
+
+- **content cosine** — a plain TF-IDF cosine of the rendered prose against the draft
+  chapter (IDF over all draft chapters), so the score rewards sharing the chapter's
+  *distinctive* terms; and
+- **section-title overlap** — the fraction of the chapter's `sections:` words that
+  occur in the draft chapter.
+
+A chapter is **stale** when content cosine `< 0.24` or section overlap `< 0.40`; the
+audit prints a per-chapter table, names the draft chapter a stale chapter's prose
+matches best (catching *relocated* content), and **fails (exit 1)** until the body is
+reconciled. The review needs the draft text in `metadata/v<N>/extract.json` (produced
+by Stage 1; git-ignored), so run it after `ingest-draft.py`; it skips with a note when
+that file is absent (e.g. CI). Thresholds are constants in `audit-site.py`
+(`STALE_COS_MIN` / `STALE_SEC_MIN`).
+
 ### Source filenames & version slots
 
 `ingest-draft.py` resolves a stable version ordinal `v<N>` from the filename:
@@ -168,12 +196,10 @@ apply, without the construct having to masquerade as `"renamed"` forever.
    present where expected; no `links:`/`era:`/`data-ent` references a now-undefined id;
    every chapter slug referenced by `_data` / `_includes` exists on disk.
 3. **Idempotence** — a second `bin/apply-rename.py --apply` yields an empty `git diff`.
-4. **Reverse-drift** — re-running `bin/audit-site.py` reports zero drift vs. the metadata.
-   This now includes a **content-drift** check: a chapter whose rendered body carries a
-   distinctive proper noun absent from its draft chapter but central to a *different*
-   draft chapter (e.g. Ratzel surviving in ch09 after the draft moved it to ch02) fails
-   the audit, so a renumbered chapter cannot keep stale prose under a "Reconciled from
-   <pdf>" source_note. Needs `metadata/v<N>/extract.json` present (skips with a note in CI).
+4. **Reverse-drift + staleness** — re-running `bin/audit-site.py` reports zero drift vs.
+   the metadata **and** runs a per-chapter **staleness review** (see below): every
+   published chapter must still match its draft chapter, so a renumbered shell cannot
+   keep stale prose under a "Reconciled from <pdf>" source_note.
 5. **Build** — push the branch; the `.github/workflows/github-pages.yml` Actions build
    is the real Jekyll validation.
 
