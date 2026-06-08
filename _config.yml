@@ -108,10 +108,15 @@ footer:
   right: "scroll-driven"
 
 # ---- Jekyll plumbing -------------------------------------------------------
-# Compatible with the github-pages gem; no plugins beyond GH Pages allow-list.
+# Standalone Jekyll 4 (see Gemfile). Use kramdown with GFM input so markdown
+# renders as it did under the former github-pages gem.
 plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
+
+markdown: kramdown
+kramdown:
+  input: GFM
 
 permalink: pretty
 
