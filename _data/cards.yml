@@ -2,42 +2,42 @@
 # Homepage chapter-card metadata, keyed by chapter slug.
 
 preface:
-  era: "before the lecture"
-  concept: "The book's two operating concepts"
+  era: ""
+  concept: "Why Boulder?"
   teaser: "Not a verdict on individuals but a tracing of the structures that recruit them."
 01-boulder:
-  era: "the case"
-  concept: "Quantitative chauvinism & lebensraum imaginaries"
-  teaser: "A progressive city builds the most elaborate growth-control machinery in America — and ends up whiter than the state around it."
+  era: " – 1968"
+  concept: "A city of homes"
+  teaser: "The history of a progressive city and the consequences of its recurring waves of migration."
 02-the-inheritance:
-  era: "1900 – 1968"
-  concept: "The architecture, already built"
-  teaser: "Before Bartlett ever picked up the chalk, the apparatus, the vocabulary, and the audience were already in place."
+  era: "1868 – 1968"
+  concept: "Eugenic afterlives"
+  teaser: "Progressive eugenics, pre-war lebensraum, American conservation, and post-war populationism."
 03-the-bottle:
-  era: "1968 – 1994"
+  era: "1969 – 1994"
   concept: "Domesticated scientism"
-  teaser: "He gave the same lecture 1,742 times. Each time, arithmetic quietly became obligation."
+  teaser: "Bartlett's celebrated lecture and its role in his anti-immigration activism."
 04-the-quarantine:
   era: "1995 – 2008"
   concept: "Agnotological infrastructuring"
-  teaser: "After Cairo, the movement lost its license — so it built a new one out of footnotes."
+  teaser: "Populationism is untroubled by its 'new' allies from white nationalism."
 05-the-swarm:
   era: "2009 – 2024"
   concept: "Demographic engineering"
-  teaser: "A federal press release became one of the most-cited numbers in a mass-shooter's manifesto."
+  teaser: "Why did a federal press release become one of the most-cited numbers in mass-shooters' manifestos?"
 06-the-portfolio:
   era: "2025 – 2048"
-  concept: "Fine-tuning & temporal gerrymandering"
-  teaser: "Overpopulation panic flips into its mirror image: where did all the babies go?"
+  concept: "Temporal gerrymandering"
+  teaser: "Pronatalism as the presumptive heir to the populationist panic."
 07-the-evacuation:
   era: "2049 – 2068"
   concept: "Regenerative sovereignty"
-  teaser: "When the bottle is finally full, the question stops being who stays and becomes who gets rescued."
+  teaser: "Who gets rescued after the bottle is full?"
 08-the-long-term:
-  era: "the reclamation"
+  era: "2069 – "
   concept: "Intersectional longtermism"
-  teaser: "The future has been ceded to people who use it as a warrant for present cruelty. Take it back."
+  teaser: "Bacteria and humans alike can govern themselves over generations."
 09-boulder-again:
   era: "the return"
-  concept: "What the valley owes"
+  concept: "Recombinatory futures"
   teaser: "What the model strips from bacteria — memory, feedback, survival — is what lebensraum imaginaries strip from us."
