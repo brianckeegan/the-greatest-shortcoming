@@ -36,29 +36,34 @@
     }
 
     function curveX(x) { return marginL + x * (W - marginL - marginR); }
-    function curveY(x) {
-      var yn = (Math.exp(K * x) - 1) / (Math.exp(K) - 1);
-      return baseY - yn * (baseY - topY);
-    }
+    function curveH(x) { return (Math.exp(K * x) - 1) / (Math.exp(K) - 1); }   // 0..1, exponential
+    function curveY(x) { return baseY - curveH(x) * (baseY - topY); }
 
     var pts = [];     // settled dots: {x,y,r,c}
     var bursts = [];  // explosions: {x,y,r,c,ring,age,life,sparks}
 
-    function explode(px, py, r, c) {
-      var n = Math.round(rnd(4, 6) + r * 0.45), sparks = [];
+    function explode(px, py, r, c, q) {
+      // the whole explosion footprint scales with the point's size, which grows
+      // along the curve — so later, taller points detonate over a visibly larger
+      // area: more sparks, flung farther, in a wider, longer-lived ring.
+      var n = Math.round(rnd(5, 8) + r * 0.9), sparks = [], maxLife = 30 + r * 1.2;
       for (var i = 0; i < n; i++) {
-        var a = Math.random() * 6.283, sp = rnd(0.6, 2.4) * S;
+        var a = Math.random() * 6.283, sp = rnd(0.16, 0.40) * r, life = rnd(28, 50) + r;
+        if (life > maxLife) maxLife = life;
         sparks.push({ x: px, y: py, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.3 * S,
-                      r: rnd(0.6, 1.6) * S, age: 0, life: rnd(26, 46) });
+                      r: rnd(0.12, 0.26) * r, age: 0, life: life });
       }
-      bursts.push({ x: px, y: py, r: r, c: c, ring: r * 3.4, age: 0, life: 30, sparks: sparks });
+      bursts.push({ x: px, y: py, r: r, c: c, q: q, ring: r * 4.2, age: 0, life: Math.round(maxLife), sparks: sparks });
     }
 
     function spawnAt(x, withBurst) {
+      // h is the exponential progress along the curve; size and intensity track it,
+      // so explosions grow exponentially larger and bolder toward noon.
+      var h = curveH(x);
       var px = curveX(x), py = curveY(x) + rnd(-1, 1) * (baseY - topY) * 0.018;
-      var c = colAt(x), r = (0.0045 + 0.020 * x) * Math.min(W, H);
-      pts.push({ x: px + rnd(-1, 1) * 4 * S, y: py, r: r, c: c });
-      if (withBurst) explode(px, py, r, c);
+      var c = colAt(x), r = (0.004 + 0.024 * h) * Math.min(W, H);
+      pts.push({ x: px + rnd(-1, 1) * 4 * S, y: py, r: r, c: c, q: h });
+      if (withBurst) explode(px, py, r, c, h);
     }
 
     // run state machine: grow → hold → fade → reset
@@ -87,9 +92,9 @@
       if (phase === 'grow') {
         t += 0.0015;                         // ~11s sweep
         while (nextX <= t && nextX <= 1) {
-          var cluster = 1 + Math.floor(nextX * nextX * 5);   // bursts intensify toward the top
+          var cluster = 1 + Math.floor(curveH(nextX) * 6);   // clusters swell toward the top
           for (var k = 0; k < cluster; k++) spawnAt(Math.min(1, nextX + rnd(-0.01, 0.01)), true);
-          nextX += (0.085 - 0.072 * nextX);  // gaps shrink as the curve goes vertical
+          nextX += 0.012 + 0.085 * Math.exp(-3 * nextX);     // delay between bursts shrinks exponentially
         }
         if (t >= 1) { t = 1; phase = 'hold'; hold = 0; }
       } else if (phase === 'hold') {
@@ -103,7 +108,7 @@
         for (var j = 0; j < b.sparks.length; j++) {
           var s = b.sparks[j]; s.x += s.vx; s.y += s.vy; s.vy += 0.05 * S; s.vx *= 0.96; s.age++;
         }
-        if (b.age > 46) bursts.splice(i, 1);
+        if (b.age > b.life) bursts.splice(i, 1);
       }
     }
 
@@ -127,21 +132,23 @@
       var i, p, col;
       for (i = 0; i < pts.length; i++) {
         p = pts[i]; col = 'rgba(' + p.c[0] + ',' + p.c[1] + ',' + p.c[2] + ',';
+        var al = 0.55 + 0.35 * p.q;        // less transparent as the curve climbs
         var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.6);
-        g.addColorStop(0, col + (0.5 * fade) + ')'); g.addColorStop(1, col + '0)');
+        g.addColorStop(0, col + (al * fade) + ')'); g.addColorStop(1, col + '0)');
         ctx.fillStyle = g;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 2.6, 0, 6.283); ctx.fill();
-        ctx.fillStyle = col + (0.9 * fade) + ')';
+        ctx.fillStyle = col + ((0.9 + 0.1 * p.q) * fade) + ')';
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
       }
       for (i = 0; i < bursts.length; i++) {
         var b = bursts[i], k = clamp01(b.age / b.life), rc = 'rgba(' + b.c[0] + ',' + b.c[1] + ',' + b.c[2] + ',';
-        ctx.strokeStyle = rc + ((1 - k) * 0.6 * fade) + ')';
+        var bal = 0.55 + 0.35 * b.q;       // bigger and bolder (less transparent) up the curve
+        ctx.strokeStyle = rc + ((1 - k) * bal * fade) + ')';
         ctx.lineWidth = Math.max(1, b.r * 0.25 * (1 - k));
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r + (b.ring - b.r) * k, 0, 6.283); ctx.stroke();
         for (var j = 0; j < b.sparks.length; j++) {
           var s = b.sparks[j], sk = clamp01(s.age / s.life);
-          ctx.fillStyle = rc + ((1 - sk) * 0.85 * fade) + ')';
+          ctx.fillStyle = rc + ((1 - sk) * (0.8 + 0.2 * b.q) * fade) + ')';
           ctx.beginPath(); ctx.arc(s.x, s.y, s.r * (1 - 0.4 * sk), 0, 6.283); ctx.fill();
         }
       }

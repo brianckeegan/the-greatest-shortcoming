@@ -102,7 +102,9 @@ const act3=document.getElementById('act3');
 const a3lines=[...document.querySelectorAll('.a3-line')];
 const steps=[...document.querySelectorAll('.pstep')];
 const pctEl=document.getElementById('pct');
-const clockEl=document.getElementById('clockTime');
+const clockEl=document.getElementById('clock');
+const minHand=document.getElementById('minHand');
+const hourHand=document.getElementById('hourHand');
 function fmtClock(m){
   m=Math.round(m);
   if(m>=60) return '12:'+String(Math.min(99,m-60)).padStart(2,'0');
@@ -146,8 +148,11 @@ function onScroll(){
   if(morph>0) over=1;                 // keep every circle for the portrait
   window.__fill=fill; window.__over=over; window.__morph=morph;
   pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
-  clockEl.textContent=fmtClock(minutes);
-  if(clockEl.parentElement) clockEl.parentElement.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+  // analog face: minute hand sweeps the hour (6°/min), hour hand creeps 11 → 12
+  if(minHand) minHand.setAttribute('transform','rotate('+((minutes%60)*6)+' 50 50)');
+  if(hourHand) hourHand.setAttribute('transform','rotate('+((330+minutes*0.5)%360)+' 50 50)');
+  if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+    clockEl.setAttribute('aria-label','clock reading '+fmtClock(minutes)); }
   // The "% full" readout belongs to the filling beats — hidden through "picture a
   // bottle / eleven o'clock / a single bacterium / one→two→four" (a lone bacterium
   // is not "1% full"); it fades in only once the narration starts naming
