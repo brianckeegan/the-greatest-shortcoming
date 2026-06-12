@@ -34,7 +34,7 @@ hero:
 nav:
   - { label: "Concepts", url: "/home.html#concepts" }
   - { label: "Chapters", url: "/home.html#chapters" }
-  - { label: "About", url: "/about/" }
+  - { label: "About", url: "/home.html#about" }
 
 # ---- Two analytical registers (definition bars beneath the hero) -----------
 registers:

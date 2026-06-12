@@ -113,8 +113,8 @@ const KF=[
   {min:0,  fill:0,      over:0},   // 0  picture a bottle (vessel fades in)
   {min:0,  fill:0,      over:0},   // 1  at eleven o'clock (clock appears)
   {min:0,  fill:1/190,  over:0},   // 2  a single bacterium
-  {min:0,  fill:2/190,  over:0},   // 3  one becomes two
-  {min:0,  fill:4/190,  over:0},   // 4  two become four
+  {min:1,  fill:2/190,  over:0},   // 3  11:01 — one becomes two
+  {min:2,  fill:4/190,  over:0},   // 4  11:02 — two become four
   {min:55, fill:0.03,   over:0},   // 5  11:55  3%
   {min:56, fill:0.06,   over:0},   // 6  11:56  6%
   {min:57, fill:0.12,   over:0},   // 7  11:57  12%
@@ -148,6 +148,11 @@ function onScroll(){
   pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
   clockEl.textContent=fmtClock(minutes);
   if(clockEl.parentElement) clockEl.parentElement.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+  // The "% full" readout belongs to the filling beats — hidden through "picture a
+  // bottle / eleven o'clock / a single bacterium / one→two→four" (a lone bacterium
+  // is not "1% full"); it fades in only once the narration starts naming
+  // percentages ("…three percent full", ~keyframe 5) and out again past the spill.
+  if(pctEl.parentElement) pctEl.parentElement.style.opacity=(bi>=4.5 && bi<11.6 && morph<0.02)?'1':'0';
   if(a2quote) a2quote.classList.toggle('is-on', p2>0.7);
 
   // ACT 3 — sequential animated story lines
@@ -203,17 +208,17 @@ steps[0].classList.add('is-on');
   IMG.onload=()=>{ imgReady=true; buildTargets(); };
   IMG.src='assets/img/bartlett.jpg';
   const off=document.createElement('canvas'); const octx=off.getContext('2d');
-  let TARGETS=[], assigned=false;
+  let TARGETS=[], assigned=false, wasMorph=false;
   function buildTargets(){
     if(!imgReady||!W||!H) return;
     const aspect=IMG.width/IMG.height;
     const ph=H*0.94, pw=ph*aspect;
     const px=(W-pw)/2, py=(H-ph)/2;
-    const rows=120, cols=Math.round(rows*aspect);
+    const rows=150, cols=Math.round(rows*aspect);   // finer grid → more facial detail
     off.width=cols; off.height=rows;
     octx.drawImage(IMG,0,0,cols,rows);
     const data=octx.getImageData(0,0,cols,rows).data;
-    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.70;
+    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.60;   // smaller dots → more facial detail
     // the face occupies roughly this normalized box of the portrait — give it extra ink
     const faceCX=0.50, faceCY=0.30, faceRX=0.20, faceRY=0.22;
     const T=[];
@@ -283,6 +288,7 @@ steps[0].classList.add('is-on');
     const morph=Math.max(0,Math.min(1, window.__morph||0));
     // ---- ACT 2: morph the circles into the hedcut ----
     if(morph>0.001 && TARGETS.length){
+      wasMorph=true;          // visited the portrait — re-home the circles on return
       const desired=TARGETS.length;
       // spawn the full population up-front so assignment captures valid homes (no NaN)
       while(P.length<desired){ P.push(P.length?child(P[(Math.random()*P.length)|0]):seed(g)); }
@@ -308,12 +314,26 @@ steps[0].classList.add('is-on');
       return;
     }
     assigned=false;
+    if(wasMorph){
+      // Coming back from the Act 2 portrait: drop every circle cleanly back inside
+      // the bottle so Act 1 replays from a tidy state, not a scattered one.
+      for(const p of P){
+        p.x=g.inL+Math.random()*(g.inR-g.inL);
+        p.y=g.rim+(g.bot-g.rim)*(0.55+Math.random()*0.4);
+        p.vx=0; p.vy=0; p.r=6+Math.random()*2.4;
+      }
+      wasMorph=false;
+    }
     const fill=Math.max(0,Math.min(1, window.__fill||0));
     const over=Math.max(0,Math.min(1, window.__over||0));
     // Before noon the bottle fills; after noon the population genuinely DOUBLES
     // by division — target grows as 2^(over) and each new circle buds from an
     // existing one, at a per-frame rate proportional to the current count.
-    const target = over<=0 ? Math.max(1, Math.round(NCAP*fill))
+    // Before the bacterium is "dropped in" (fill still rounds to 0) there are no
+    // particles at all — the empty bottle stands alone through the first beats.
+    // The first dot appears only as fill crosses ~1/NCAP, on cue with the
+    // "…drop in a single bacterium" line.
+    const target = over<=0 ? Math.round(NCAP*fill)
                            : Math.round(NCAP*Math.pow(2, over*DOUB));
     let added=0;
     const maxAdd=Math.max(30, Math.ceil(P.length*0.6));
@@ -355,6 +375,15 @@ steps[0].classList.add('is-on');
         collideRect(p, g.outL, g.rim, g.inL, g.outBot);
         collideRect(p, g.inR,  g.rim, g.outR, g.outBot);
         collideRect(p, g.outL, g.bot, g.outR, g.outBot);
+      }
+    }
+    // Pre-overflow, every circle belongs inside the vessel. If one strayed out
+    // (scrolling back up from the spill, or down from the Act 2 portrait), funnel
+    // it back through the open rim so Act 1 always restarts cleanly in the bottle.
+    if(over<=0.001){
+      for(const p of P){
+        if(p.x<g.inL+p.r) p.x=g.inL+p.r; else if(p.x>g.inR-p.r) p.x=g.inR-p.r;
+        if(p.y<g.rim+p.r){ p.y=g.rim+p.r; if(p.vy<0)p.vy=0; }
       }
     }
     for(const p of P){ p.vx*=0.84; p.vy*=0.9; if(Math.abs(p.vx)<0.03)p.vx=0; if(Math.abs(p.vy)<0.05 && p.y>H-p.r-1.5)p.vy=0; }
