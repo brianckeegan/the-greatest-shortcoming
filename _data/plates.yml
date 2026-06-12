@@ -50,12 +50,13 @@ preface:
     - { el: line, attrs: { x1: 138, y1: 43, x2: 138, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
     - { el: line, attrs: { x1: 24, y1: 52, x2: 138, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
     - { el: line, attrs: { x1: 80, y1: 52, x2: 80, y2: 64, stroke: "#1a1a1a", stroke-width: 2 } }
-    # the descendant — one hexagon synthesising a trait from each parent: blue
-    # border (blue circle), red fill (red square), a yellow element (yellow
-    # triangle) and an ink element (ink diamond)
-    - { el: polygon, attrs: { points: "80,64 99,75 99,99 80,110 61,99 61,75", fill: "#b0382a", stroke: "#285079", stroke-width: 2.5 } }
-    - { el: polygon, attrs: { points: "80,77 86,89 74,89", fill: "#e0a52f" } }
-    - { el: polygon, attrs: { points: "80,92 85,98 80,104 75,98", fill: "#1a1a1a" } }
+    # the descendant — the four parents integrated into one hexagon: three colour
+    # wedges (red, yellow, blue) meeting at the centre, under an ink outline that
+    # stands in for the empty diamond
+    - { el: polygon, attrs: { points: "80,87 80,64 99,75 99,99", fill: "#b0382a" } }
+    - { el: polygon, attrs: { points: "80,87 99,99 80,110 61,99", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "80,87 61,99 61,75 80,64", fill: "#285079" } }
+    - { el: polygon, attrs: { points: "80,64 99,75 99,99 80,110 61,99 61,75", fill: "none", stroke: "#1a1a1a", stroke-width: 2.5 } }
 
 03-the-bottle:
   viewBox: "0 0 160 116"
