@@ -78,9 +78,9 @@ PRs build-only to catch breakage).
 | URL | Source | Layout | Purpose |
 |-----|--------|--------|---------|
 | `/` | `index.html` | `landing` | **Landing** — cinematic intro |
-| `/home.html` | `home.html` | `home` | **Home hub** — title card + concepts + chapters |
+| `/home.html` | `home.html` | `home` | **Home hub** — title card + concepts + chapters + about |
 | `/chapters/<slug>/` | `_chapters/NN-slug.md` | `chapter` | the 10 chapters (preface + 9) |
-| `/about/` | `pages/about.md` | `default` | About (renders `_config.yml` `coda`) |
+| `/about/` | `pages/about.md` | redirect | → `/home.html#about` (About is now a hub section, not a standalone page) |
 | `/colophon/` | `pages/colophon.md` | `default` | design/colophon |
 | `/readme/` | `pages/readme.md` | `default` | socio-technical stack |
 | `/ecofascism-bench/` | `pages/ecofascism-bench.md` | `default` | the eval-harness page |
@@ -92,9 +92,13 @@ PRs build-only to catch breakage).
   ACT 2 the Bartlett portrait + epigraph (particles morph into a stipple hedcut),
   ACT 3 the story bridge — ending in an **"Enter the book →"** link to `/home.html`.
   Driven by `assets/js/landing.js`.
-- **Home hub** (`_layouts/home.html`): opens on the dark **title card**, then the
-  two concepts (from `_config.yml` `registers`), then the chapter grid. A small
-  inline script handles `.reveal` fade-ins, the title reveal, and the progress bar.
+- **Home hub** (`_layouts/home.html`): opens on the dark **title card** — whose
+  background is a slow canvas animation of scatter points exploding along an
+  exponential growth curve (an evocative take on the ch.3 "Fig. 3" chart),
+  `assets/js/titlecard-growth.js` — then the two concepts (from `_config.yml`
+  `registers`), the chapter grid, and an **About** section (`#about`, rendered
+  from `_config.yml` `coda`). A small inline script handles `.reveal` fade-ins,
+  the title reveal, and the progress bar.
 
 `landing.js` is written to **guard missing elements** (the title card / concepts /
 chapters live only on the hub), so it no-ops cleanly on the landing page.
@@ -106,9 +110,9 @@ chapters live only on the hub), so it no-ops cleanly on the landing page.
 - **Includes** (`_includes/`):
   - `brandbar.html` — the immersive top bar on landing + hub. `mix-blend-mode:
     difference` keeps it legible over both the light canvas and the dark title
-    card. Brand (upper-left) → `/home.html`; links from `site.nav`.
+    card. Brand (upper-left) → `/` (the landing); links from `site.nav`.
   - `header.html` — the frosted sticky nav for long-form/content pages. Same
-    `site.nav` link set + a GitHub button. Brand → `/home.html`.
+    `site.nav` link set + a GitHub button. Brand → `/` (the landing).
   - `footer.html` — content-page footer.
   - `chapter-card.html` / `chapter-span.html` — the chapter grid cards / full-width
     rows. `chapter-nav.html` — prev/next. `plate.html` — renders a chapter's SVG
@@ -116,8 +120,8 @@ chapters live only on the hub), so it no-ops cleanly on the landing page.
 
 **Navigation is config-driven and single-sourced**: `_config.yml` → `nav`
 (`Concepts` → `/home.html#concepts`, `Chapters` → `/home.html#chapters`,
-`About` → `/about/`). Both `brandbar.html` and `header.html` loop over it. Change
-links there, not in the includes.
+`About` → `/home.html#about`). Both `brandbar.html` and `header.html` loop over it.
+Change links there, not in the includes.
 
 ---
 
@@ -129,7 +133,7 @@ links there, not in the includes.
 - **Site identity & argument** — `_config.yml`:
   - `registers` — the **two operating concepts** (Quantitative Chauvinism,
     Lebensraum Imaginaries), rendered in the hub's `#concepts` section.
-  - `coda` — `book` / `author` / `resources` blocks; rendered by the **About** page.
+  - `coda` — `book` / `author` / `resources` blocks; rendered by the **About** section on the home hub (`#about`).
   - `nav`, `title`/`subtitle`/`description`, `theme_defaults`, `footer`.
 - **`_data/*.yml`**:
   | File | Role | Hand-edit? |

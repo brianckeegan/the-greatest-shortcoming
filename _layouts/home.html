@@ -15,7 +15,7 @@
 
   <!-- ============================ ACT 3 — TITLE ============================ -->
   <section class="titlecard" id="titlecard">
-    <div class="glow"></div>
+    <canvas class="growthfield" id="growthfield" aria-hidden="true"></canvas>
     <div class="wrap">
       <div class="bigtitle" id="bigtitle">
         <h1><span class="brand-1">The Greatest</span><br><span class="brand-2">Shortcoming</span></h1>
@@ -70,6 +70,28 @@
     </div>
   </section>
 
+  <!-- ============================ ABOUT ============================ -->
+  <section class="about" id="about">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2>About</h2>
+        <span class="kicker">the book, the author, the works it builds on</span>
+      </div>
+      <div class="about-grid">
+        {% for item in site.coda %}
+        <div class="about-item reveal">
+          <h3>{{ item.title }}</h3>
+          {% if item.id == "author" %}
+          <p class="about-body">By <a href="https://www.brianckeegan.com">Brian C. Keegan</a>.</p>
+          {% else %}
+          <p class="about-body">{{ item.body }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
   <footer class="foot">
     <div class="wrap f-grid">
       <div>
@@ -105,5 +127,6 @@
       }
     })();
   </script>
+  <script src="{{ '/assets/js/titlecard-growth.js' | relative_url }}"></script>
 </body>
 </html>
