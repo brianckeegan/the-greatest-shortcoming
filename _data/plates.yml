@@ -50,12 +50,12 @@ preface:
     - { el: line, attrs: { x1: 138, y1: 43, x2: 138, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
     - { el: line, attrs: { x1: 24, y1: 52, x2: 138, y2: 52, stroke: "#1a1a1a", stroke-width: 2 } }
     - { el: line, attrs: { x1: 80, y1: 52, x2: 80, y2: 64, stroke: "#1a1a1a", stroke-width: 2 } }
-    # the descendant — one vessel carrying a figure of each of the four parents
-    - { el: polygon, attrs: { points: "80,64 99,75 99,99 80,110 61,99 61,75", fill: "#1a1a1a", fill-opacity: 0.04, stroke: "#1a1a1a", stroke-width: 2 } }
-    - { el: circle, attrs: { cx: 72, cy: 81, r: 3.6, fill: "#285079" } }
-    - { el: rect, attrs: { x: 84.5, y: 77.5, width: 7.2, height: 7.2, fill: "#b0382a" } }
-    - { el: polygon, attrs: { points: "72,91 77.5,100 66.5,100", fill: "#e0a52f" } }
-    - { el: polygon, attrs: { points: "88,91 92.5,96 88,101 83.5,96", fill: "#1a1a1a" } }
+    # the descendant — one hexagon synthesising a trait from each parent: blue
+    # border (blue circle), red fill (red square), a yellow element (yellow
+    # triangle) and an ink element (ink diamond)
+    - { el: polygon, attrs: { points: "80,64 99,75 99,99 80,110 61,99 61,75", fill: "#b0382a", stroke: "#285079", stroke-width: 2.5 } }
+    - { el: polygon, attrs: { points: "80,77 86,89 74,89", fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "80,92 85,98 80,104 75,98", fill: "#1a1a1a" } }
 
 03-the-bottle:
   viewBox: "0 0 160 116"
@@ -77,11 +77,14 @@ preface:
   viewBox: "0 0 160 116"
   els:
     # cordon sanitaire — a population circle held inside a dashed containment ring,
-    # with a few excluded markers left outside it
-    - { el: circle, attrs: { cx: 68, cy: 56, r: 22, fill: "#285079", fill-opacity: 0.9 } }
-    - { el: circle, attrs: { cx: 68, cy: 56, r: 34, fill: "none", stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "5 5" } }
-    - { el: circle, attrs: { cx: 126, cy: 30, r: 6, fill: "#b0382a" } }
-    - { el: circle, attrs: { cx: 138, cy: 84, r: 4, fill: "#b0382a" } }
+    # with a scatter of differently coloured, differently sized shapes left outside
+    - { el: circle, attrs: { cx: 66, cy: 58, r: 22, fill: "#285079", fill-opacity: 0.9 } }
+    - { el: circle, attrs: { cx: 66, cy: 58, r: 34, fill: "none", stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "5 5" } }
+    - { el: circle, attrs: { cx: 128, cy: 28, r: 9, fill: "#b0382a" } }
+    - { el: rect, attrs: { x: 118, y: 64, width: 17, height: 17, fill: "#e0a52f" } }
+    - { el: polygon, attrs: { points: "112,104 122,88 102,88", fill: "#1a1a1a" } }
+    - { el: circle, attrs: { cx: 150, cy: 50, r: 5, fill: "#285079" } }
+    - { el: polygon, attrs: { points: "142,96 147,101 142,106 137,101", fill: "#b0382a" } }
 
 05-the-swarm:
   viewBox: "0 0 160 116"
@@ -120,18 +123,14 @@ preface:
 07-the-evacuation:
   viewBox: "0 0 160 116"
   els:
-    - { el: line, attrs: { x1: 12, y1: 46, x2: 148, y2: 46, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
-    - { el: line, attrs: { x1: 12, y1: 72, x2: 148, y2: 72, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
-    - { el: line, attrs: { x1: 58, y1: 12, x2: 58, y2: 104, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
-    - { el: line, attrs: { x1: 104, y1: 12, x2: 104, y2: 104, stroke: "#1a1a1a", stroke-width: 0.6, stroke-dasharray: "2 4" } }
     - { el: polygon, attrs: { points: "30,26 40,44 20,44", fill: "#285079" } }
     - { el: rect, attrs: { x: 116, y: 22, width: 22, height: 22, fill: "#e0a52f" } }
     - { el: circle, attrs: { cx: 32, cy: 86, r: 12, fill: "#b0382a" } }
     - { el: line, attrs: { x1: 38, y1: 42, x2: 68, y2: 56, stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "6 5" } }
     - { el: line, attrs: { x1: 116, y1: 38, x2: 94, y2: 56, stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "6 5" } }
     - { el: line, attrs: { x1: 42, y1: 80, x2: 70, y2: 68, stroke: "#1a1a1a", stroke-width: 2, stroke-dasharray: "6 5" } }
-    - { el: polygon, attrs: { points: "81,48 97,62 81,76 65,62", fill: "none", stroke: "#b0382a", stroke-width: 2 } }
-    - { el: circle, attrs: { cx: 81, cy: 62, r: 4, fill: "#1a1a1a" } }
+    # central decision node — an empty diamond with a black border
+    - { el: polygon, attrs: { points: "81,48 97,62 81,76 65,62", fill: "none", stroke: "#1a1a1a", stroke-width: 2 } }
 
 08-the-long-term:
   viewBox: "0 0 160 116"
