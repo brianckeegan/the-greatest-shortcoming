@@ -200,6 +200,16 @@ window.addEventListener('resize',onScroll);
 onScroll();
 // init first step
 steps[0].classList.add('is-on');
+
+// One-shot "scroll to continue" cue at the foot of the opening screen. The element
+// is present only on the landing layout (not the home hub), and it dismisses itself
+// the first time the reader scrolls — or immediately if the page loaded mid-scroll.
+(function(){
+  const cue=document.getElementById('scrollcue'); if(!cue) return;
+  if((window.scrollY||window.pageYOffset||0)>4){ cue.remove(); return; }
+  const hide=()=>{ cue.classList.add('is-hidden'); setTimeout(()=>{ if(cue.parentNode) cue.remove(); },700); };
+  window.addEventListener('scroll',hide,{passive:true,once:true});
+})();
 (function(){
   const cv=document.getElementById('bcanvas'); if(!cv) return;
   const ctx=cv.getContext('2d');
@@ -393,9 +403,14 @@ steps[0].classList.add('is-on');
     }
     for(const p of P){ p.vx*=0.84; p.vy*=0.9; if(Math.abs(p.vx)<0.03)p.vx=0; if(Math.abs(p.vy)<0.05 && p.y>H-p.r-1.5)p.vy=0; }
 
-    // DRAW — black U + identical red circles
+    // DRAW — the vessel fades out *in place* as the overflow swallows the screen,
+    // so it dissolves into the spilled circles instead of sliding up through them
+    // on the way into Act 2. Balls stay fully opaque; only the U's alpha drops, and
+    // it returns on scroll-up because the fade tracks `over`.
+    let uT=(over-0.45)/0.5; uT=uT<0?0:uT>1?1:uT;
+    const uA=1-uT*uT*(3-2*uT);
     ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='#111111'; drawU(ctx,g);
+    if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
     ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
     for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
     requestAnimationFrame(step);
@@ -403,7 +418,11 @@ steps[0].classList.add('is-on');
 
   function drawU(ctx,g){
     const x=g.outL,y=g.rim,w=g.w,h=g.h,th=g.th;
-    const rad=Math.min(w*0.34, h*0.42), irad=Math.max(2,rad-th);
+    // Gentle outer bottom corners over a near-square interior floor: round balls
+    // pack into the corners (no cream gaps), and the silhouette reads as a clean
+    // beaker rather than a deep bowl whose big radii clipped the lower corners
+    // with background "white space".
+    const rad=Math.min(16, w*0.12, h*0.12), irad=Math.max(2,rad-th*0.4);
     ctx.beginPath();
     ctx.moveTo(x,y);
     ctx.lineTo(x,y+h-rad); ctx.quadraticCurveTo(x,y+h,x+rad,y+h);

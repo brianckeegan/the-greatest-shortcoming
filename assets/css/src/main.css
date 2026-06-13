@@ -202,6 +202,18 @@
 .readout{position:absolute;bottom:-46px;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;opacity:0;transition:opacity .5s ease}
 .readout .pct{font-family:var(--serif);font-size:22px;font-variant-numeric:tabular-nums;color:var(--alarm);font-weight:500}
 .readout .lbl{font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mist)}
+/* One-shot "scroll to continue" cue — opening screen of the landing page only.
+   Eases in once with a bobbing chevron; JS adds .is-hidden (fade) then removes it. */
+.scrollcue{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:40;
+  display:flex;flex-direction:column;align-items:center;gap:11px;pointer-events:none;
+  opacity:1;transition:opacity .5s ease;animation:cue-in .9s ease}
+.scrollcue.is-hidden{opacity:0}
+.scrollcue-label{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--mist)}
+.scrollcue-arrow{width:18px;height:18px;border-right:2px solid var(--mist);border-bottom:2px solid var(--mist);
+  transform:rotate(45deg);animation:cue-bob 1.8s ease-in-out infinite}
+@keyframes cue-in{from{opacity:0}to{opacity:1}}
+@keyframes cue-bob{0%,100%{transform:translateY(0) rotate(45deg)}50%{transform:translateY(6px) rotate(45deg)}}
 .pstep{position:absolute;left:50%;top:40%;width:min(46%,520px);padding:0 10px;opacity:0;transform:translateY(24px);
   transition:opacity .6s ease,transform .6s ease}
 .pstep.is-on{opacity:1;transform:none}
@@ -373,4 +385,5 @@
 
 @media (prefers-reduced-motion: reduce){
   .reveal,.pstep,.titlecard .bigtitle{transition:none;opacity:1;transform:none}
+  .scrollcue,.scrollcue-arrow{animation:none}
 }
