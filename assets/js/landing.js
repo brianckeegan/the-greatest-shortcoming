@@ -221,7 +221,8 @@ steps[0].classList.add('is-on');
   /* ---- Act 2: stipple targets sampled from the Bartlett portrait ---- */
   const IMG=new Image(); let imgReady=false;
   IMG.onload=()=>{ imgReady=true; buildTargets(); };
-  IMG.src='assets/img/bartlett.jpg';
+  IMG.onerror=()=>{ if(IMG.src.indexOf('.webp')>-1) IMG.src='assets/img/bartlett.jpg'; };  // legacy fallback
+  IMG.src='assets/img/bartlett.webp';
   const off=document.createElement('canvas'); const octx=off.getContext('2d');
   let TARGETS=[], assigned=false, wasMorph=false;
   function buildTargets(){
