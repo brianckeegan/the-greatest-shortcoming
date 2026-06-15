@@ -7,5 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon-32.png' | relative_url }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon-16.png' | relative_url }}">
 <link rel="apple-touch-icon" href="{{ '/assets/apple-touch-icon.png' | relative_url }}">
+{%- comment -%} Preload the primary display face (Josefin Sans, drives above-the-fold headings). {%- endcomment -%}
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{{ '/assets/fonts/josefin-sans-normal-latin.woff2' | relative_url }}">
 {%- comment -%} Lenis-style smooth-scroll driver (attribution in assets/js/smooth-scroll.js). {%- endcomment -%}
 <script defer src="{{ '/assets/js/smooth-scroll.js' | relative_url }}"></script>
