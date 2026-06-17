@@ -145,7 +145,9 @@ function onScroll(){
   const t2=Math.max(1,act2.offsetHeight-window.innerHeight);
   const p2=Math.min(1,Math.max(0,(-r2.top)/t2));
   let morph=0;
-  if(p2>0){ let x=Math.min(1,p2/0.45); morph=x*x*(3-2*x); }
+  // Linear here — render applies a single smoothstep. Completes by 20% of Act 2's
+  // scroll (was 45% + a second smoothstep, which dragged the finish badly).
+  if(p2>0) morph=Math.min(1,p2/0.20);
   if(morph>0) over=1;                 // keep every circle for the portrait
   window.__fill=fill; window.__over=over; window.__morph=morph;
   pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
