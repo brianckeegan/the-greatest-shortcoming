@@ -13,7 +13,18 @@
   <div class="progress" id="progress"></div>
   {% include brandbar.html %}
 
-  <canvas id="bcanvas"></canvas>
+  <!-- Background: a pre-rendered, all-intra video of the bacteria → spill →
+       hedcut simulation (rendered offline; see render/README.md). landing.js
+       scrubs its currentTime to scroll position. preload=auto so seeking has
+       frames; falls back to the poster still (and prefers-reduced-motion freezes
+       on it) until assets/video/* exists. -->
+  <video id="bcanvas" muted playsinline preload="auto"
+         poster="{{ '/assets/video/landing.1920x1080.jpg' | relative_url }}">
+    <source src="{{ '/assets/video/landing.1080x1920.webm' | relative_url }}" type="video/webm" media="(max-aspect-ratio: 1/1)">
+    <source src="{{ '/assets/video/landing.1080x1920.mp4'  | relative_url }}" type="video/mp4"  media="(max-aspect-ratio: 1/1)">
+    <source src="{{ '/assets/video/landing.1920x1080.webm' | relative_url }}" type="video/webm">
+    <source src="{{ '/assets/video/landing.1920x1080.mp4'  | relative_url }}" type="video/mp4">
+  </video>
 
   <!-- One-shot affordance: shown on the opening screen, dismissed on first scroll. -->
   <div class="scrollcue" id="scrollcue" aria-hidden="true">

@@ -1,5 +1,9 @@
-/* The Greatest Shortcoming — home scrollytelling engine + bottle/hedcut sim.
-   Ported verbatim from the standalone landing prototype. No build step. */
+/* The Greatest Shortcoming — landing scrollytelling engine.
+   Drives the narration beats (steps, digital clock, "% full" readout, progress
+   bar, Act 3 text) from scroll position, and scrubs the pre-rendered background
+   <video> (#bcanvas) to match. The heavy bacteria → spill → hedcut simulation
+   that used to run live on a <canvas> here is now rendered offline to video
+   (see render/README.md); this file no longer simulates anything. No build step. */
 (function () {
   function init() {
 /* ---------------- Chapter data (mirrors _data/chapters.yml, new structure) ---------------- */
@@ -172,15 +176,20 @@ function onScroll(){
     a3lines.forEach((el,k)=>el.classList.toggle('is-on', inv3 && k===idx3));
   }
 
-  // canvas spans Act 1 + Act 2; fades in at the very start, out as Act 2 ends
-  const cvEl=document.getElementById('bcanvas');
-  if(cvEl){
+  // The pre-rendered background <video> spans Act 1 + Act 2: scrub its time to
+  // scroll position and fade it in at the start / out as Act 2 ends. The scrub
+  // timeline matches render/scenes/landing.js phases — Act 1 → [0,0.70] (fill +
+  // spill), Act 2 → [0.70,1.0] (hedcut morph). The seek is eased toward this
+  // target by the scrubber loop below.
+  const vidEl=document.getElementById('bcanvas');
+  if(vidEl){
     const a1vis=rect.bottom>0 && rect.top<window.innerHeight;
     const a2vis=r2.bottom>0 && r2.top<window.innerHeight;
     let op=Math.min(1,Math.max(0,bi/0.8));
     if(p2>0.58) op=Math.min(op, Math.max(0,1-(p2-0.58)/0.16));
-    cvEl.style.display=(a1vis||a2vis)?'block':'none';
-    cvEl.style.opacity=String(op);
+    vidEl.style.display=(a1vis||a2vis)?'block':'none';
+    vidEl.style.opacity=String(op);
+    window.__scrubTarget = p2>0 ? (0.70 + Math.min(1,p2)*0.30) : (p*0.70);
   }
 
   let idx=Math.min(N-1,Math.max(0,Math.round(bi)));
@@ -240,190 +249,30 @@ steps[0].classList.add('is-on');
   ['wheel','touchstart','touchmove','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,onInput,{passive:true}));
   arm();
 })();
+
+/* ---------------- Scroll-scrubbed background video ----------------
+   Replaces the former live canvas particle sim. The heavy bacteria → spill →
+   hedcut simulation is now a pre-rendered, all-intra video
+   (render/scenes/landing.js); here we only seek it to the scroll position that
+   onScroll() publishes as window.__scrubTarget (0..1). currentTime is eased
+   toward the target each frame for smoothness across browsers. Honours
+   prefers-reduced-motion by freezing on the poster. (ScrollyVideo.js would be a
+   drop-in upgrade for iOS canvas-decoded seeking if stutter shows up there.) */
 (function(){
-  const cv=document.getElementById('bcanvas'); if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const flask=document.getElementById('flask');
-  const RED=[176,56,42], BLACK=[17,17,17];
-  let W=0,H=0,dpr=1;
-  function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); W=window.innerWidth; H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); rebuild(); }
-
-  /* ---- Act 2: stipple targets sampled from the Bartlett portrait ---- */
-  const IMG=new Image(); let imgReady=false;
-  IMG.onload=()=>{ imgReady=true; rebuild(); };
-  IMG.onerror=()=>{ if(IMG.src.indexOf('.webp')>-1) IMG.src='assets/img/bartlett.jpg'; };  // legacy fallback
-  IMG.src='assets/img/bartlett.webp';
-  const off=document.createElement('canvas'); const octx=off.getContext('2d');
-  let TARGETS=[];
-  function buildTargets(){
-    if(!imgReady||!W||!H) return;
-    const aspect=IMG.width/IMG.height;
-    const ph=H*0.94, pw=ph*aspect;
-    const px=(W-pw)/2, py=(H-ph)/2;
-    const rows=156, cols=Math.round(rows*aspect);   // finer grid → more facial detail
-    off.width=cols; off.height=rows;
-    octx.drawImage(IMG,0,0,cols,rows);
-    const data=octx.getImageData(0,0,cols,rows).data;
-    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.66;   // denser coverage in the darks
-    // the face occupies roughly this normalized box of the portrait — give it extra ink
-    const faceCX=0.50, faceCY=0.30, faceRX=0.20, faceRY=0.22;
-    const T=[];
-    for(let j=0;j<rows;j++){
-      for(let i=0;i<cols;i++){
-        const idx=(j*cols+i)*4;
-        const r=data[idx], gC=data[idx+1], bC=data[idx+2];
-        const L=(0.299*r+0.587*gC+0.114*bC)/255;
-        const cx=px+(i+0.5)*sx, cy=py+(j+0.5)*sy;
-        const ndx=(cx-W/2)/(pw*0.55), ndy=(cy-H/2)/(ph*0.62);
-        const vig=Math.min(1,Math.max(0,1.16-Math.sqrt(ndx*ndx+ndy*ndy)));
-        // brass exponential trophy = saturated yellow-gold in the lower foreground → red dots
-        const warm=(j/rows)>0.42 && (r-bC)>52 && gC>92 && bC<gC*0.66 && r>138;
-        let ink, red=false;
-        if(warm){
-          ink=Math.min(1,0.5+(r-bC)/240);
-          red=false; // trophy rendered in black with the rest of the portrait
-        } else {
-          // extra contrast inside the face box so eyes/glasses/brow read.
-          // hi reaches into the highlights and a gamma lift recovers detail in
-          // the (otherwise blown-out) lit side of the face.
-          const fx=(i/cols-faceCX)/faceRX, fy=(j/rows-faceCY)/faceRY;
-          const inFace=(fx*fx+fy*fy)<1;
-          const hi=inFace?0.94:0.80, lo=inFace?0.0:0.08;
-          ink=Math.min(1,Math.max(0,(hi-L)/(hi-lo)))*vig;
-          if(inFace) ink=Math.pow(ink,0.68);
-        }
-        ink=ink*ink*(3-2*ink);   // smoothstep → stronger tonal contrast (darks darker, faint drops out)
-        if(ink<0.07) continue;
-        T.push({x:cx+(Math.random()-0.5)*sx*0.45, y:cy+(Math.random()-0.5)*sy*0.45, r:Math.max(1.0,ink*maxR), red:red});
-      }
-    }
-    TARGETS=T;
-  }
-  // canvas boot + resize listener are wired at the end, once the engine state exists
-
-  // Bauhaus U vessel geometry from the flask anchor (viewport px)
-  function geo(){
-    const r=flask.getBoundingClientRect();
-    const cx=r.left+r.width/2;
-    const w=Math.min(212, r.width*0.94);
-    const h=Math.min(300, r.height*0.84);
-    const top=r.top+r.height*0.10;
-    const th=Math.max(18, w*0.155);
-    return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
-  }
-
-  /* ---- Full forward physics sim → freeze → hedcut (no GSAP) ----------------
-     Act I is a real, forward-integrated particle sim. Bacteria DIVIDE (count
-     gated by scroll so the narration beats line up), fall and PACK in the bottle
-     under gravity + repulsion — no grid, organic settling. After noon the walls
-     drop and repulsion pressure (a growing population in open space) plus a gentle
-     outward push erupt them into a fluid-like spread that fills the screen. On
-     entering Act II the sim FREEZES (snapshot) and every particle lerps to its
-     Bartlett-hedcut target — the SAME particles, so the explosion seamlessly
-     BECOMES the portrait. Forward sim → scroll-up re-settles (approx. reverse). */
-  const clamp01=v=>v<0?0:v>1?1:v, smooth=x=>x*x*(3-2*x);
-  const BOTTLE=190;               // bacteria that fill the bottle at fill = 100% (noon)
-  const act1El=document.getElementById('act1'), act2El=document.getElementById('act2');
-  let P=[], geoCache=null, frozen=false, NMAX=0;
-
-  function seed(g){ return {x:g.cx+(Math.random()-0.5)*(g.inR-g.inL)*0.6, y:g.bot-12-Math.random()*10, vx:0, vy:0, r:6+Math.random()*2}; }
-  function divide(par){ const a=Math.random()*6.283, o=par.r*0.5;
-    return {x:par.x+Math.cos(a)*o, y:par.y+Math.sin(a)*o, vx:Math.cos(a)*0.5, vy:Math.sin(a)*0.5-0.5, r:6+Math.random()*2}; }
-
-  // grow (by division) / trim the live population to the scroll-gated target count
-  function resample(target){
-    let guard=0;
-    while(P.length<target && guard++<8000) P.push(P.length? divide(P[(Math.random()*P.length)|0]) : seed(geoCache));
-    if(P.length>target) P.splice(target, P.length-target);
-  }
-
-  // cheap broadphase repulsion (overlap separation only); fewer passes when crowded
-  function repel(){
-    const n=P.length, passes=n>5000?1:n>1200?2:4, cell=16;
-    const grid=new Map();
-    for(let i=0;i<n;i++){ const p=P[i], k=((p.x/cell)|0)+((p.y/cell)|0)*8192; let a=grid.get(k); if(!a){a=[];grid.set(k,a);} a.push(i); }
-    for(let pass=0; pass<passes; pass++){
-      for(let i=0;i<n;i++){ const a=P[i], gx=(a.x/cell)|0, gy=(a.y/cell)|0;
-        for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const arr=grid.get((gx+ox)+(gy+oy)*8192); if(!arr) continue;
-          for(let m=0;m<arr.length;m++){ const j=arr[m]; if(j<=i) continue; const b=P[j];
-            const dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy, rr=a.r+b.r;
-            if(d2<rr*rr && d2>0.0001){ const d=Math.sqrt(d2), ov=(rr-d)*0.5, nx=dx/d, ny=dy/d;
-              a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov; } } } }
-    }
-  }
-
-  function simStep(g, fill, over){
-    const target = over<=0.0001 ? Math.round(BOTTLE*clamp01(fill))
-                                : Math.min(NMAX, Math.round(BOTTLE*Math.pow(NMAX/BOTTLE, over)));
-    resample(target);
-    const erupt=over>0.001, G=erupt?0.03:0.2, cx=g.cx, cy=g.rim+(g.bot-g.rim)*0.45, push=over*0.15;
-    for(let i=0;i<P.length;i++){ const p=P[i]; p.vy+=G;
-      if(erupt){ const dx=p.x-cx, dy=p.y-cy, d=Math.sqrt(dx*dx+dy*dy)||1; p.vx+=(dx/d)*push; p.vy+=(dy/d)*push-0.1; }
-      p.x+=p.vx; p.y+=p.vy; }
-    repel();
-    if(over<0.12){ for(let i=0;i<P.length;i++){ const p=P[i];   // inside the open-top vessel
-      if(p.x<g.inL+p.r){ p.x=g.inL+p.r; if(p.vx<0)p.vx*=-0.3; } else if(p.x>g.inR-p.r){ p.x=g.inR-p.r; if(p.vx>0)p.vx*=-0.3; }
-      if(p.y>g.bot-p.r){ p.y=g.bot-p.r; if(p.vy>0)p.vy*=-0.2; } } }
-    const dv=erupt?0.92:0.86, dvy=erupt?0.94:0.9;
-    for(let i=0;i<P.length;i++){ const p=P[i]; p.vx*=dv; p.vy*=dvy; }
-  }
-
-  function freeze(){
-    resample(NMAX);                              // exactly N particles for a 1:1 morph
-    for(let i=0;i<P.length;i++){ const p=P[i]; if(!isFinite(p.x))p.x=W/2; if(!isFinite(p.y))p.y=H/2; }
-    const po=P.map((p,i)=>i).sort((a,b)=>(P[a].y-P[b].y)||(P[a].x-P[b].x));
-    const to=TARGETS.map((t,i)=>i).sort((a,b)=>(TARGETS[a].y-TARGETS[b].y)||(TARGETS[a].x-TARGETS[b].x));
-    for(let k=0;k<po.length;k++){ const p=P[po[k]]; p.ti=to[k]; p.fx=p.x; p.fy=p.y; p.fr=p.r; }
-    frozen=true;
-  }
-
-  function rebuild(){ if(!W||!H) return; buildTargets(); geoCache=geo(); NMAX=TARGETS.length; P=[]; frozen=false; }
-  function visible(el){ if(!el) return false; const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<window.innerHeight; }
-
-  function frame(){
-    requestAnimationFrame(frame);
-    if(!NMAX || !(visible(act1El)||visible(act2El))) return;
-    const g=geoCache||geo();
-    const fill=clamp01(window.__fill||0), over=clamp01(window.__over||0), morph=clamp01(window.__morph||0);
-    ctx.clearRect(0,0,W,H);
-    const uA=1-smooth(clamp01(over/0.16));               // vessel fades as the overflow takes over
-    if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
-    if(morph>0.001){
-      if(!frozen) freeze();
-      const m=smooth(morph);
-      for(let i=0;i<P.length;i++){ const p=P[i], t=TARGETS[p.ti]||{x:p.fx,y:p.fy,r:p.fr,red:false};
-        const x=p.fx+(t.x-p.fx)*m, y=p.fy+(t.y-p.fy)*m, r=p.fr+(t.r-p.fr)*m, md=t.red?0:m;
-        const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
-        ctx.fillStyle='rgb('+cr+','+cg+','+cb+')'; ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.fill(); }
-    } else {
-      frozen=false;
-      simStep(g, fill, over);
-      ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
-      for(let i=0;i<P.length;i++){ const p=P[i]; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
-    }
-  }
-
-  function drawU(ctx,g){
-    const x=g.outL,y=g.rim,w=g.w,h=g.h,th=g.th;
-    // Gentle outer bottom corners over a near-square interior floor: round balls
-    // pack into the corners (no cream gaps), and the silhouette reads as a clean beaker.
-    const rad=Math.min(16, w*0.12, h*0.12), irad=Math.max(2,rad-th*0.4);
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-    ctx.lineTo(x,y+h-rad); ctx.quadraticCurveTo(x,y+h,x+rad,y+h);
-    ctx.lineTo(x+w-rad,y+h); ctx.quadraticCurveTo(x+w,y+h,x+w,y+h-rad);
-    ctx.lineTo(x+w,y);
-    ctx.lineTo(x+w-th,y);
-    ctx.lineTo(x+w-th,y+h-th-irad); ctx.quadraticCurveTo(x+w-th,y+h-th,x+w-th-irad,y+h-th);
-    ctx.lineTo(x+th+irad,y+h-th); ctx.quadraticCurveTo(x+th,y+h-th,x+th,y+h-th-irad);
-    ctx.lineTo(x+th,y);
-    ctx.closePath(); ctx.fill();
-  }
-
-  // boot: size the canvas, wire resize, run the sim/render loop
-  resize();
-  window.addEventListener('resize',resize);
-  requestAnimationFrame(frame);
+  const vid=document.getElementById('bcanvas'); if(!vid||vid.tagName!=='VIDEO') return;
+  const reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ try{vid.pause();}catch(e){} return; }   // poster stands in
+  try{vid.pause();}catch(e){}                          // we drive currentTime manually
+  let duration=0;
+  function onMeta(){ duration=vid.duration||0; }
+  if(vid.readyState>=1) onMeta(); else vid.addEventListener('loadedmetadata',onMeta);
+  (function tick(){
+    requestAnimationFrame(tick);
+    if(!duration) return;
+    const target=Math.min(1,Math.max(0,window.__scrubTarget||0))*duration;
+    const cur=vid.currentTime||0;
+    if(Math.abs(target-cur)>0.001){ try{ vid.currentTime=cur+(target-cur)*0.18; }catch(e){} }
+  })();
 })();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

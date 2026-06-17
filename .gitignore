@@ -18,6 +18,9 @@ Thumbs.db
 node_modules/
 assets/css/dist/
 
+# Offline render pipeline — captured PNG frames (intermediate; regenerate with `npm run render`)
+render/.frames/
+
 # Claude Code local worktrees
 .claude/worktrees/
 

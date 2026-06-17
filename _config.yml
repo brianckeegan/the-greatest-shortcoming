@@ -135,6 +135,7 @@ exclude:
   - package.json
   - package-lock.json
   - tailwind.config.js
+  - render/          # offline background-animation pipeline (rendered locally, see render/README.md)
 
 collections:
   chapters:
