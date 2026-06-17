@@ -36,6 +36,11 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+        # three/playwright are devDeps used only by the local render pipeline
+        # (render/ — see render/README.md). Skip Playwright's browser download
+        # here so the Pages build stays fast; CI never renders.
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Build Tailwind CSS
         run: npm run build:css

@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- Offline render host page.
+     Loaded by render/harness/capture.mjs in headless Chrome (with WebGPU). It
+     reads the scene + dimensions from the query string, mounts the requested
+     scene onto a full-window canvas, and exposes a deterministic, frame-indexed
+     render hook the capture harness drives one frame at a time:
+
+       ?scene=titlecard|landing & width=1920 & height=1080 & frames=330 & seed=...
+
+     window.__ready        — resolves true once the scene is initialised
+     window.__totalFrames  — frame count the scene was built for
+     window.__renderFrame  — async (i) => advances + renders frame i, awaitable
+
+     three.js is resolved from the repo's node_modules via the importmap below,
+     served by the harness's static server rooted at the repo. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #111; overflow: hidden; }
+    #c { display: block; width: 100vw; height: 100vh; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/node_modules/three/build/three.webgpu.js",
+      "three/webgpu": "/node_modules/three/build/three.webgpu.js",
+      "three/tsl": "/node_modules/three/build/three.tsl.js",
+      "three/addons/": "/node_modules/three/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script type="module">
+    import * as THREE from 'three/webgpu';
+    import * as TSL from 'three/tsl';
+    import { makePRNG } from '/render/harness/prng.js';
+
+    const q = new URLSearchParams(location.search);
+    const sceneName = q.get('scene') || 'titlecard';
+    const width = parseInt(q.get('width') || '1920', 10);
+    const height = parseInt(q.get('height') || '1080', 10);
+    const totalFrames = parseInt(q.get('frames') || '300', 10);
+    const seed = q.get('seed') || `${sceneName}:${width}x${height}`;
+
+    window.__totalFrames = totalFrames;
+
+    window.__ready = (async () => {
+      const canvas = document.getElementById('c');
+      canvas.width = width;
+      canvas.height = height;
+
+      const renderer = new THREE.WebGPURenderer({ canvas, antialias: true });
+      renderer.setSize(width, height, false);
+      renderer.setPixelRatio(1); // exact 1:1 capture; no devicePixelRatio scaling
+      await renderer.init();
+
+      const adapterInfo = renderer.backend?.adapter?.info || {};
+      console.log('[host] WebGPU backend ready', JSON.stringify(adapterInfo));
+
+      const prng = makePRNG(seed);
+      const mod = await import(`/render/scenes/${sceneName}.js`);
+      const scene = await mod.default({
+        THREE, TSL, renderer, width, height,
+        aspect: width / height, totalFrames, prng,
+      });
+
+      // Drive the scene deterministically by frame index. Frames are requested
+      // strictly in order (0..N-1) by the harness, so scenes may step their
+      // compute/physics incrementally.
+      window.__renderFrame = async (i) => {
+        await scene.render(i);
+      };
+
+      // Render frame 0 so a screenshot before the loop is never blank.
+      await scene.render(0);
+      return true;
+    })();
+  </script>
+</body>
+</html>

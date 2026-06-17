@@ -7,13 +7,18 @@
   "scripts": {
     "build": "npm run build:css",
     "build:css": "tailwindcss -i assets/css/src/main.css -o assets/css/dist/main.css --minify",
-    "dev:css": "tailwindcss -i assets/css/src/main.css -o assets/css/dist/main.css --watch"
+    "dev:css": "tailwindcss -i assets/css/src/main.css -o assets/css/dist/main.css --watch",
+    "render": "node render/harness/capture.mjs",
+    "encode": "node render/encode.mjs",
+    "render:all": "npm run render && npm run encode"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
     "autoprefixer": "^10.4.20",
+    "playwright": "^1.49.0",
     "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "three": "^0.171.0"
   },
   "dependencies": {
     "sharp": "^0.35.1"
