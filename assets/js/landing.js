@@ -322,7 +322,7 @@ steps[0].classList.add('is-on');
   // low-cost); the post-noon spill is free repulsion stacking. The ~16k-dot hedcut is one
   // GSAP-timed bulk lerp folded into the same scrubbed timeline.
   const BOTTLE=190;               // bacteria that fill the bottle
-  const NBOT=380;                 // + overflow born during the spill to take the screen
+  const NBOT=1200;                // + overflow that keeps doubling to take the whole screen
   const BOT=[]; for(let i=0;i<NBOT;i++) BOT.push({gx:0,gy:0,gr:7.2,a:0,ox:0,oy:0});
   const morphP={m:0};
   let portrait=[], nFill=0, tl=null, geoCache=null, curS=0, active=true;
@@ -361,23 +361,28 @@ steps[0].classList.add('is-on');
       tl.fromTo(p,{gx:par.x,gy:par.y,gr:2.4,a:0},
                   {gx:slot.x,gy:slot.y,gr:7.2,a:1,duration:0.05,ease:'back.out(1.7)'}, 0.40*(i/Math.max(1,nFill)));
     }
-    // SPILL [0.45 → 0.63] — overflow fades in at the mouth; Physics2D erupts every base
-    // position (gx,gy) while the repulsion pass stacks them haphazardly.
-    const overflow=BOT.slice(nFill);
-    if(overflow.length) tl.to(overflow,{a:1,duration:0.02,stagger:{each:0.12/overflow.length,from:'start'}},0.45);
-    tl.to(BOT,{duration:0.18,ease:'none',
-      physics2D:{velocity:'random(320,1400)',angle:'random(222,318)',gravity:1400,xProp:'gx',yProp:'gy'},
-      stagger:{amount:0.12,from:'center'}},0.45);
-    // MORPH [0.63 → 1] — bacteria fade; the denser, higher-contrast portrait resolves
-    tl.to(BOT,{a:0,duration:0.12,ease:'power1.in',stagger:{amount:0.06,from:'random'}},0.63);
-    tl.to(morphP,{m:1,duration:0.37,ease:'power2.inOut'},0.63);
+    // SPILL [0.45 → 0.62] — the population keeps DOUBLING. Overflow bacteria reveal on an
+    // exponential (accelerating) schedule — count ∝ e^t, not linear — running right up to
+    // the morph so growth never plateaus early. Physics2D erupts every base position
+    // (gx,gy) omnidirectionally so they spread across the whole screen; the repulsion pass
+    // stacks them haphazardly. Trajectories all launch at 0.45, so late arrivals appear
+    // already spread out — the screen fills exponentially.
+    const overflow=BOT.slice(nFill), span=0.16, K=Math.max(1,overflow.length);
+    if(overflow.length) tl.to(overflow,{a:1,duration:0.02,
+      stagger:(i)=>span*Math.log(1+i)/Math.log(1+K)},0.45);
+    tl.to(BOT,{duration:0.17,ease:'none',
+      physics2D:{velocity:'random(550,3000)',angle:'random(0,360)',gravity:900,xProp:'gx',yProp:'gy'},
+      stagger:{amount:0.05,from:'start'}},0.45);
+    // MORPH [0.62 → 1] — bacteria fade; the denser, higher-contrast portrait resolves
+    tl.to(BOT,{a:0,duration:0.12,ease:'power1.in',stagger:{amount:0.06,from:'random'}},0.62);
+    tl.to(morphP,{m:1,duration:0.38,ease:'power2.inOut'},0.62);
   }
 
   // onScroll sets window.__fill/__over/__morph; fold to one scalar. The bottle reaches
   // full at __fill≈0.92, before the "Noon — the bottle is full" line (bi≈10).
   function applyScroll(){
     const f=clamp01(window.__fill||0), o=clamp01(window.__over||0), mo=clamp01(window.__morph||0);
-    curS=clamp01(mo>0.0001 ? 0.63+0.37*mo : o>0.0001 ? 0.45+0.18*o : 0.45*clamp01(f/0.92));
+    curS=clamp01(mo>0.0001 ? 0.62+0.38*mo : o>0.0001 ? 0.45+0.17*o : 0.45*clamp01(f/0.92));
     if(tl) tl.progress(curS);
     const a1=document.getElementById('act1'), a2=document.getElementById('act2');
     const vis=el=>{ if(!el) return false; const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<window.innerHeight; };
