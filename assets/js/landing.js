@@ -103,8 +103,7 @@ const a3lines=[...document.querySelectorAll('.a3-line')];
 const steps=[...document.querySelectorAll('.pstep')];
 const pctEl=document.getElementById('pct');
 const clockEl=document.getElementById('clock');
-const minHand=document.getElementById('minHand');
-const hourHand=document.getElementById('hourHand');
+const clockTimeEl=document.getElementById('clockTime');
 function fmtClock(m){
   m=Math.round(m);
   if(m>=60) return '12:'+String(Math.min(99,m-60)).padStart(2,'0');
@@ -148,11 +147,10 @@ function onScroll(){
   if(morph>0) over=1;                 // keep every circle for the portrait
   window.__fill=fill; window.__over=over; window.__morph=morph;
   pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
-  // analog face: minute hand sweeps the hour (6°/min), hour hand creeps 11 → 12
-  if(minHand) minHand.setAttribute('transform','rotate('+((minutes%60)*6)+' 50 50)');
-  if(hourHand) hourHand.setAttribute('transform','rotate('+((330+minutes*0.5)%360)+' 50 50)');
+  // digital watchface: HH:MM ticks from 11:00 toward noon as you scroll
+  if(clockTimeEl) clockTimeEl.textContent=fmtClock(minutes);
   if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
-    clockEl.setAttribute('aria-label','clock reading '+fmtClock(minutes)); }
+    clockEl.setAttribute('aria-label','digital watch reading '+fmtClock(minutes)); }
   // The "% full" readout belongs to the filling beats — hidden through "picture a
   // bottle / eleven o'clock / a single bacterium / one→two→four" (a lone bacterium
   // is not "1% full"); it fades in only once the narration starts naming
@@ -210,6 +208,31 @@ steps[0].classList.add('is-on');
   const hide=()=>{ cue.classList.add('is-hidden'); setTimeout(()=>{ if(cue.parentNode) cue.remove(); },700); };
   window.addEventListener('scroll',hide,{passive:true,once:true});
 })();
+
+// After 10 s with no scroll input, gently auto-advance Act I so the bottle plays itself;
+// any real scroll / touch / key cancels it and re-arms the 10 s idle timer. Act I only,
+// and never under prefers-reduced-motion.
+(function(){
+  const a1=document.getElementById('act1'); if(!a1) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const IDLE=10000, SPEED=210;            // ms idle before auto-scroll; px per second
+  let timer=null, raf=0, last=0, auto=false;
+  const actEnd=()=>a1.offsetTop+a1.offsetHeight-window.innerHeight;
+  function stop(){ auto=false; if(raf){ cancelAnimationFrame(raf); raf=0; } }
+  function frame(ts){
+    if(!auto) return;
+    if(!last) last=ts;
+    const dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    if((window.scrollY||window.pageYOffset||0) >= actEnd()-1){ stop(); return; }   // Act I finished
+    window.scrollBy(0, SPEED*dt);
+    raf=requestAnimationFrame(frame);
+  }
+  function start(){ if(auto||(window.scrollY||0)>=actEnd()-1) return; auto=true; last=0; raf=requestAnimationFrame(frame); }
+  function arm(){ clearTimeout(timer); timer=setTimeout(start, IDLE); }
+  function onInput(){ stop(); arm(); }    // real input cancels and restarts the countdown
+  ['wheel','touchstart','touchmove','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,onInput,{passive:true}));
+  arm();
+})();
 (function(){
   const cv=document.getElementById('bcanvas'); if(!cv) return;
   const ctx=cv.getContext('2d');
@@ -230,11 +253,11 @@ steps[0].classList.add('is-on');
     const aspect=IMG.width/IMG.height;
     const ph=H*0.94, pw=ph*aspect;
     const px=(W-pw)/2, py=(H-ph)/2;
-    const rows=150, cols=Math.round(rows*aspect);   // finer grid → more facial detail
+    const rows=156, cols=Math.round(rows*aspect);   // finer grid → more facial detail
     off.width=cols; off.height=rows;
     octx.drawImage(IMG,0,0,cols,rows);
     const data=octx.getImageData(0,0,cols,rows).data;
-    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.60;   // smaller dots → more facial detail
+    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.66;   // denser coverage in the darks
     // the face occupies roughly this normalized box of the portrait — give it extra ink
     const faceCX=0.50, faceCY=0.30, faceRX=0.20, faceRY=0.22;
     const T=[];
@@ -262,6 +285,7 @@ steps[0].classList.add('is-on');
           ink=Math.min(1,Math.max(0,(hi-L)/(hi-lo)))*vig;
           if(inFace) ink=Math.pow(ink,0.68);
         }
+        ink=ink*ink*(3-2*ink);   // smoothstep → stronger tonal contrast (darks darker, faint drops out)
         if(ink<0.07) continue;
         T.push({x:cx+(Math.random()-0.5)*sx*0.45, y:cy+(Math.random()-0.5)*sy*0.45, r:Math.max(1.0,ink*maxR), red:red});
       }
@@ -292,9 +316,15 @@ steps[0].classList.add('is-on');
   const haveGSAP=(typeof gsap!=='undefined');
   if(haveGSAP && typeof Physics2DPlugin!=='undefined') gsap.registerPlugin(Physics2DPlugin);
 
-  const NBOT=190;                 // bacteria that fill the bottle (and erupt)
-  const BOT=[]; for(let i=0;i<NBOT;i++) BOT.push({x:0,y:0,r:7.2,a:0,hx:0,hy:0});
-  const morphP={m:0};             // 0→1 portrait morph, tweened by GSAP, read in render
+  // Bacteria are GSAP bodies. Physics2DPlugin animates a *base* position (gx,gy via its
+  // xProp/yProp); a cheap repulsion pass adds a separate offset (ox,oy), so GSAP and the
+  // repulsion never fight over the same property. The fill snaps to a tight grid (clean,
+  // low-cost); the post-noon spill is free repulsion stacking. The ~16k-dot hedcut is one
+  // GSAP-timed bulk lerp folded into the same scrubbed timeline.
+  const BOTTLE=190;               // bacteria that fill the bottle
+  const NBOT=380;                 // + overflow born during the spill to take the screen
+  const BOT=[]; for(let i=0;i<NBOT;i++) BOT.push({gx:0,gy:0,gr:7.2,a:0,ox:0,oy:0});
+  const morphP={m:0};
   let portrait=[], nFill=0, tl=null, geoCache=null, curS=0, active=true;
 
   // hex-pack as many bacteria as fit inside the vessel, bottom-up
@@ -304,10 +334,10 @@ steps[0].classList.add('is-on');
     const cols=Math.max(1,Math.floor((innerW-2)/gap));
     const x0=g.inL+(innerW-(cols-1)*gap)/2;
     const maxRows=Math.max(1,Math.floor(innerH/(gap*0.9)));
-    for(let row=0; row<maxRows && pos.length<NBOT; row++){
+    for(let row=0; row<maxRows && pos.length<BOTTLE; row++){
       const y=g.bot-r-2-row*gap*0.9; if(y<g.rim+r) break;
       const odd=row&1, n=cols-(odd?1:0), ox=odd?gap*0.5:0;
-      for(let c=0;c<n && pos.length<NBOT;c++) pos.push({x:x0+ox+c*gap,y:y});
+      for(let c=0;c<n && pos.length<BOTTLE;c++) pos.push({x:x0+ox+c*gap,y:y});
     }
     return pos;
   }
@@ -317,36 +347,65 @@ steps[0].classList.add('is-on');
     if(tl){ tl.kill(); tl=null; }
     const g=geo(); geoCache=g;
     const packed=packedPositions(g); nFill=packed.length;
-    for(let i=0;i<BOT.length;i++){ const p=BOT[i];
-      if(i<nFill){ p.hx=packed[i].x; p.hy=packed[i].y; p.r=7.2;
-        p.x=packed[i].x+(Math.random()-0.5)*10; p.y=g.rim-30-Math.random()*70; p.a=0; }
-      else p.a=0;
+    for(let i=0;i<NBOT;i++){ const p=BOT[i]; p.ox=0; p.oy=0; p.gr=7.2; p.a=0;
+      if(i<nFill){ p.gx=packed[i].x; p.gy=packed[i].y; }
+      else { p.gx=g.inL+Math.random()*(g.inR-g.inL); p.gy=g.rim+Math.random()*16; }  // overflow waits at the mouth
     }
     portrait=TARGETS.map(t=>({t:t, sx:Math.random()*W, sy:Math.random()*H}));
     morphP.m=0;
     if(!haveGSAP) return;
-    const fillSet=BOT.slice(0,nFill);
     tl=gsap.timeline({paused:true});
-    // FILL [0 → ~0.45] — bacteria drop into their packed slots, bottom-up
-    tl.to(fillSet,{a:1,x:(i,t)=>t.hx,y:(i,t)=>t.hy,r:7.2,ease:'power2.out',
-      duration:0.10,stagger:{each:nFill?0.35/nFill:0,from:'start'}},0);
-    // SPILL [0.45 → ~0.62] — Physics2D eruption: velocity / angle / gravity + stagger
-    tl.to(fillSet,{duration:0.16,ease:'none',
-      physics2D:{velocity:'random(420,1050)',angle:'random(250,290)',gravity:1500},
-      stagger:{amount:0.10,from:'center'}},0.45);
-    // MORPH [0.62 → 1] — bacteria fade as the 16k-dot portrait resolves
-    tl.to(fillSet,{a:0,duration:0.12,ease:'power1.in',stagger:{amount:0.05,from:'random'}},0.62);
-    tl.to(morphP,{m:1,duration:0.38,ease:'power2.inOut'},0.62);
+    // FILL [0 → 0.45] — each bacterium pops beside its parent and snaps to its grid slot,
+    // swelling 2.4→7.2 (division by splitting). Bacterium 0 just appears at the bottom.
+    for(let i=0;i<nFill;i++){ const p=BOT[i], slot=packed[i], par=packed[(i-1)>>1]||slot;
+      tl.fromTo(p,{gx:par.x,gy:par.y,gr:2.4,a:0},
+                  {gx:slot.x,gy:slot.y,gr:7.2,a:1,duration:0.05,ease:'back.out(1.7)'}, 0.40*(i/Math.max(1,nFill)));
+    }
+    // SPILL [0.45 → 0.63] — overflow fades in at the mouth; Physics2D erupts every base
+    // position (gx,gy) while the repulsion pass stacks them haphazardly.
+    const overflow=BOT.slice(nFill);
+    if(overflow.length) tl.to(overflow,{a:1,duration:0.02,stagger:{each:0.12/overflow.length,from:'start'}},0.45);
+    tl.to(BOT,{duration:0.18,ease:'none',
+      physics2D:{velocity:'random(320,1400)',angle:'random(222,318)',gravity:1400,xProp:'gx',yProp:'gy'},
+      stagger:{amount:0.12,from:'center'}},0.45);
+    // MORPH [0.63 → 1] — bacteria fade; the denser, higher-contrast portrait resolves
+    tl.to(BOT,{a:0,duration:0.12,ease:'power1.in',stagger:{amount:0.06,from:'random'}},0.63);
+    tl.to(morphP,{m:1,duration:0.37,ease:'power2.inOut'},0.63);
   }
 
-  // onScroll (above) sets window.__fill/__over/__morph; fold them into one scalar
+  // onScroll sets window.__fill/__over/__morph; fold to one scalar. The bottle reaches
+  // full at __fill≈0.92, before the "Noon — the bottle is full" line (bi≈10).
   function applyScroll(){
     const f=clamp01(window.__fill||0), o=clamp01(window.__over||0), mo=clamp01(window.__morph||0);
-    curS=clamp01(mo>0.0001 ? 0.62+0.38*mo : o>0.0001 ? 0.45+0.17*o : 0.45*f);
+    curS=clamp01(mo>0.0001 ? 0.63+0.37*mo : o>0.0001 ? 0.45+0.18*o : 0.45*clamp01(f/0.92));
     if(tl) tl.progress(curS);
     const a1=document.getElementById('act1'), a2=document.getElementById('act2');
     const vis=el=>{ if(!el) return false; const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<window.innerHeight; };
     active=vis(a1)||vis(a2);
+  }
+
+  // cheap broadphase repulsion → per-body offset (ox,oy) that decays toward the base
+  // position: ~nil on the snapped grid, the haphazard stacking once they erupt.
+  function repel(){
+    const cell=17, grid=new Map(), vis=[];
+    for(let i=0;i<NBOT;i++){ const p=BOT[i];
+      if(p.a<=0.05){ p.ox*=0.8; p.oy*=0.8; continue; }
+      p.ox*=0.86; p.oy*=0.86;
+      const x=p.gx+p.ox, y=p.gy+p.oy, k=((x/cell)|0)+'_'+((y/cell)|0);
+      let a=grid.get(k); if(!a){ a=[]; grid.set(k,a); } a.push(p); vis.push(p);
+    }
+    for(let pass=0; pass<2; pass++){
+      for(const p of vis){ const x=p.gx+p.ox, y=p.gy+p.oy, cx=(x/cell)|0, cy=(y/cell)|0;
+        for(let gx=-1;gx<=1;gx++) for(let gy=-1;gy<=1;gy++){
+          const arr=grid.get((cx+gx)+'_'+(cy+gy)); if(!arr) continue;
+          for(const q of arr){ if(q===p) continue;
+            const dx=(q.gx+q.ox)-x, dy=(q.gy+q.oy)-y, d2=dx*dx+dy*dy, rr=p.gr+q.gr;
+            if(d2<rr*rr && d2>0.01){ const d=Math.sqrt(d2), push=(rr-d)*0.25, nx=dx/d, ny=dy/d;
+              p.ox-=nx*push; p.oy-=ny*push; q.ox+=nx*push; q.oy+=ny*push; }
+          }
+        }
+      }
+    }
   }
 
   function render(){
@@ -354,17 +413,18 @@ steps[0].classList.add('is-on');
     const g=geoCache||geo();
     ctx.clearRect(0,0,W,H);
     // the vessel fades out in place as the overflow swallows the screen
-    const uA=1-smooth(clamp01((curS-0.45)/0.12));
+    const uA=1-smooth(clamp01((curS-0.45)/0.16));
     if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
-    // bacteria (identical red bodies), each at its own GSAP-driven alpha
+    // bacteria — base (gx,gy) from GSAP/Physics2D plus the repulsion offset (ox,oy)
+    repel();
     ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
-    for(let i=0;i<BOT.length;i++){ const p=BOT[i]; if(p.a<=0.004) continue;
-      ctx.globalAlpha=p.a; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
+    for(let i=0;i<NBOT;i++){ const p=BOT[i]; if(p.a<=0.01) continue;
+      ctx.globalAlpha=p.a; ctx.beginPath(); ctx.arc(p.gx+p.ox,p.gy+p.oy,p.gr,0,6.283); ctx.fill(); }
     ctx.globalAlpha=1;
     // portrait hedcut — bulk lerp from a screen-wide scatter → sampled targets
     const m=morphP.m;
     if(m>0.0001 && portrait.length){
-      const em=smooth(m); ctx.globalAlpha=Math.min(1,m*2.2);
+      const em=smooth(m); ctx.globalAlpha=Math.min(1,m*2.5);
       for(let i=0;i<portrait.length;i++){ const pp=portrait[i], t=pp.t;
         const x=pp.sx+(t.x-pp.sx)*em, y=pp.sy+(t.y-pp.sy)*em, r=0.6+(t.r-0.6)*em;
         const md=t.red?0:em;
