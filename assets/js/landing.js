@@ -183,7 +183,10 @@ function onScroll(){
     cvEl.style.opacity=String(op);
   }
 
-  const idx=Math.min(N-1,Math.max(0,Math.round(bi)));
+  let idx=Math.min(N-1,Math.max(0,Math.round(bi)));
+  // Hold "11:59 — half full" until the bottle is genuinely full (counter = 100%) so
+  // "Noon. The bottle is full." never appears before the fill completes.
+  if(idx>=10 && fill<0.999) idx=9;
   steps.forEach((st,k)=>st.classList.toggle('is-on',k===idx));
   const docH=document.documentElement.scrollHeight-window.innerHeight;
   const progEl=document.getElementById('progress');
@@ -309,100 +312,94 @@ steps[0].classList.add('is-on');
     return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
   }
 
-  /* ---- Procedural bacteria sim → freeze → hedcut (no GSAP) ------------------
-     Act I is one deterministic, scroll-scrubbed sim over a single pool of
-     N = TARGETS.length particles. They DIVIDE into a tight grid in the bottle
-     (count gated by scroll so the narration beats line up and each settles),
-     then erupt and spill with a fluid-like turbulent spread. At the Act II
-     boundary each particle's spill-end position is its "frozen" snapshot, and it
-     lerps from there to its Bartlett-hedcut target — the SAME particles, so the
-     explosion seamlessly BECOMES the portrait (no fade-out, no second set of
-     dots). Pure formula → fully reversible and light. */
+  /* ---- Full forward physics sim → freeze → hedcut (no GSAP) ----------------
+     Act I is a real, forward-integrated particle sim. Bacteria DIVIDE (count
+     gated by scroll so the narration beats line up), fall and PACK in the bottle
+     under gravity + repulsion — no grid, organic settling. After noon the walls
+     drop and repulsion pressure (a growing population in open space) plus a gentle
+     outward push erupt them into a fluid-like spread that fills the screen. On
+     entering Act II the sim FREEZES (snapshot) and every particle lerps to its
+     Bartlett-hedcut target — the SAME particles, so the explosion seamlessly
+     BECOMES the portrait. Forward sim → scroll-up re-settles (approx. reverse). */
   const clamp01=v=>v<0?0:v>1?1:v, smooth=x=>x*x*(3-2*x);
-  const BOTTLE=190;               // bacteria that pack the bottle before noon
+  const BOTTLE=190;               // bacteria that fill the bottle at fill = 100% (noon)
   const act1El=document.getElementById('act1'), act2El=document.getElementById('act2');
-  let P=[], nFill=0, geoCache=null, RP=null;
+  let P=[], geoCache=null, frozen=false, NMAX=0;
 
-  // hex-pack as many grid slots as fit inside the vessel, bottom-up
-  function packedPositions(g){
-    const r=7.2, gap=r*2*1.02, pos=[];
-    const innerW=g.inR-g.inL, innerH=g.bot-g.rim;
-    const cols=Math.max(1,Math.floor((innerW-2)/gap));
-    const x0=g.inL+(innerW-(cols-1)*gap)/2;
-    const maxRows=Math.max(1,Math.floor(innerH/(gap*0.9)));
-    for(let row=0; row<maxRows && pos.length<BOTTLE; row++){
-      const y=g.bot-r-2-row*gap*0.9; if(y<g.rim+r) break;
-      const odd=row&1, n=cols-(odd?1:0), ox=odd?gap*0.5:0;
-      for(let c=0;c<n && pos.length<BOTTLE;c++) pos.push({x:x0+ox+c*gap,y:y});
-    }
-    return pos;
+  function seed(g){ return {x:g.cx+(Math.random()-0.5)*(g.inR-g.inL)*0.6, y:g.bot-12-Math.random()*10, vx:0, vy:0, r:6+Math.random()*2}; }
+  function divide(par){ const a=Math.random()*6.283, o=par.r*0.5;
+    return {x:par.x+Math.cos(a)*o, y:par.y+Math.sin(a)*o, vx:Math.cos(a)*0.5, vy:Math.sin(a)*0.5-0.5, r:6+Math.random()*2}; }
+
+  // grow (by division) / trim the live population to the scroll-gated target count
+  function resample(target){
+    let guard=0;
+    while(P.length<target && guard++<8000) P.push(P.length? divide(P[(Math.random()*P.length)|0]) : seed(geoCache));
+    if(P.length>target) P.splice(target, P.length-target);
   }
 
-  // Build the particle pool for the current geometry + portrait targets. Each particle
-  // precomputes its grid slot + parent (fill), an exponential birth threshold (spill
-  // reveal), a launch vector, and its frozen spill-end snapshot (where the morph starts).
-  function rebuild(){
-    if(!W||!H) return;
-    buildTargets();
-    const g=geo(); geoCache=g;
-    const packed=packedPositions(g); nFill=packed.length;
-    const N=TARGETS.length; if(!N){ P=[]; return; }
-    const REACH=0.60*Math.hypot(W,H), GY=0.16*H, TAMP=0.05*Math.min(W,H);
-    const denom=Math.log(N/Math.max(1,nFill))||1;
-    P=new Array(N);
-    for(let i=0;i<N;i++){
-      const t=TARGETS[i];
-      const ang=Math.random()*6.283, spd=0.12+Math.random()*0.92;
-      let bx=0,by=0,px=0,py=0,ox,oy,birth;
-      if(i<nFill){ bx=packed[i].x; by=packed[i].y; const par=packed[(i-1)>>1]||packed[i];
-        px=par.x; py=par.y; ox=bx; oy=by; birth=0; }
-      else { ox=g.cx+(Math.random()-0.5)*(g.inR-g.inL); oy=g.rim+Math.random()*14;
-        birth=clamp01(Math.log((i+1)/nFill)/denom); }            // exponential reveal
-      // frozen spill-end (sp = 1) — the snapshot the morph lerps FROM
-      const ex=ox+Math.cos(ang)*spd*REACH, ey=oy+Math.sin(ang)*spd*REACH+GY;
-      const sex=ex+Math.sin(oy*0.012+7+ang)*TAMP, sey=ey+Math.cos(ox*0.011-6+ang)*TAMP;
-      P[i]={t,bx,by,px,py,ox,oy,ang,spd,birth,sex,sey};
+  // cheap broadphase repulsion (overlap separation only); fewer passes when crowded
+  function repel(){
+    const n=P.length, passes=n>5000?1:n>1200?2:4, cell=16;
+    const grid=new Map();
+    for(let i=0;i<n;i++){ const p=P[i], k=((p.x/cell)|0)+((p.y/cell)|0)*8192; let a=grid.get(k); if(!a){a=[];grid.set(k,a);} a.push(i); }
+    for(let pass=0; pass<passes; pass++){
+      for(let i=0;i<n;i++){ const a=P[i], gx=(a.x/cell)|0, gy=(a.y/cell)|0;
+        for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const arr=grid.get((gx+ox)+(gy+oy)*8192); if(!arr) continue;
+          for(let m=0;m<arr.length;m++){ const j=arr[m]; if(j<=i) continue; const b=P[j];
+            const dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy, rr=a.r+b.r;
+            if(d2<rr*rr && d2>0.0001){ const d=Math.sqrt(d2), ov=(rr-d)*0.5, nx=dx/d, ny=dy/d;
+              a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov; } } } }
     }
-    RP={REACH,GY,TAMP};
   }
 
+  function simStep(g, fill, over){
+    const target = over<=0.0001 ? Math.round(BOTTLE*clamp01(fill))
+                                : Math.min(NMAX, Math.round(BOTTLE*Math.pow(NMAX/BOTTLE, over)));
+    resample(target);
+    const erupt=over>0.001, G=erupt?0.03:0.2, cx=g.cx, cy=g.rim+(g.bot-g.rim)*0.45, push=over*0.15;
+    for(let i=0;i<P.length;i++){ const p=P[i]; p.vy+=G;
+      if(erupt){ const dx=p.x-cx, dy=p.y-cy, d=Math.sqrt(dx*dx+dy*dy)||1; p.vx+=(dx/d)*push; p.vy+=(dy/d)*push-0.1; }
+      p.x+=p.vx; p.y+=p.vy; }
+    repel();
+    if(over<0.12){ for(let i=0;i<P.length;i++){ const p=P[i];   // inside the open-top vessel
+      if(p.x<g.inL+p.r){ p.x=g.inL+p.r; if(p.vx<0)p.vx*=-0.3; } else if(p.x>g.inR-p.r){ p.x=g.inR-p.r; if(p.vx>0)p.vx*=-0.3; }
+      if(p.y>g.bot-p.r){ p.y=g.bot-p.r; if(p.vy>0)p.vy*=-0.2; } } }
+    const dv=erupt?0.92:0.86, dvy=erupt?0.94:0.9;
+    for(let i=0;i<P.length;i++){ const p=P[i]; p.vx*=dv; p.vy*=dvy; }
+  }
+
+  function freeze(){
+    resample(NMAX);                              // exactly N particles for a 1:1 morph
+    for(let i=0;i<P.length;i++){ const p=P[i]; if(!isFinite(p.x))p.x=W/2; if(!isFinite(p.y))p.y=H/2; }
+    const po=P.map((p,i)=>i).sort((a,b)=>(P[a].y-P[b].y)||(P[a].x-P[b].x));
+    const to=TARGETS.map((t,i)=>i).sort((a,b)=>(TARGETS[a].y-TARGETS[b].y)||(TARGETS[a].x-TARGETS[b].x));
+    for(let k=0;k<po.length;k++){ const p=P[po[k]]; p.ti=to[k]; p.fx=p.x; p.fy=p.y; p.fr=p.r; }
+    frozen=true;
+  }
+
+  function rebuild(){ if(!W||!H) return; buildTargets(); geoCache=geo(); NMAX=TARGETS.length; P=[]; frozen=false; }
   function visible(el){ if(!el) return false; const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<window.innerHeight; }
 
-  function render(){
-    if(!P.length || !RP || !(visible(act1El)||visible(act2El))) return;
+  function frame(){
+    requestAnimationFrame(frame);
+    if(!NMAX || !(visible(act1El)||visible(act2El))) return;
     const g=geoCache||geo();
     const fill=clamp01(window.__fill||0), over=clamp01(window.__over||0), morph=clamp01(window.__morph||0);
-    const fillFrac=clamp01(fill/0.92), me=smooth(morph), SER=3.4;
-    const REACH=RP.REACH, GY=RP.GY, TAMP=RP.TAMP;
     ctx.clearRect(0,0,W,H);
-    // the vessel fades out in place as the overflow swallows the screen
-    const uA=1-smooth(clamp01(over/0.16));
+    const uA=1-smooth(clamp01(over/0.16));               // vessel fades as the overflow takes over
     if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
-    for(let i=0;i<P.length;i++){
-      const p=P[i], t=p.t; let x,y,r, md=0;
-      if(morph<=0.0001){
-        if(over<=0.0001){
-          // FILL — divide into the grid bottom-up; each snaps (settles) within its beat
-          if(i>=nFill) continue;
-          const bf=i/nFill; if(fillFrac<bf) continue;
-          const pe=smooth(clamp01((fillFrac-bf)/0.02));
-          x=p.px+(p.bx-p.px)*pe; y=p.py+(p.by-p.py)*pe; r=2.4+4.6*pe;
-        } else {
-          // SPILL — fluid-like turbulent eruption; exponential reveal fills the screen
-          if(over<p.birth) continue;
-          const sp=over, tb=TAMP*sp;
-          x=p.ox+Math.cos(p.ang)*p.spd*REACH*sp + Math.sin(p.oy*0.012+sp*7+p.ang)*tb;
-          y=p.oy+Math.sin(p.ang)*p.spd*REACH*sp + GY*sp*sp + Math.cos(p.ox*0.011-sp*6+p.ang)*tb;
-          r=7+(SER-7)*sp;
-        }
-      } else {
-        // MORPH — frozen spill-end → hedcut target (same particle); red → ink
-        x=p.sex+(t.x-p.sex)*me; y=p.sey+(t.y-p.sey)*me; r=SER+(t.r-SER)*me;
-        md=t.red?0:me;
-      }
-      const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
-      ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
-      ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.fill();
+    if(morph>0.001){
+      if(!frozen) freeze();
+      const m=smooth(morph);
+      for(let i=0;i<P.length;i++){ const p=P[i], t=TARGETS[p.ti]||{x:p.fx,y:p.fy,r:p.fr,red:false};
+        const x=p.fx+(t.x-p.fx)*m, y=p.fy+(t.y-p.fy)*m, r=p.fr+(t.r-p.fr)*m, md=t.red?0:m;
+        const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
+        ctx.fillStyle='rgb('+cr+','+cg+','+cb+')'; ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.fill(); }
+    } else {
+      frozen=false;
+      simStep(g, fill, over);
+      ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
+      for(let i=0;i<P.length;i++){ const p=P[i]; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
     }
   }
 
@@ -423,10 +420,10 @@ steps[0].classList.add('is-on');
     ctx.closePath(); ctx.fill();
   }
 
-  // boot: size the canvas, wire resize, run the render loop
+  // boot: size the canvas, wire resize, run the sim/render loop
   resize();
   window.addEventListener('resize',resize);
-  (function loop(){ render(); requestAnimationFrame(loop); })();
+  requestAnimationFrame(frame);
 })();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
