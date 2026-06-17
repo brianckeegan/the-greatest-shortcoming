@@ -1,43 +1,43 @@
-# Attribution — bundled Three.js skills
+# Attribution — the `threejs` skill
 
-The Three.js skills under `.claude/skills/` are incorporated from two
-third-party, MIT-licensed collections. Only the skill content (each
-`SKILL.md` and its `references/`) was vendored; repository scaffolding (build
-configs, roadmaps, research notes, CI, social previews, etc.) was not.
+The single `threejs` skill here is a **synthesis**: written for this repo by
+de-duplicating and reconciling three MIT-licensed community skill collections,
+then checking them against the official Three.js documentation. The raw upstream
+skills are **not** vendored — only this consolidated skill is kept, for lower
+complexity and consistent coverage.
 
 ## Sources
 
 1. **CloudAI-X/threejs-skills** — https://github.com/CloudAI-X/threejs-skills
-   License: MIT (stated in the repository README; no `LICENSE` file present
-   upstream). Provides 10 flat single-file skills (`threejs-animation`,
-   `threejs-fundamentals`, `threejs-geometry`, `threejs-interaction`,
-   `threejs-lighting`, `threejs-loaders`, `threejs-materials`,
-   `threejs-postprocessing`, `threejs-shaders`, `threejs-textures`).
-
+   MIT (stated in the repo README). 10 flat topic skills.
 2. **Impertio-Studio/Three.js-Claude-Skill-Package** —
    https://github.com/Impertio-Studio/Three.js-Claude-Skill-Package
-   License: MIT, Copyright (c) 2026 OpenAEC Foundation. Provides 24 structured
-   skills (each with `references/{anti-patterns,examples,methods}.md`) under the
-   `threejs-{agents,core,errors,impl,syntax}-*` naming scheme. Flattened here
-   from the upstream `skills/source/<category>/<skill>/` layout into
-   `.claude/skills/<skill>/` (the upstream `name:` already matches the leaf dir).
+   MIT, Copyright (c) 2026 OpenAEC Foundation. 24 structured skills with
+   ALWAYS/NEVER guidance and `references/` (the source for the WebGPU/TSL and
+   physics material here).
+3. **secondsky/claude-skills** (`plugins/threejs`) —
+   https://github.com/secondsky/claude-skills
+   MIT, Copyright (c) 2025 Claude Skills Maintainers. A single consolidated
+   `threejs` skill whose "one SKILL.md + topic references" structure this
+   synthesis follows.
 
-## License texts
+## Official documentation reconciled against
 
-Both collections are MIT licensed. The MIT terms below apply to the vendored
-content; retain this notice if redistributing.
+- Three.js docs — https://threejs.org/docs/
+- Three.js manual — https://threejs.org/manual/
+- Three.js examples — https://threejs.org/examples/ (incl. `webgpu_compute_particles*`, `physics_ammo_break`)
 
-### CloudAI-X/threejs-skills (MIT)
+## License
 
-> MIT License — per the upstream README. Feel free to use, modify, and
-> distribute. Copyright belongs to the CloudAI-X/threejs-skills authors.
-
-### Impertio-Studio/Three.js-Claude-Skill-Package (MIT)
+All three sources are MIT. This derived skill is provided under the same MIT
+terms; retain this attribution if redistributing.
 
 ```
 MIT License
 
-Copyright (c) 2026 OpenAEC Foundation
+Copyright (c) 2026 OpenAEC Foundation (Impertio-Studio/Three.js-Claude-Skill-Package)
+Copyright (c) 2025 Claude Skills Maintainers (secondsky/claude-skills)
+Copyright (c) CloudAI-X/threejs-skills authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

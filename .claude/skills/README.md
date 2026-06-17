@@ -1,44 +1,39 @@
-# Three.js skills
+# Project skills
 
-34 project-level Three.js skills for Claude Code, incorporated from two
-MIT-licensed collections (see `ATTRIBUTION.md`). They give Claude API-accurate
-Three.js knowledge — directly useful for the offline render pipeline in
-[`render/`](../../render/README.md), which authors `three/webgpu` + TSL compute
-scenes and Ammo physics.
+## `threejs`
 
-Each skill is a directory with a `SKILL.md` (loaded on demand via its frontmatter
-`name`/`description`); the Impertio set also ships `references/` with
-`anti-patterns.md`, `examples.md`, and `methods.md`.
+One consolidated Three.js skill for Claude Code — `threejs/SKILL.md` plus topic
+files under `threejs/references/`. It gives Claude API-accurate Three.js
+knowledge, directly supporting the offline render pipeline in
+[`render/`](../../render/README.md) (`three/webgpu` + TSL compute, Ammo physics).
 
-## Most relevant to this repo's render pipeline
+It is a **synthesis** of three MIT-licensed community collections reconciled with
+the official Three.js docs — see [`ATTRIBUTION.md`](ATTRIBUTION.md). Earlier this
+directory briefly vendored all 34 raw upstream skills; those were replaced by this
+single skill for lower complexity and consistent coverage.
 
-- `threejs-impl-webgpu` — WebGPU renderer / TSL (the render scenes use this)
-- `threejs-impl-post-processing`, `threejs-postprocessing`
-- `threejs-impl-physics` — physics engines (the landing beaker break uses Ammo)
-- `threejs-impl-animation`, `threejs-animation` — animation loops, timing
-- `threejs-syntax-geometries` / `threejs-geometry`, `threejs-syntax-materials` / `threejs-materials`
-- `threejs-core-renderer`, `threejs-core-scene-graph`, `threejs-core-math`
+### Structure
 
-## Inventory
+```
+threejs/
+  SKILL.md                       # overview, quick starts, "when to load references", cross-cutting rules
+  references/
+    fundamentals.md              # scene, camera, renderer, loop, transforms, resize, disposal
+    geometry.md                  # BufferGeometry, built-ins, InstancedMesh, particles
+    materials-textures.md        # PBR materials, texture maps, color space
+    lighting-shadows.md          # light types, IBL/PMREM, shadows + artifacts
+    loaders.md                   # GLTF/Draco/KTX2/HDR, FBX/OBJ, LoadingManager
+    animation.md                 # AnimationMixer, clips, crossfade, procedural
+    controls-interaction.md      # camera controls + raycasting/picking
+    shaders.md                   # GLSL ShaderMaterial, uniforms, onBeforeCompile
+    postprocessing.md            # EffectComposer, bloom, SSAO, DOF, AA
+    webgpu-tsl.md                # WebGPURenderer, node materials, TSL, compute shaders
+    physics.md                   # cannon-es / Rapier / Ammo (incl. ConvexObjectBreaker)
+    performance-debugging.md     # FPS/memory/draw calls + black-screen/color/z-fight fixes
+```
 
-**CloudAI-X/threejs-skills (10, flat):** `threejs-animation`,
-`threejs-fundamentals`, `threejs-geometry`, `threejs-interaction`,
-`threejs-lighting`, `threejs-loaders`, `threejs-materials`,
-`threejs-postprocessing`, `threejs-shaders`, `threejs-textures`.
+Every reference follows the same shape — **Use when · ALWAYS · NEVER · Core API ·
+Pattern · Gotchas · Docs** — so guidance stays consistent across topics.
 
-**Impertio-Studio/Three.js-Claude-Skill-Package (24, with `references/`):**
-`threejs-agents-{model-optimizer,scene-builder}`,
-`threejs-core-{math,raycaster,renderer,scene-graph}`,
-`threejs-errors-{performance,rendering}`,
-`threejs-impl-{animation,audio,drei,ifc-viewer,lighting,physics,post-processing,react-three-fiber,shadows,webgpu,xr}`,
-`threejs-syntax-{controls,geometries,loaders,materials,shaders}`.
-
-## Note on overlap
-
-The two sources overlap by topic (e.g. `threejs-animation` vs
-`threejs-impl-animation`; `threejs-shaders` vs `threejs-syntax-shaders`). They're
-complementary: the CloudAI set leans toward quick-start API references; the
-Impertio set is deeper, with deterministic ALWAYS/NEVER guidance plus
-`references/` (anti-patterns, methods, worked examples). Both are kept; prefer the
-Impertio variant when you need the reference material, the CloudAI variant for a
-fast pattern.
+### Most relevant to this repo
+`webgpu-tsl.md`, `physics.md`, `geometry.md` (instancing), `performance-debugging.md`.
