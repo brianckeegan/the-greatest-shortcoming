@@ -121,10 +121,12 @@ const KF=[
   {min:57, fill:0.12,   over:0},   // 7  11:57  12%
   {min:58, fill:0.25,   over:0},   // 8  11:58  quarter
   {min:59, fill:0.50,   over:0},   // 9  11:59  half
-  {min:60, fill:1.0,    over:0},   // 10 12:00  full
-  {min:61, fill:1.0,    over:0.18},// 11 12:01  spills out
-  {min:63, fill:1.0,    over:1.0}, // 12 12:03  fills the screen
-  {min:63, fill:1.0,    over:1.0}  // 13 clear view -> the line
+  {min:60, fill:1.0,    over:0},    // 10 12:00  full (≈190)
+  {min:61, fill:1.0,    over:0.25}, // 11 12:01  spills out (≈580)
+  {min:62, fill:1.0,    over:0.50}, // 12 12:02  doubles again (≈1.8k)
+  {min:63, fill:1.0,    over:0.75}, // 13 12:03  fills the screen (≈5.4k)
+  {min:64, fill:1.0,    over:1.0},  // 14 12:04  one last doubling — full population (≈16k)
+  {min:64, fill:1.0,    over:1.0}   // 15 clear view -> the line
 ];
 function onScroll(){
   const rect=act1.getBoundingClientRect();
@@ -149,13 +151,13 @@ function onScroll(){
   pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
   // digital watchface: HH:MM ticks from 11:00 toward noon as you scroll
   if(clockTimeEl) clockTimeEl.textContent=fmtClock(minutes);
-  if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+  if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<14.6 && morph<0.02)?'1':'0';
     clockEl.setAttribute('aria-label','digital watch reading '+fmtClock(minutes)); }
   // The "% full" readout belongs to the filling beats — hidden through "picture a
   // bottle / eleven o'clock / a single bacterium / one→two→four" (a lone bacterium
   // is not "1% full"); it fades in only once the narration starts naming
   // percentages ("…three percent full", ~keyframe 5) and out again past the spill.
-  if(pctEl.parentElement) pctEl.parentElement.style.opacity=(bi>=4.5 && bi<11.6 && morph<0.02)?'1':'0';
+  if(pctEl.parentElement) pctEl.parentElement.style.opacity=(bi>=4.5 && bi<10.6 && morph<0.02)?'1':'0';
   if(a2quote) a2quote.classList.toggle('is-on', p2>0.7);
 
   // ACT 3 — sequential animated story lines
@@ -305,29 +307,21 @@ steps[0].classList.add('is-on');
     return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
   }
 
-  /* ---- GSAP-driven bacteria engine -----------------------------------------
-     The bacteria are GSAP bodies. They drop into the bottle (staggered fill),
-     then erupt via Physics2DPlugin (velocity / angle / gravity + stagger — the
-     technique in ZachSaucier's pen) as the bottle overflows. The Act 2 hedcut is
-     ~16k dots, far too many for a tween each, so the portrait is a single
-     GSAP-timed bulk lerp folded into the same master timeline. The whole
-     sequence is one paused timeline whose progress is scrubbed from scroll. */
+  /* ---- Procedural bacteria sim → freeze → hedcut (no GSAP) ------------------
+     Act I is one deterministic, scroll-scrubbed sim over a single pool of
+     N = TARGETS.length particles. They DIVIDE into a tight grid in the bottle
+     (count gated by scroll so the narration beats line up and each settles),
+     then erupt and spill with a fluid-like turbulent spread. At the Act II
+     boundary each particle's spill-end position is its "frozen" snapshot, and it
+     lerps from there to its Bartlett-hedcut target — the SAME particles, so the
+     explosion seamlessly BECOMES the portrait (no fade-out, no second set of
+     dots). Pure formula → fully reversible and light. */
   const clamp01=v=>v<0?0:v>1?1:v, smooth=x=>x*x*(3-2*x);
-  const haveGSAP=(typeof gsap!=='undefined');
-  if(haveGSAP && typeof Physics2DPlugin!=='undefined') gsap.registerPlugin(Physics2DPlugin);
+  const BOTTLE=190;               // bacteria that pack the bottle before noon
+  const act1El=document.getElementById('act1'), act2El=document.getElementById('act2');
+  let P=[], nFill=0, geoCache=null, RP=null;
 
-  // Bacteria are GSAP bodies. Physics2DPlugin animates a *base* position (gx,gy via its
-  // xProp/yProp); a cheap repulsion pass adds a separate offset (ox,oy), so GSAP and the
-  // repulsion never fight over the same property. The fill snaps to a tight grid (clean,
-  // low-cost); the post-noon spill is free repulsion stacking. The ~16k-dot hedcut is one
-  // GSAP-timed bulk lerp folded into the same scrubbed timeline.
-  const BOTTLE=190;               // bacteria that fill the bottle
-  const NBOT=1200;                // + overflow that keeps doubling to take the whole screen
-  const BOT=[]; for(let i=0;i<NBOT;i++) BOT.push({gx:0,gy:0,gr:7.2,a:0,ox:0,oy:0});
-  const morphP={m:0};
-  let portrait=[], nFill=0, tl=null, geoCache=null, curS=0, active=true;
-
-  // hex-pack as many bacteria as fit inside the vessel, bottom-up
+  // hex-pack as many grid slots as fit inside the vessel, bottom-up
   function packedPositions(g){
     const r=7.2, gap=r*2*1.02, pos=[];
     const innerW=g.inR-g.inL, innerH=g.bot-g.rim;
@@ -342,115 +336,78 @@ steps[0].classList.add('is-on');
     return pos;
   }
 
-  // (re)build the scrubbed master timeline for the current geometry + targets
-  function buildTimeline(){
-    if(tl){ tl.kill(); tl=null; }
+  // Build the particle pool for the current geometry + portrait targets. Each particle
+  // precomputes its grid slot + parent (fill), an exponential birth threshold (spill
+  // reveal), a launch vector, and its frozen spill-end snapshot (where the morph starts).
+  function rebuild(){
+    if(!W||!H) return;
+    buildTargets();
     const g=geo(); geoCache=g;
     const packed=packedPositions(g); nFill=packed.length;
-    for(let i=0;i<NBOT;i++){ const p=BOT[i]; p.ox=0; p.oy=0; p.gr=7.2; p.a=0;
-      if(i<nFill){ p.gx=packed[i].x; p.gy=packed[i].y; }
-      else { p.gx=g.inL+Math.random()*(g.inR-g.inL); p.gy=g.rim+Math.random()*16; }  // overflow waits at the mouth
+    const N=TARGETS.length; if(!N){ P=[]; return; }
+    const REACH=0.60*Math.hypot(W,H), GY=0.16*H, TAMP=0.05*Math.min(W,H);
+    const denom=Math.log(N/Math.max(1,nFill))||1;
+    P=new Array(N);
+    for(let i=0;i<N;i++){
+      const t=TARGETS[i];
+      const ang=Math.random()*6.283, spd=0.12+Math.random()*0.92;
+      let bx=0,by=0,px=0,py=0,ox,oy,birth;
+      if(i<nFill){ bx=packed[i].x; by=packed[i].y; const par=packed[(i-1)>>1]||packed[i];
+        px=par.x; py=par.y; ox=bx; oy=by; birth=0; }
+      else { ox=g.cx+(Math.random()-0.5)*(g.inR-g.inL); oy=g.rim+Math.random()*14;
+        birth=clamp01(Math.log((i+1)/nFill)/denom); }            // exponential reveal
+      // frozen spill-end (sp = 1) — the snapshot the morph lerps FROM
+      const ex=ox+Math.cos(ang)*spd*REACH, ey=oy+Math.sin(ang)*spd*REACH+GY;
+      const sex=ex+Math.sin(oy*0.012+7+ang)*TAMP, sey=ey+Math.cos(ox*0.011-6+ang)*TAMP;
+      P[i]={t,bx,by,px,py,ox,oy,ang,spd,birth,sex,sey};
     }
-    portrait=TARGETS.map(t=>({t:t, sx:Math.random()*W, sy:Math.random()*H}));
-    morphP.m=0;
-    if(!haveGSAP) return;
-    tl=gsap.timeline({paused:true});
-    // FILL [0 → 0.45] — each bacterium pops beside its parent and snaps to its grid slot,
-    // swelling 2.4→7.2 (division by splitting). Bacterium 0 just appears at the bottom.
-    for(let i=0;i<nFill;i++){ const p=BOT[i], slot=packed[i], par=packed[(i-1)>>1]||slot;
-      tl.fromTo(p,{gx:par.x,gy:par.y,gr:2.4,a:0},
-                  {gx:slot.x,gy:slot.y,gr:7.2,a:1,duration:0.05,ease:'back.out(1.7)'}, 0.40*(i/Math.max(1,nFill)));
-    }
-    // SPILL [0.45 → 0.62] — the population keeps DOUBLING. Overflow bacteria reveal on an
-    // exponential (accelerating) schedule — count ∝ e^t, not linear — running right up to
-    // the morph so growth never plateaus early. Physics2D erupts every base position
-    // (gx,gy) omnidirectionally so they spread across the whole screen; the repulsion pass
-    // stacks them haphazardly. Trajectories all launch at 0.45, so late arrivals appear
-    // already spread out — the screen fills exponentially.
-    const overflow=BOT.slice(nFill), span=0.16, K=Math.max(1,overflow.length);
-    if(overflow.length) tl.to(overflow,{a:1,duration:0.02,
-      stagger:(i)=>span*Math.log(1+i)/Math.log(1+K)},0.45);
-    tl.to(BOT,{duration:0.17,ease:'none',
-      physics2D:{velocity:'random(550,3000)',angle:'random(0,360)',gravity:900,xProp:'gx',yProp:'gy'},
-      stagger:{amount:0.05,from:'start'}},0.45);
-    // MORPH [0.62 → 1] — bacteria fade; the denser, higher-contrast portrait resolves
-    tl.to(BOT,{a:0,duration:0.12,ease:'power1.in',stagger:{amount:0.06,from:'random'}},0.62);
-    tl.to(morphP,{m:1,duration:0.38,ease:'power2.inOut'},0.62);
+    RP={REACH,GY,TAMP};
   }
 
-  // onScroll sets window.__fill/__over/__morph; fold to one scalar. The bottle reaches
-  // full at __fill≈0.92, before the "Noon — the bottle is full" line (bi≈10).
-  function applyScroll(){
-    const f=clamp01(window.__fill||0), o=clamp01(window.__over||0), mo=clamp01(window.__morph||0);
-    curS=clamp01(mo>0.0001 ? 0.62+0.38*mo : o>0.0001 ? 0.45+0.17*o : 0.45*clamp01(f/0.92));
-    if(tl) tl.progress(curS);
-    const a1=document.getElementById('act1'), a2=document.getElementById('act2');
-    const vis=el=>{ if(!el) return false; const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<window.innerHeight; };
-    active=vis(a1)||vis(a2);
-  }
-
-  // cheap broadphase repulsion → per-body offset (ox,oy) that decays toward the base
-  // position: ~nil on the snapped grid, the haphazard stacking once they erupt.
-  function repel(){
-    const cell=17, grid=new Map(), vis=[];
-    for(let i=0;i<NBOT;i++){ const p=BOT[i];
-      if(p.a<=0.05){ p.ox*=0.8; p.oy*=0.8; continue; }
-      p.ox*=0.86; p.oy*=0.86;
-      const x=p.gx+p.ox, y=p.gy+p.oy, k=((x/cell)|0)+'_'+((y/cell)|0);
-      let a=grid.get(k); if(!a){ a=[]; grid.set(k,a); } a.push(p); vis.push(p);
-    }
-    for(let pass=0; pass<2; pass++){
-      for(const p of vis){ const x=p.gx+p.ox, y=p.gy+p.oy, cx=(x/cell)|0, cy=(y/cell)|0;
-        for(let gx=-1;gx<=1;gx++) for(let gy=-1;gy<=1;gy++){
-          const arr=grid.get((cx+gx)+'_'+(cy+gy)); if(!arr) continue;
-          for(const q of arr){ if(q===p) continue;
-            const dx=(q.gx+q.ox)-x, dy=(q.gy+q.oy)-y, d2=dx*dx+dy*dy, rr=p.gr+q.gr;
-            if(d2<rr*rr && d2>0.01){ const d=Math.sqrt(d2), push=(rr-d)*0.25, nx=dx/d, ny=dy/d;
-              p.ox-=nx*push; p.oy-=ny*push; q.ox+=nx*push; q.oy+=ny*push; }
-          }
-        }
-      }
-    }
-  }
+  function visible(el){ if(!el) return false; const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<window.innerHeight; }
 
   function render(){
-    if(!active||!W) return;
+    if(!P.length || !RP || !(visible(act1El)||visible(act2El))) return;
     const g=geoCache||geo();
+    const fill=clamp01(window.__fill||0), over=clamp01(window.__over||0), morph=clamp01(window.__morph||0);
+    const fillFrac=clamp01(fill/0.92), me=smooth(morph), SER=3.4;
+    const REACH=RP.REACH, GY=RP.GY, TAMP=RP.TAMP;
     ctx.clearRect(0,0,W,H);
     // the vessel fades out in place as the overflow swallows the screen
-    const uA=1-smooth(clamp01((curS-0.45)/0.16));
+    const uA=1-smooth(clamp01(over/0.16));
     if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
-    // bacteria — base (gx,gy) from GSAP/Physics2D plus the repulsion offset (ox,oy)
-    repel();
-    ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
-    for(let i=0;i<NBOT;i++){ const p=BOT[i]; if(p.a<=0.01) continue;
-      ctx.globalAlpha=p.a; ctx.beginPath(); ctx.arc(p.gx+p.ox,p.gy+p.oy,p.gr,0,6.283); ctx.fill(); }
-    ctx.globalAlpha=1;
-    // portrait hedcut — bulk lerp from a screen-wide scatter → sampled targets
-    const m=morphP.m;
-    if(m>0.0001 && portrait.length){
-      const em=smooth(m); ctx.globalAlpha=Math.min(1,m*2.5);
-      for(let i=0;i<portrait.length;i++){ const pp=portrait[i], t=pp.t;
-        const x=pp.sx+(t.x-pp.sx)*em, y=pp.sy+(t.y-pp.sy)*em, r=0.6+(t.r-0.6)*em;
-        const md=t.red?0:em;
-        const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
-        ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
-        ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.fill(); }
-      ctx.globalAlpha=1;
+    for(let i=0;i<P.length;i++){
+      const p=P[i], t=p.t; let x,y,r, md=0;
+      if(morph<=0.0001){
+        if(over<=0.0001){
+          // FILL — divide into the grid bottom-up; each snaps (settles) within its beat
+          if(i>=nFill) continue;
+          const bf=i/nFill; if(fillFrac<bf) continue;
+          const pe=smooth(clamp01((fillFrac-bf)/0.02));
+          x=p.px+(p.bx-p.px)*pe; y=p.py+(p.by-p.py)*pe; r=2.4+4.6*pe;
+        } else {
+          // SPILL — fluid-like turbulent eruption; exponential reveal fills the screen
+          if(over<p.birth) continue;
+          const sp=over, tb=TAMP*sp;
+          x=p.ox+Math.cos(p.ang)*p.spd*REACH*sp + Math.sin(p.oy*0.012+sp*7+p.ang)*tb;
+          y=p.oy+Math.sin(p.ang)*p.spd*REACH*sp + GY*sp*sp + Math.cos(p.ox*0.011-sp*6+p.ang)*tb;
+          r=7+(SER-7)*sp;
+        }
+      } else {
+        // MORPH — frozen spill-end → hedcut target (same particle); red → ink
+        x=p.sex+(t.x-p.sex)*me; y=p.sey+(t.y-p.sey)*me; r=SER+(t.r-SER)*me;
+        md=t.red?0:me;
+      }
+      const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
+      ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
+      ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.fill();
     }
   }
-
-  function rebuild(){ if(!W||!H) return; buildTargets(); buildTimeline(); applyScroll(); }
-
-  // (the legacy per-frame integrator + 8-pass collision packing was removed —
-  //  the GSAP timeline above now drives fill, spill and morph)
 
   function drawU(ctx,g){
     const x=g.outL,y=g.rim,w=g.w,h=g.h,th=g.th;
     // Gentle outer bottom corners over a near-square interior floor: round balls
-    // pack into the corners (no cream gaps), and the silhouette reads as a clean
-    // beaker rather than a deep bowl whose big radii clipped the lower corners
-    // with background "white space".
+    // pack into the corners (no cream gaps), and the silhouette reads as a clean beaker.
     const rad=Math.min(16, w*0.12, h*0.12), irad=Math.max(2,rad-th*0.4);
     ctx.beginPath();
     ctx.moveTo(x,y);
@@ -464,13 +421,10 @@ steps[0].classList.add('is-on');
     ctx.closePath(); ctx.fill();
   }
 
-  // boot: size the canvas, wire scroll/resize, run the render loop
+  // boot: size the canvas, wire resize, run the render loop
   resize();
   window.addEventListener('resize',resize);
-  window.addEventListener('scroll',applyScroll,{passive:true});
-  applyScroll();
-  if(haveGSAP) gsap.ticker.add(render);
-  else (function loop(){ render(); requestAnimationFrame(loop); })();
+  (function loop(){ render(); requestAnimationFrame(loop); })();
 })();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
