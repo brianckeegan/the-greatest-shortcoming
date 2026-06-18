@@ -81,6 +81,10 @@ test -w . && echo "repo is writable"
   wrong user; re-clone over HTTPS with your account, or `sudo chown -R "$USER" .`.
 - Keep `node_modules/` and `render/.frames/` **out of commits** — they're already
   git-ignored; never `git add -A` blindly, only `git add assets/video/`.
+> **Authoring help:** the consolidated `threejs` skill lives in
+> [`.claude/skills/threejs/`](../.claude/skills/README.md) — load its
+> `references/webgpu-tsl.md` (WebGPURenderer + TSL compute) and `references/physics.md`
+> (Ammo / `ConvexObjectBreaker`) when writing or tuning the scenes here.
 
 ## Why local, not CI
 
