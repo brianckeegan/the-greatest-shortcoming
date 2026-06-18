@@ -6,6 +6,81 @@ the resulting files committed under [`assets/video/`](../assets/video). The
 visitor's browser only ever plays lightweight video — no live physics. The
 Jekyll/GitHub-Pages deploy is unchanged and just serves the committed assets.
 
+## Quickstart (for dummies)
+
+You render the animation **once on a computer with a GPU** (a Mac is ideal), the
+video files get **committed to the repo**, and the website's normal build just
+serves them. CI never renders. You only repeat this when the animation changes.
+
+```bash
+# 0. one-time tools: Node 22, Google Chrome, and ffmpeg
+#    (macOS: brew install ffmpeg | Linux: sudo apt install ffmpeg)
+
+# 1. get the code + the working branch (full HTTPS clone URL, not a placeholder)
+git clone https://github.com/brianckeegan/the-greatest-shortcoming.git
+cd the-greatest-shortcoming
+git checkout claude/webgl-animation-generation-v8gt66
+
+# 2. install JS tools (first time, and after package.json changes)
+npm install
+
+# 3. render on the GPU, then encode to video → assets/video/
+npm run render:all
+
+# 4. (optional) preview the real site
+npm run build:css && bundle exec jekyll serve     # http://localhost:4000
+
+# 5. ship it back: commit ONLY the generated videos, then push
+git add assets/video/
+git commit -m "Render background videos"
+git push                                          # the PR updates automatically
+```
+
+Merging the PR to `master` deploys the videos with the normal Pages build — **you
+never touch CI**. Re-render only when something in `render/` changes; the build
+writes `assets/video/.render-hash`, and if it differs from your current `render/`
+the committed videos are stale. (If step 3 says *no WebGPU adapter*, you're on a
+machine without a usable GPU — render on the Mac. If it says *ffmpeg: command not
+found*, do step 0.)
+
+### Pre-flight checklist (housecleaning)
+
+Run these from the repo root **before** rendering — each prints what to fix:
+
+```bash
+# tools + versions
+node -v                       # expect v22.x  (>= 20 works)
+ffmpeg -version | head -1     # expect a version line, not "command not found"
+git --version
+
+# you're in the right place, on the right branch, with a clean tree
+git rev-parse --show-toplevel # should end in /the-greatest-shortcoming
+git branch --show-current     # expect claude/webgl-animation-generation-v8gt66
+git status --short            # expect empty before you start
+
+# GitHub write permission (does NOT push — dry run only)
+git push --dry-run origin HEAD            # errors here = you lack push access / auth
+
+# GPU / WebGPU is actually available (the renderer needs it; CI does not have it).
+# Start a render and watch the first lines: the page logs its WebGPU adapter via
+# [page:...]. A WebGPU/adapter error there means no usable GPU. Ctrl-C once it
+# starts counting frames — you only need to see it begin.
+node render/harness/capture.mjs --scene=titlecard --only=desktop
+
+# filesystem permissions: you can write the outputs
+mkdir -p assets/video && touch assets/video/.writetest && rm assets/video/.writetest
+test -w . && echo "repo is writable"
+```
+
+- **Push access:** if `git push --dry-run` fails with a permission/auth error,
+  fix your GitHub credentials (HTTPS token or SSH key) before you waste a render —
+  you won't be able to ship the result otherwise.
+- **No WebGPU adapter** from the probe ⇒ this machine can't render (headless
+  Linux/VMs usually can't); use a Mac or a box with a real GPU + recent Chrome.
+- **Permission denied writing `assets/video/`** ⇒ you cloned read-only or as the
+  wrong user; re-clone over HTTPS with your account, or `sudo chown -R "$USER" .`.
+- Keep `node_modules/` and `render/.frames/` **out of commits** — they're already
+  git-ignored; never `git add -A` blindly, only `git add assets/video/`.
 > **Authoring help:** the consolidated `threejs` skill lives in
 > [`.claude/skills/threejs/`](../.claude/skills/README.md) — load its
 > `references/webgpu-tsl.md` (WebGPURenderer + TSL compute) and `references/physics.md`
