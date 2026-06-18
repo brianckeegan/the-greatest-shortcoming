@@ -20,9 +20,9 @@
        on it) until assets/video/* exists. -->
   <video id="bcanvas" muted playsinline preload="auto"
          poster="{{ '/assets/video/landing.1920x1080.jpg' | relative_url }}">
-    <source src="{{ '/assets/video/landing.1080x1920.webm' | relative_url }}" type="video/webm" media="(max-aspect-ratio: 1/1)">
+    <!-- Scrub rendition is MP4-only: all-intra VP9 WebM ballooned to 18-24 MB
+         (see postmortem); ScrollyVideo seeks the all-intra MP4 fine. -->
     <source src="{{ '/assets/video/landing.1080x1920.mp4'  | relative_url }}" type="video/mp4"  media="(max-aspect-ratio: 1/1)">
-    <source src="{{ '/assets/video/landing.1920x1080.webm' | relative_url }}" type="video/webm">
     <source src="{{ '/assets/video/landing.1920x1080.mp4'  | relative_url }}" type="video/mp4">
   </video>
 

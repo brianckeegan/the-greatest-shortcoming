@@ -70,13 +70,16 @@ function encodeOne(scene, renditionKey, cfg) {
     '-crf', String(cfg.crf), ...allIntra, '-movflags', '+faststart', '-an',
     join(OUT_DIR, `${base}.mp4`)]);
 
-  // VP9 WebM (all-intra via -g 1 when scrubbing)
-  const vp9Intra = cfg.scrub ? ['-g', '1'] : [];
-  ffmpeg([...input, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(cfg.crf + 2),
-    '-row-mt', '1', ...vp9Intra, '-an', join(OUT_DIR, `${base}.webm`)]);
+  // VP9 WebM — only for looping (non-scrub) scenes. All-intra VP9 for the scrub
+  // rendition ballooned to 18–24 MB (postmortem); ScrollyVideo drives the MP4
+  // fine, so scrub scenes ship MP4-only.
+  if (!cfg.scrub) {
+    ffmpeg([...input, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', String(cfg.crf + 2),
+      '-row-mt', '1', '-an', join(OUT_DIR, `${base}.webm`)]);
+  }
 
-  // Poster — a representative still (frame at ~60% through).
-  const posterIdx = frames[Math.min(frames.length - 1, Math.floor(frames.length * 0.6))];
+  // Poster / reduced-motion still — the "full beaker" beat (~55% through).
+  const posterIdx = frames[Math.min(frames.length - 1, Math.floor(frames.length * 0.55))];
   ffmpeg(['-i', join(dir, posterIdx), '-q:v', '4', join(OUT_DIR, `${base}.jpg`)]);
 }
 
