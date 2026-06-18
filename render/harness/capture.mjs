@@ -25,14 +25,13 @@ const REPO_ROOT = join(__dirname, '..', '..');
 const FRAMES_ROOT = join(REPO_ROOT, 'render', '.frames');
 
 /* ----- scene / rendition matrix ------------------------------------------- */
-// Frame counts: titlecard is a closed loop (~11s @ 30fps). landing is
-// scroll-scrubbed and encoded all-intra, so it stays deliberately short.
+// Only the landing is pre-rendered (scroll-scrubbed, all-intra). The home
+// titlecard is a live canvas animation (assets/js/titlecard-growth.js).
 const RENDITIONS = [
   { key: 'desktop', width: 1920, height: 1080 },
   { key: 'mobile', width: 1080, height: 1920 },
 ];
 const SCENES = {
-  titlecard: { frames: 330 },
   landing: { frames: 220 },
 };
 
