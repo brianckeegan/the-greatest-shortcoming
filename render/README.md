@@ -113,7 +113,6 @@ npm run render:all    # both of the above
 Useful flags:
 
 ```bash
-node render/harness/capture.mjs --scene=titlecard      # one scene
 node render/harness/capture.mjs --only=mobile          # one rendition
 node render/encode.mjs --scene=landing                 # re-encode one scene
 ```
@@ -124,13 +123,15 @@ Then **commit** the changed files in `assets/video/` (plain git — no Git LFS).
 
 ```
 render/
-  scenes/      titlecard.js   exponential-growth compute-particle loop (home)
-               landing.js     bacteria fill → spill → (Ammo break) → hedcut morph
+  scenes/      landing.js     bacteria fill → spill → (Ammo break) → hedcut morph
   harness/     host.html      importmap host page; exposes window.__renderFrame(i)
                capture.mjs    Playwright + static server; screenshots each frame
                prng.js        deterministic seeded RNG (CPU side)
-  encode.mjs   ffmpeg encode (titlecard: looping GOP; landing: all-intra for scrubbing)
+  encode.mjs   ffmpeg encode (landing: all-intra MP4 for scrubbing)
 ```
+
+> The home title-card is **not** in this pipeline — it's a live canvas animation
+> (`assets/js/titlecard-growth.js`). Only the landing is pre-rendered.
 
 ## Determinism
 
@@ -143,7 +144,6 @@ records a hash of `render/**` + the three.js version so stale assets are detecta
 
 | scene     | desktop     | mobile      | encoding                       |
 |-----------|-------------|-------------|--------------------------------|
-| titlecard | 1920×1080   | 1080×1920   | looping (closed cycle)         |
 | landing   | 1920×1080   | 1080×1920   | all-intra **MP4-only** (scrubbable)|
 
 ## Status / TODO (validate + tune on a GPU machine)
@@ -159,8 +159,6 @@ against the storyboard beats (render → screenshot → compare → iterate):
   position-based **volume fill** (not a full SPH port of
   `webgpu_compute_particles_fluid`), and per-particle division adjacency is
   dropped in favour of a volume-proportional home layout.
-- `titlecard.js` — confirm TSL `SpriteNodeMaterial` wiring; tune count, colour
-  ramp, bloom/hold/fade timing for a seamless loop.
 - Validate by pasting frames at the storyboard `t` values
   (0.04/0.08/0.14/0.22/0.35/0.50/0.55/0.59/0.66/0.80/0.95) and comparing to §3.
 

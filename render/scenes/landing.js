@@ -36,10 +36,10 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
     mix, smoothstep, clamp, If,
   } = TSL;
 
-  const COUNT = 16384;        // 2^14 macro-particles = hedcut resolution
-  const FULL = COUNT / 16;    // 1024 macro-particles = beaker full at the rim (11:50)
+  const COUNT = 65536;        // 2^16 macro-particles (dense fill); hedcut resolution
+  const FULL = COUNT / 16;    // 4096 macro-particles = beaker full at the rim (11:50)
   const RED = vec3(176 / 255, 56 / 255, 42 / 255);
-  const BLACK = vec3(17 / 255, 17 / 255, 17 / 255);
+  const CREAMV = vec3(233 / 255, 226 / 255, 208 / 255); // hedcut ink reads light on dark bg
   const GOLD = vec3(224 / 255, 165 / 255, 47 / 255);
   const CREAM = 0xe9e2d0;
 
@@ -105,9 +105,15 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
 
   const computeInit = Fn(() => {
     const i = instanceIndex;
-    // start each cell just below its home so it "rises" into place as it activates
+    // Seed every cell AT its volume-fill home (+ tiny jitter). Because a cell
+    // becomes visible the instant it is "active" (index < uActive) and the homes
+    // are sorted bottom-up, the surface level = active/FULL with no travel time —
+    // this is the fix for "balls never fill / pile underneath".
     const h = homeBuffer.element(i);
-    positionBuffer.element(i).assign(vec3(h.x, float(BK.bot), h.z));
+    const jx = hash(i).sub(0.5).mul(0.005);
+    const jy = hash(i.add(1)).sub(0.5).mul(0.005);
+    const jz = hash(i.add(2)).sub(0.5).mul(0.005);
+    positionBuffer.element(i).assign(h.add(vec3(jx, jy, jz)));
     velocityBuffer.element(i).assign(vec3(0, 0, 0));
   })().compute(COUNT);
   await renderer.computeAsync(computeInit);
@@ -120,51 +126,24 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
   const uHalo = uniform(1.0);   // glow halo opacity (sparse→1, packed→0)
   const uRod = uniform(1.0);    // 1 = rod aspect (micro), 0 = round (macro)
 
-  // fill update: ease toward volume-fill home + gravity + cylinder containment;
-  // on overflow, release the constraint and push outward (storyboard §4).
+  // Update: during the FILL the cells simply rest at their homes (set at init),
+  // so the level tracks active/FULL exactly. Only once the beaker overflows do
+  // they integrate ballistically — bursting outward from centre to fill the
+  // frame (storyboard §4). No containment needed: homes are already inside the
+  // cylinder, and the spill is meant to escape it.
   const computeUpdate = Fn(() => {
     const i = instanceIndex;
     If(float(i).lessThan(uActive), () => {
-      const pos = positionBuffer.element(i);
-      const vel = velocityBuffer.element(i);
-      const home = homeBuffer.element(i);
-      const erupt = uOver.greaterThan(0.001);
-
-      // settle toward the (volume-proportional) home slot — emergent fill level
-      const toHome = home.sub(pos).mul(float(6.0).mul(uDt));
-      vel.addAssign(toHome.mul(float(1.0).sub(uOver)));
-      // gravity, stronger during eruption
-      const g = mix(float(-0.25), float(-0.9), uOver);
-      vel.addAssign(vec3(0, g.mul(uDt), 0));
-      // a little roil so the surface reads as liquid, not a lattice
-      const j = hash(i.add(7)).sub(0.5).mul(float(0.04).mul(uDt).mul(60.0));
-      vel.x.addAssign(j.mul(float(1.0).sub(uMorph)));
-
-      If(erupt, () => {
-        const dir = pos.sub(vec3(BK.cx, float(RIM), 0.0));
+      If(uOver.greaterThan(0.001), () => {
+        const pos = positionBuffer.element(i);
+        const vel = velocityBuffer.element(i);
+        vel.addAssign(vec3(0, float(-0.9).mul(uDt), 0));            // gravity
+        const dir = pos.sub(vec3(BK.cx, 0.0, 0.0));                 // burst from centre
         const len = dir.length().max(0.0001);
-        vel.addAssign(dir.div(len).mul(uOver.mul(uDt).mul(1.2)));
+        vel.addAssign(dir.div(len).mul(uOver.mul(uDt).mul(1.6)));
+        pos.addAssign(vel.mul(uDt));
+        vel.mulAssign(vec3(0.93, 0.96, 0.93));                      // drag
       });
-
-      pos.addAssign(vel.mul(uDt));
-
-      // analytic cylinder containment, ONLY below the rim, until overflow
-      If(uOver.lessThan(0.05), () => {
-        If(pos.y.lessThan(float(RIM)), () => {
-          const dx = pos.x.sub(float(BK.cx));
-          const dz = pos.z;
-          const rad = dx.mul(dx).add(dz.mul(dz)).sqrt().max(0.0001);
-          If(rad.greaterThan(float(BK.r)), () => {
-            const s = float(BK.r).div(rad);
-            pos.x.assign(float(BK.cx).add(dx.mul(s)));
-            pos.z.assign(dz.mul(s));
-            vel.x.mulAssign(-0.2);
-          });
-        });
-        If(pos.y.lessThan(float(BK.bot)), () => { pos.y.assign(float(BK.bot)); vel.y.mulAssign(-0.2); });
-      });
-
-      vel.mulAssign(vec3(0.86, 0.9, 0.86)); // drag
     });
   })().compute(COUNT);
 
@@ -177,7 +156,8 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
   const d = uv().sub(vec2(0.5, 0.5)).length();
   const radial = smoothstep(0.5, 0.08, d);
   const goldPick = hash(instanceIndex.add(99)).lessThan(0.04).select(float(1.0), float(0.0));
-  const baseCol = mix(RED, BLACK, uMorph);
+  // hedcut: red bacteria → CREAM ink (light, so the portrait reads on the dark bg)
+  const baseCol = mix(RED, CREAMV, uMorph);
   const col = mix(baseCol, GOLD, goldPick.mul(uMorph));
 
   function makeParticles({ additive, scaleMul, opacityMul }) {
@@ -210,7 +190,7 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
   const portrait = aspect < 1;
   function camForT(t) {
     // distance: zoomed in early, out by 11:35, settle for morph
-    const zIn = camDist * 0.45, zMid = camDist * 1.15, zPortrait = camDist * 1.0;
+    const zIn = camDist * 0.85, zMid = camDist * 1.2, zPortrait = camDist * 1.0;
     let dist, lookY, orbit;
     if (t < 0.10) { dist = lerp(zIn, zIn * 1.05, t / 0.10); lookY = BK.bot + 0.02; orbit = 0; }
     else if (t < 0.24) { dist = lerp(zIn, zMid, sstep(t, 0.10, 0.24)); lookY = lerp(BK.bot + 0.02, 0, sstep(t, 0.10, 0.24)); orbit = 0; }
@@ -250,8 +230,9 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
       uRod.value = p.rod;
       camForT(t);
 
-      // hide beaker glass once it shatters (Ammo fragments take over)
-      const showBeaker = !(p.shatter && ammo);
+      // hide the beaker the moment it shatters — regardless of whether Ammo is
+      // available — so the eruption/morph is never occluded by a phantom vessel.
+      const showBeaker = !p.shatter;
       beaker.visible = showBeaker; rim.visible = showBeaker;
 
       if (p.morph < 0.999) await renderer.computeAsync(computeUpdate);

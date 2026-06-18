@@ -29,9 +29,8 @@ const FRAMES_ROOT = join(REPO_ROOT, 'render', '.frames');
 const OUT_DIR = join(REPO_ROOT, 'assets', 'video');
 
 const FPS = 30;
-// Per-scene encoding intent. `scrub: true` ⇒ all-intra for seek accuracy.
+// Per-scene encoding intent. `scrub: true` ⇒ all-intra (MP4-only) for seek accuracy.
 const SCENES = {
-  titlecard: { scrub: false, crf: 30 },
   landing: { scrub: true, crf: 30 },
 };
 

@@ -15,19 +15,11 @@
 
   <!-- ============================ ACT 3 — TITLE ============================ -->
   <section class="titlecard" id="titlecard">
-    <!-- Background: a pre-rendered, looping WebGPU compute-particle animation
-         (rendered offline; see render/README.md). Falls back to the poster
-         still, then the dark titlecard background, until assets/video/* exists.
-         Autoplay is suppressed under prefers-reduced-motion by bg-video.js. -->
-    <video class="growthfield" id="growthfield" aria-hidden="true"
-           autoplay muted loop playsinline preload="metadata"
-           data-bg-video
-           poster="{{ '/assets/video/titlecard.1920x1080.jpg' | relative_url }}">
-      <source src="{{ '/assets/video/titlecard.1080x1920.webm' | relative_url }}" type="video/webm" media="(max-aspect-ratio: 1/1)">
-      <source src="{{ '/assets/video/titlecard.1080x1920.mp4'  | relative_url }}" type="video/mp4"  media="(max-aspect-ratio: 1/1)">
-      <source src="{{ '/assets/video/titlecard.1920x1080.webm' | relative_url }}" type="video/webm">
-      <source src="{{ '/assets/video/titlecard.1920x1080.mp4'  | relative_url }}" type="video/mp4">
-    </video>
+    <!-- Background: a live canvas animation of the chapter-3 "Fig. 3"
+         exponential-growth scatter (assets/js/titlecard-growth.js). Pure canvas,
+         no build step; pauses off-screen and degrades to a static frame under
+         prefers-reduced-motion. -->
+    <canvas class="growthfield" id="growthfield" aria-hidden="true"></canvas>
     <div class="wrap">
       <div class="bigtitle" id="bigtitle">
         <h1><span class="brand-1">The Greatest</span><br><span class="brand-2">Shortcoming</span></h1>
@@ -139,6 +131,6 @@
       }
     })();
   </script>
-  <script src="{{ '/assets/js/bg-video.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/titlecard-growth.js' | relative_url }}"></script>
 </body>
 </html>
