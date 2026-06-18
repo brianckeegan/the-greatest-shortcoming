@@ -1,163 +1,205 @@
 # Landing storyboard — *bottle → bacteria → Bartlett*
 
-The source-of-truth creative + technical spec for `render/scenes/landing.js`. Now
-that the landing background is a real 3D WebGPU scene (not abstract circles in a
-2D beaker), this is the shot-by-shot script it renders. Keep narration, timing,
-and visual direction **here**; the scene module implements it.
+The source-of-truth creative + technical spec for `render/scenes/landing.js`. The
+landing background is a **single vanilla three.js `WebGPURenderer` scene** (TSL
+compute particles + an Ammo beaker break) — **no CSS3D / `CSS3DRenderer`**, one
+canvas, captured via `canvas.toBlob`. Keep narration, timing, and visual
+direction **here**; the scene module implements it.
 
 Not hyperrealistic — **stylized midcentury / Bauhaus-textbook**, matching the
-site: ink void, cream light, alarm-red bacteria, brass-gold accents. Think a
-1960s science-film diagram that quietly turns ominous.
-
----
-
-## 1. Timeline contract (must match the code + the page)
-
-The scene renders one pass, indexed by frame; `phase t = frameIndex / totalFrames`
-∈ [0,1]. The encoded video is **all-intra** and **scroll-scrubbed**:
-`assets/js/landing.js` maps scroll → `window.__scrubTarget` → `video.currentTime`.
-
-| timeline `t` | scroll region | act |
-|---|---|---|
-| `0.00 – 0.70` | Act 1 (`#act1`) | fill + spill + break |
-| `0.70 – 1.00` | Act 2 (`#act2`) | hedcut morph + hold |
-
-This is the contract `paramsForPhase(t)` in `landing.js` already encodes
-(`fill 0–0.55`, `over 0.55–0.70`, `morph 0.70–1.0`). The storyboard beats below
-are written in the same `t` so the scene, the scrub mapping, and the narration
-beats (`.pstep` text, the digital `#clock`, the `#pct` readout) stay in lockstep.
+site: ink void, cream light, alarm-red bacteria, brass-gold accents. A 1960s
+science-film diagram that quietly turns ominous.
 
 Palette tokens (from `assets/css/src/main.css`): ink `#111`, cream `#e9e2d0`,
 red `#b0382a` (176,56,42), gold `#e0a52f` (224,165,47), blue `#285079`.
 
 ---
 
-## 2. Beat sheet
+## 1. Verified arithmetic (the anchor numbers — do not re-derive)
 
-Each beat: the narration it underscores (already in `_layouts/landing.html`), the
-3D action, camera, material/light, and the transition out.
+The clock is grounded in real *E. coli*, so "full" lands at **11:50, not noon**:
 
-### A — "Picture a bottle." · `t 0.00–0.06` · 11:00
-- **3D:** a single stylized **glass beaker** fades up out of the ink void, dead
-  centre on a faint cream ground-plane shadow. Empty. Thin rim-light traces the
-  silhouette (the Bauhaus "U" from the old 2D version, now a translucent solid).
-- **Camera:** establishing, slightly low; almost still, a slow 2% push.
-- **Material/light:** matte-frosted glass — fake refraction (a dim env tint + a
-  fresnel rim), no raytracing. One key light upper-left, cool fill.
-- **Out:** hold; the void stays empty so emptiness reads.
+- One *E. coli* ≈ **1 μm³** (rod, cylinder πr²h with r=0.5 μm, h=2 μm → 1.57;
+  canonical ~1).
+- **10¹⁵ cells per liter** (1 μm³ = 10⁻¹⁸ m³; 1 L = 10⁻³ m³).
+- Start **1 cell at 11:00**, doubling every minute → the liter fills at **~11:50**
+  (2⁵⁰ ≈ 1.13×10¹⁵).
+- **Macro mapping** — the render draws *macro-particles*, not real cells. Seed
+  **1 macro at 11:40**, double each minute:
 
-### B — "…drop in a single bacterium." · `t 0.06–0.12` · 11:00
-- **3D:** one **red capsule** (rod bacterium) drops from the rim and settles on
-  the floor, with a soft glow and a tiny bounce. `#pct` hidden (a lone cell isn't
-  "1% full").
-- **Camera:** small push toward the floor of the beaker.
-- **Out:** the cell pulses once — about to divide.
+  | clock | 11:40 | 11:45 | 11:46 | 11:49 | **11:50** | 11:51 | 11:52 | 11:53 | **11:54** |
+  |---|---|---|---|---|---|---|---|---|---|
+  | macro count | 1 | 32 | 64 | 512 | **1024** | 2048 | 4096 | 8192 | **16384** |
+  | beaker | 0.1% | 3% | 6% | 50% | **full** | 2× | 4× | 8× | **16× (screen)** |
 
-### C — "one becomes two → two become four …" → "11:55, three percent" · `t 0.12–0.45`
-- **3D:** **binary division** — each cell splits into two along a random axis
-  (seeded), the pair nudging apart, falling, packing under gravity. The count
-  doubles but the **fill line barely rises** for most of this stretch — the whole
-  deception of the thought experiment. By 11:55 the floor is dusted, ~3%.
-- **Camera:** held **wide** — the visible emptiness is the point.
-- **Material/light:** bacteria read as a glowing red granular mass; subtle
-  additive bloom in the crowd.
-- **Out:** a beat of false calm at ~3%.
-
-### D — "11:56 6% · 11:57 12% · 11:58 quarter · 11:59 half" · `t 0.45–0.55`
-- **3D:** the **late doublings race** — the surface climbs fast and roils;
-  pressure visibly building against the glass walls.
-- **Camera:** push in ~8%, tilt up slightly to follow the rising line.
-- **Out:** the surface reaches just under the rim.
-
-### E — "Noon. The bottle is full." · `t 0.55–0.58` · 12:00
-- **3D:** the mass meets the rim; a **held breath**. Light shifts warmer/redder;
-  the watch flips to 12:00; `#pct` reads 100%.
-- **Camera:** stop. A micro-hold.
-- **Out:** the first cells crest the lip.
-
-### F — "12:01 spills out · 12:02 doubles again" · `t 0.58–0.66`
-- **3D:** **overflow** — bacteria pour over the rim and cascade down the outside,
-  fluid-like (optionally the MPM fluid pass from `webgpu_compute_particles_fluid`),
-  outward radial push + gravity. The vessel can no longer contain the curve.
-- **Camera:** ease back to reveal the spill spreading past the beaker's base.
-- **Out:** pressure peaks.
-
-### G — "the circles fill the screen · one last doubling, and they keep coming" · `t 0.66–0.70` · 12:03–12:04
-- **3D:** **the beaker shatters** under exponential pressure — Ammo
-  `ConvexObjectBreaker` fractures the glass; shards fly; the swarm **erupts to
-  fill the frame**. (Scaffolded behind `ENABLE_AMMO`; until then, a shader-only
-  eruption stands in.)
-- **Camera:** a restrained shake, then begins settling to portrait framing.
-- **Out:** the screen is full of red — the bridge into the morph.
-
-### H — morph: swarm → hedcut · `t 0.70–0.90`
-- **3D:** the erupted cloud **decelerates, freezes, and migrates**: every
-  particle lerps to its target sampled from the **Bartlett portrait** stipple
-  (`assets/img/bartlett.webp`, `buildTargets()`), red → ink-black. The brass
-  **exponential-growth trophy** detail emerges in gold in the lower foreground.
-- **Camera:** settles to a straight-on **portrait** frame, centred.
-- **Out:** the face resolves.
-
-### I — resolve + quote · `t 0.90–1.00`
-- **3D:** the **hedcut fully forms** and holds with a faint breathing jitter.
-- **Page:** Act 2's epigraph fades in over it — *"The greatest shortcoming of the
-  human race is our inability to understand the exponential function." — Albert
-  Bartlett, 1972* (already in `_layouts/landing.html`).
-- **Out:** hold on the portrait into the rest of the page.
+  So 1 macro ≈ 1.1×10¹² real cells, constant throughout. `COUNT = 16384 = 2¹⁴`
+  (the hedcut resolution); "full" = `COUNT/16 = 1024`. The micro view
+  (11:00–11:35, literal 1→8 cells) and the macro fluid (11:40→) are different
+  scales; the **zoom-out at 11:35 hides the rebaseline**.
 
 ---
 
-## 3. Composition per aspect (distinct, not crops)
+## 2. Timeline contract (must match the code + the page)
+
+The scene renders one pass, indexed by frame; `t = frameIndex / totalFrames` ∈
+[0,1]. The encoded video is **all-intra** and **scroll-scrubbed**:
+`assets/js/landing.js` maps scroll → `video.currentTime`.
+
+| timeline `t` | scroll region | act |
+|---|---|---|
+| `0.00 – 0.70` | Act 1 (`#act1`) | micro intro → macro fill → spill → break |
+| `0.70 – 1.00` | Act 2 (`#act2`) | hedcut morph + hold |
+
+`paramsForPhase(t)` in `landing.js` is the single mapping `t → {clock, active,
+over, shatter, morph}`. The beats below are written in the same `t` so the scene,
+the scrub mapping, and the page (`.pstep` text, `#clock`, `#pct`) stay in
+lockstep.
+
+**Pacing:** the `t → clock` map is deliberately **non-linear** — give the *late*
+doublings (11:47→11:50) more frames than the early ones so growth reads "slow,
+then all at once."
+
+---
+
+## 3. Beat sheet
+
+Eight on-screen text beats (streamlined from Bartlett's lecture), each with its
+3D action, camera, and transition. Text lives in `_layouts/landing.html`.
+
+| beat | `t` | clock | active | on-screen text | 3D action |
+|---|---|---|---|---|---|
+| **A** | 0.00–0.06 | 11:00 | — | **Picture an empty bottle.** | glass beaker fades up from the ink void, centred, faint cream ground shadow, fresnel rim-light. Empty. |
+| **B** | 0.06–0.10 | 11:00 | 1 | **Drop in one bacterium.** | one **red rod** drops from the rim, settles on the floor with a soft glow + tiny bounce. `#pct` hidden. Camera zoomed in. |
+| **C** | 0.10–0.18 | 11:01–03 | 2→8 | **It divides once a minute. One becomes two.** · **Two become four. Four become eight.** | binary division along a seeded axis; daughters nudge apart. Hero rods, legible. |
+| — | 0.18–0.24 | 11:35 | — | *(silent — the emptiness is the point)* | **zoom out** to the whole beaker; it looks empty. |
+| — | 0.24–0.30 | 11:40 | 1 (macro) | — | macro seed appears at the floor (rebaseline); material crosses from lit rods → soft round sprites. |
+| **D** | 0.30–0.40 | 11:45 | 32 | **Forty-five minutes in — still three percent full.** | fluid solver active; a thin glowing film dusts the floor; vast empty headroom above. |
+| **E** | 0.40–0.46 | 11:46 | 64 | **If you were one of them, when would you feel crowded?** | the field roils gently; still mostly empty. False calm. |
+| **F** | 0.46–0.52 | 11:49 | 512 | **Half full. One minute to go.** | the **late doublings race** — surface climbs fast, pressure building on the walls. Camera pushes in, tilts up. |
+| **G** | 0.52–0.56 | 11:50 | 1024 | **Full.** | mass meets the rim; a held breath; light shifts warmer/redder; `#pct` 100%. Camera stops. |
+| — | 0.56–0.62 | 11:51 | 2048 | *(visual payoff)* | **overflow + shatter** — fluid crests the lip and pours down the outside; the **beaker shatters** (Ammo `ConvexObjectBreaker`); the wall constraint drops. |
+| — | 0.62–0.70 | 11:52–54 | 4096→16384 | — | the swarm **erupts to fill the frame** (4×→8×→16× volume); camera begins settling to portrait; **freeze** at 16384. |
+| — | 0.70–0.90 | — | 16384 | — | **morph** — every particle lerps to its target sampled from the **Bartlett portrait** stipple (`buildTargets()`), red → ink-black; the brass exponential-growth detail emerges in gold. Camera settles straight-on portrait. |
+| — | 0.90–1.00 | — | 16384 | epigraph fades in | hedcut **fully forms** and holds with a faint breathing jitter. Act 2's quote (already in `_layouts/landing.html`): *"…our inability to understand the exponential function." — Albert Bartlett, 1972.* |
+
+---
+
+## 4. Simulation model (the priority — `activeCount` doubling + spill)
+
+- **Fixed buffer, variable active set.** Pre-allocate `instancedArray(COUNT,'vec3')`
+  (positions + velocities), `COUNT = 16384`. Every compute kernel early-outs:
+  `If(float(i).greaterThanEqual(uActive), () => Return())`. Inactive slots park
+  offscreen and cost ~nothing.
+- **`uActive = clamp(2^(clock − 11:40), 1, COUNT)`** — driven from `t`; the
+  timeline owns the doubling clock. Full (rim) at `COUNT/16 = 1024`.
+- **Division = activation at the parent.** On a minute tick, activate slot
+  `i + active` at `position[i] + hash(i)·ε` (small deterministic offset). The
+  solver's incompressibility shoves daughters apart → "divide, then pack" with no
+  per-agent logic.
+- **Fill level is emergent.** Constant per-particle rest volume ⇒ occupied volume
+  = `active·v` ⇒ surface height tracks the count automatically (fill % =
+  `active/1024`). Never keyframe the level.
+- **Containment = analytic cylinder** (centre `cx`, half-width `R`, floor `bot`,
+  rim `top`) in the integration kernel: project/reflect + damp particles crossing
+  the wall, **only below the rim**. Past 1024 particles the column exceeds the rim
+  and unconstrained particles **spill over the lip under gravity** — overflow is
+  emergent, not animated.
+- **Shatter at 11:51 (`t≈0.58`) is choreographed, not coupled.** On that frame:
+  (1) trigger Ammo `ConvexObjectBreaker` on the glass mesh (visual only), and
+  (2) drop the wall constraint so fluid pours out. **No two-way fluid↔rigid
+  coupling.** Both fire on a fixed frame → deterministic.
+
+### Render / material (vanilla WebGPU, deliberately simple)
+- **Billboards via `SpriteNodeMaterial`**, `positionNode = positions.toAttribute()`,
+  size via `.scaleNode`.
+- **Soft round dot** = radial-falloff alpha in TSL (`smoothstep` on
+  `uv().sub(0.5).length()` → `.opacityNode`) — no texture asset.
+- **Blend follows density:** `AdditiveBlending` + `depthWrite=false` while sparse
+  (glow); crossfade to **normal alpha** as `active/1024 → 1` so the packed fluid
+  doesn't blow out to white.
+- **Hero cells legible:** 1→8 (zoomed) render as red `0xb0382a` lit rods;
+  `mix()` toward round soft sprites as the field scales — same material, no swap.
+- **Camera scripted + deterministic:** zoom in to the seed cell (11:00), hold,
+  zoom out to the whole beaker (11:35), gentle orbital parallax through the macro
+  phase; settle to portrait for the morph. A subtle TSL sine "wave" shimmer in the
+  setup fades out as the solver takes over (~11:45): orderly → chaotic.
+
+---
+
+## 5. Composition per aspect (distinct, not crops)
 
 - **Desktop 1920×1080:** beaker centred; spill spreads horizontally; the hedcut
   fills ~90% of frame height, centred.
-- **Mobile 1080×1920:** taller, narrower beaker placed in the **lower third** (so
-  the rising fill has vertical room and clears the brandbar); the portrait fills
-  the vertical frame. Match the old 860px breakpoint intent (`transform:scale(.74)`,
-  flask dropped low).
+- **Mobile 1080×1920:** taller, narrower beaker in the **lower third** (rising
+  fill has vertical room and clears the brandbar); the portrait fills the vertical
+  frame. Match the 860px breakpoint intent (`transform:scale(.74)`, flask low).
 
 ---
 
-## 4. Technical guardrails (the scene must honour)
+## 6. Technical guardrails (the scene must honour)
 
 - **Contract:** `default async ({THREE,TSL,renderer,width,height,aspect,totalFrames,prng}) → { render(i), dispose() }`; frames requested in order; render is a **pure function of `t`**.
-- **Determinism:** fixed `dt = 1/30`; CPU randomness via `prng` (`render/harness/prng.js`); GPU randomness via `hash(instanceIndex)`; no wall-clock, no input.
-- **Budget:** ~50k particles (`COUNT` in `landing.js`); tune for the spill density vs. encode size. Keep scrub frame count modest (~150–240) — all-intra is heavy.
+- **Determinism:** fixed `dt = 1/30`; CPU randomness via `prng`
+  (`render/harness/prng.js`); GPU randomness via `hash(instanceIndex)`; no
+  wall-clock, no input.
+- **Budget:** `COUNT = 16384`. Density knob: scale `COUNT` by a **power of two**
+  (e.g. 65536) to pack denser — "full" stays `COUNT/16`, so the doubling math is
+  unchanged. Keep scrub frame count modest (~150–240) — all-intra is heavy.
 - **Assets:** portrait at `assets/img/bartlett.webp` (`.jpg` fallback).
-- **Ammo:** behind `ENABLE_AMMO`; per `examples/physics_ammo_break`; deterministic at fixed timestep.
+- **Ammo:** behind `ENABLE_AMMO`; per `examples/physics_ammo_break`; deterministic
+  at fixed timestep.
+- **References (follow the upstream API verbatim — do not invent nodes):**
+  `webgpu_compute_particles`, `webgpu_compute_particles_fluid`,
+  `physics_ammo_break`, `webgl_points_dynamic`.
 
 ---
 
-## 5. Generating / extending the scene from this storyboard (scaffolding + prompting)
+## 7. Hand-off to the page (`_layouts/landing.html` / `assets/js/landing.js`)
+
+When this spec is shipped to the site implementation:
+
+- **`_layouts/landing.html`:** replace the 15 `.pstep` blocks with the **8 beats**
+  in §3 (A, B, C×2, D, E, F, G); swap `<canvas id="bcanvas">` → a scroll-scrubbed
+  `<video>` (poster + `prefers-reduced-motion` still).
+- **`assets/js/landing.js`:** **strip** the old 2D-canvas sim + hedcut stipple;
+  **keep** the scroll engine, the `#clock`, the `#pct` readout, the progress bar,
+  and Act-3 text. Re-time the keyframes to **11:00→11:50**. `#pct` reads
+  `active/1024`.
+- **Scroll↔video** via **`scrolly-video`** (dkaoster/ScrollyVideo.js) — it handles
+  the cross-browser seek-on-scroll quirks (Safari/iOS) by decoding frames to a
+  canvas rather than naive `video.currentTime`. **Drive it manually** with
+  `setVideoPercentage(p)` from the existing Act 1/Act 2 scroll mapping (do **not**
+  use its auto `trackScroll`: only the `#act1`+`#act2` span maps to the video
+  `t 0→0.70→1.0`; Act 3 is separate page content). Pairs with the **all-intra**
+  encode (every frame a keyframe → exact, instant seeks). On
+  `prefers-reduced-motion`, don't init ScrollyVideo — show the `poster`.
+
+---
+
+## 8. Generating / extending the scene from this storyboard
 
 How to turn this script into (or refine) `render/scenes/landing.js` with an LLM,
-reliably:
+reliably — the sandbox can't run WebGPU, so the loop is render-on-GPU → screenshot
+→ vision-check:
 
 1. **One source of truth, two artefacts.** This storyboard (creative + timing) →
-   the scene module (code). Never let timing drift between them; cite beat letters
-   in code comments.
-2. **Pin the API surface in the prompt.** three.js TSL/WebGPU drifts between
-   versions. Always give the model: the pinned `three` version (`package.json`),
-   the **exact** reference examples
-   (`webgpu_compute_particles`, `webgpu_compute_particles_fluid`,
-   `physics_ammo_break`, `webgl_points_dynamic`), and the node names to use
-   (`instancedArray`, `instanceIndex`, `Fn().compute()`, `hash`, `SpriteNodeMaterial`,
-   `storage`, `If`). Instruct: *follow the upstream example API verbatim; do not
-   invent nodes.*
-3. **Hand it the contract + invariants** from §4 as hard constraints, plus the
-   palette tokens and asset paths. State that it runs **headless/offline** and
-   must be deterministic.
-4. **Decompose by beat, implement one at a time.** Prompt per beat (A…I) with its
-   §2 row as the spec and an **acceptance criterion** ("at `t=0.40` the floor is
-   lightly dusted and the beaker still reads near-empty"). Smaller scope → far
-   higher hit rate than "write the whole scene."
-5. **Close the loop with rendered frames.** After each beat: `node
-   render/harness/capture.mjs --scene=landing` for a few `t` values, screenshot,
-   and feed the image back to a vision model: *"Does this match beat D? what's
-   off?"* Iterate. This is the only real validator — the sandbox can't run WebGPU.
+   the scene module (code). Never let timing drift; cite beat letters in code
+   comments.
+2. **Pin the API surface in the prompt.** Give the model the pinned `three`
+   version (`package.json`), the exact reference examples (§6), and the node names
+   (`instancedArray`, `instanceIndex`, `Fn().compute()`, `hash`,
+   `SpriteNodeMaterial`, `storage`, `If`). Instruct: *follow the upstream example
+   API verbatim; do not invent nodes.*
+3. **Hand it the contract + invariants** from §4/§6, the palette tokens, and asset
+   paths. State it runs **headless/offline** and must be deterministic.
+4. **Decompose by beat, implement one at a time** (A…G) with an **acceptance
+   criterion** ("at `t=0.34` the floor is lightly dusted, beaker reads ~3%").
+5. **Close the loop with rendered frames.** `node render/harness/capture.mjs
+   --scene=landing` for a few `t`, screenshot, feed the image back: *"Does this
+   match beat D? what's off?"* Iterate.
 6. **Verify determinism + scrub seams** before committing: render twice → frames
-   identical; check the `0.70` Act1→Act2 handoff and the morph endpoint are smooth
-   (no pop), since the video is scrubbed both directions.
+   identical; check the `0.70` Act1→Act2 handoff and morph endpoint are smooth
+   (no pop) — the video is scrubbed both directions.
 
 ### Reusable prompt skeleton
 
@@ -166,10 +208,12 @@ Role: three.js r0.171 WebGPU TSL author. Output ONE scene module.
 Contract: default async ({THREE,TSL,renderer,width,height,aspect,totalFrames,prng})
           → { render(frameIndex), dispose() }. Pure function of t=frameIndex/totalFrames.
 Invariants: deterministic (fixed dt=1/30; prng + hash(instanceIndex); no input/clock);
-            runs headless offline; ~50k particles; palette {ink#111, red#b0382a, gold#e0a52f};
-            portrait assets/img/bartlett.webp.
+            headless offline; COUNT=16384 macro-particles, full=1024 (2^(clock-11:40));
+            palette {ink#111, red#b0382a, gold#e0a52f}; portrait assets/img/bartlett.webp.
 Reference (follow API verbatim, don't invent nodes): <paste the 4 example URLs>.
-Task: implement BEAT <X> only — <paste the §2 row>.
+Task: implement BEAT <X> only — <paste its §3 row>.
 Acceptance: <one concrete, checkable statement about the frame at a given t>.
-Return: the module diff for landing.js implementing this beat, plus the t-values to screenshot.
+Return: the module diff for landing.js implementing this beat, plus t-values to screenshot.
 ```
+</content>
+</invoke>

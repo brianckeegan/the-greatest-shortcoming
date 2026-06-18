@@ -6,6 +6,42 @@ the resulting files committed under [`assets/video/`](../assets/video). The
 visitor's browser only ever plays lightweight video — no live physics. The
 Jekyll/GitHub-Pages deploy is unchanged and just serves the committed assets.
 
+## Quickstart (for dummies)
+
+You render the animation **once on a computer with a GPU** (a Mac is ideal), the
+video files get **committed to the repo**, and the website's normal build just
+serves them. CI never renders. You only repeat this when the animation changes.
+
+```bash
+# 0. one-time tools: Node 22, Google Chrome, and ffmpeg
+#    (macOS: brew install ffmpeg | Linux: sudo apt install ffmpeg)
+
+# 1. get the code + the working branch
+git clone <repo-url> && cd the-greatest-shortcoming
+git checkout claude/webgl-animation-generation-v8gt66
+
+# 2. install JS tools (first time, and after package.json changes)
+npm install
+
+# 3. render on the GPU, then encode to video → assets/video/
+npm run render:all
+
+# 4. (optional) preview the real site
+npm run build:css && bundle exec jekyll serve     # http://localhost:4000
+
+# 5. ship it back: commit ONLY the generated videos, then push
+git add assets/video/
+git commit -m "Render background videos"
+git push                                          # the PR updates automatically
+```
+
+Merging the PR to `master` deploys the videos with the normal Pages build — **you
+never touch CI**. Re-render only when something in `render/` changes; the build
+writes `assets/video/.render-hash`, and if it differs from your current `render/`
+the committed videos are stale. (If step 3 says *no WebGPU adapter*, you're on a
+machine without a usable GPU — render on the Mac. If it says *ffmpeg: command not
+found*, do step 0.)
+
 ## Why local, not CI
 
 The scenes use **three.js `WebGPURenderer` compute shaders** (+ Ammo.js for the

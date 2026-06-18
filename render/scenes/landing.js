@@ -1,8 +1,13 @@
 /* Landing background — scroll-scrubbed (#bcanvas).
+   See render/scenes/landing.storyboard.md for the full spec + verified E. coli
+   arithmetic. Clock grounded in real cells, so "full" lands at 11:50, not noon.
    The narrative the video must carry, frame-indexed across the loop:
-     phase 0.00–0.55  fill   — bacteria fill the vessel under gravity (count ramps)
-     phase 0.55–0.70  spill  — vessel overflows; particles erupt outward
-     phase ~0.62      break  — (optional, ENABLE_AMMO) the beaker shatters
+     phase 0.00–0.30  intro  — 1 cell (11:00) → 1→8 hero rods (11:01–03) → zoom out
+                               (11:35 empty) → macro seed (11:40)
+     phase 0.30–0.56  fill   — macro count doubles 1→1024 (11:40→11:50), full at rim
+     phase 0.56–0.62  spill  — vessel overflows; particles erupt outward (11:51)
+     phase ~0.58      break  — (optional, ENABLE_AMMO) the beaker shatters
+     phase 0.62–0.70  erupt  — 1024→16384 (11:52→11:54, 16× volume), fill frame
      phase 0.70–1.00  morph  — particles reorganise into the Bartlett hedcut
 
    The encoded video is ALL-INTRA (see render/encode.mjs) so the site can drive
@@ -27,7 +32,8 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
     mix, smoothstep, clamp, If,
   } = TSL;
 
-  const COUNT = 50000;
+  const COUNT = 16384;        // 2^14 macro-particles = hedcut resolution
+  const FULL = COUNT / 16;    // 1024 macro-particles = beaker full at the rim (11:50)
   const RED = vec3(176 / 255, 56 / 255, 42 / 255);
   const BLACK = vec3(17 / 255, 17 / 255, 17 / 255);
 
@@ -120,15 +126,21 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
   let ammo = null;
   if (ENABLE_AMMO) ammo = await ammoBreak({ THREE, scene, prng });
 
-  // ---- phase → sim parameters ----
+  // ---- phase → sim parameters (storyboard §1/§3: powers-of-two doubling) ----
+  // active = 2^(clock-11:40) macro-particles, full (rim) at FULL=1024 (11:50),
+  // 16384 (16× volume) at 11:54. The t→clock map is non-linear so the late
+  // doublings (11:47→11:50) get more frames — "slow, then all at once".
   function paramsForPhase(t) {
-    // fill: 0..0.55, spill: 0.55..0.70, morph: 0.70..1.0
-    const fill = clampJS(t / 0.55, 0, 1);
-    const over = clampJS((t - 0.55) / 0.15, 0, 1);
+    let active;
+    if (t < 0.10) active = 1;                                  // 11:00 single cell
+    else if (t < 0.18) active = pow2Ramp(t, 0.10, 0.18, 1, 8); // 11:01–03: 1→8 hero rods
+    else if (t < 0.30) active = 1;                             // 11:35 empty → 11:40 macro seed
+    else if (t < 0.56) active = pow2Ramp(t, 0.30, 0.56, 1, FULL);     // 11:40→11:50: 1→1024
+    else active = pow2Ramp(t, 0.56, 0.70, FULL, COUNT);              // 11:50→11:54: 1024→16384
+    const over = clampJS((t - 0.56) / 0.06, 0, 1);   // overflow ramps once full (11:51+)
+    const shatter = t >= 0.58;                        // beaker break (11:51)
     const morph = smoothstepJS(0.70, 1.0, t);
-    // active particle count grows exponentially through the fill, full at spill
-    const active = Math.round(COUNT * (over > 0 ? 1 : Math.pow(fill, 1.6)));
-    return { active: Math.max(1, active), over, morph };
+    return { active: Math.max(1, Math.round(active)), over, shatter, morph };
   }
 
   return {
@@ -141,7 +153,7 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
 
       // step the sim only while not fully morphed (frozen during morph)
       if (p.morph < 0.999) await renderer.computeAsync(computeUpdate);
-      if (ammo && t > 0.6 && t < 0.72) ammo.step(1 / 30);
+      if (ammo && p.shatter && t < 0.72) ammo.step(1 / 30);
 
       await renderer.renderAsync(scene, camera);
     },
@@ -154,6 +166,12 @@ export default async function init({ THREE, TSL, renderer, width, height, aspect
 
   // tiny CPU easing helpers (uniform-side math)
   function clampJS(v, a, b) { return v < a ? a : v > b ? b : v; }
+  // exponential (doubling) interpolation a→b across t∈[t0,t1] — equal minutes
+  // map to equal doublings, so a*2,*4,… steps land evenly on the clock.
+  function pow2Ramp(t, t0, t1, a, b) {
+    const u = clampJS((t - t0) / (t1 - t0), 0, 1);
+    return a * Math.pow(b / a, u);
+  }
   function smoothstepJS(e0, e1, x) {
     const t = clampJS((x - e0) / (e1 - e0), 0, 1);
     return t * t * (3 - 2 * t);
