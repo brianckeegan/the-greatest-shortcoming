@@ -6,6 +6,11 @@ the resulting files committed under [`assets/video/`](../assets/video). The
 visitor's browser only ever plays lightweight video — no live physics. The
 Jekyll/GitHub-Pages deploy is unchanged and just serves the committed assets.
 
+> **Authoring help:** the consolidated `threejs` skill lives in
+> [`.claude/skills/threejs/`](../.claude/skills/README.md) — load its
+> `references/webgpu-tsl.md` (WebGPURenderer + TSL compute) and `references/physics.md`
+> (Ammo / `ConvexObjectBreaker`) when writing or tuning the scenes here.
+
 ## Why local, not CI
 
 The scenes use **three.js `WebGPURenderer` compute shaders** (+ Ammo.js for the
