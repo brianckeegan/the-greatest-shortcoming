@@ -232,7 +232,7 @@
 .pstep.finale{width:min(60%,640px)}
 .pstep.finale p{font-size:clamp(20px,2.2vw,30px);line-height:1.32}
 .pscene{height:100vh}
-#bcanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;object-fit:cover;background:var(--ink,#111)}
+#bcanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
 .act1{position:relative;z-index:1;background:transparent}
 .flask{background:transparent}
 /* ACT 2 — the hedcut */
