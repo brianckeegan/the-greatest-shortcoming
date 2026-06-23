@@ -200,6 +200,15 @@ window.addEventListener('resize',onScroll);
 onScroll();
 // init first step
 steps[0].classList.add('is-on');
+
+// One-shot "scroll to continue" cue at the foot of the opening screen; dismisses on the
+// first scroll (or immediately if the page loaded mid-scroll). Landing layout only.
+(function(){
+  const cue=document.getElementById('scrollcue'); if(!cue) return;
+  if((window.scrollY||window.pageYOffset||0)>4){ cue.remove(); return; }
+  const hide=()=>{ cue.classList.add('is-hidden'); setTimeout(()=>{ if(cue.parentNode) cue.remove(); },700); };
+  window.addEventListener('scroll',hide,{passive:true,once:true});
+})();
 (function(){
   const cv=document.getElementById('bcanvas'); if(!cv) return;
   const ctx=cv.getContext('2d');
@@ -271,7 +280,7 @@ steps[0].classList.add('is-on');
     return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
   }
 
-  const NCAP=190, DOUB=4.6;     // bottle capacity, then ~4.6 doublings of overflow after noon
+  const NCAP=190;     // bottle capacity at noon; overflow then doubles up to the hedcut count
   const P=[];
   function seed(g){ return {x:g.cx,y:g.bot-12,vx:0,vy:0,r:6.5}; }
   function child(par){ const a=Math.random()*6.283, off=par.r*0.5;
@@ -339,8 +348,11 @@ steps[0].classList.add('is-on');
     // particles at all — the empty bottle stands alone through the first beats.
     // The first dot appears only as fill crosses ~1/NCAP, on cue with the
     // "…drop in a single bacterium" line.
+    // After noon the population doubles exponentially all the way up to the hedcut dot
+    // count, so the spill already matches the portrait when the morph begins (seamless).
+    const DOUB = TARGETS.length>NCAP ? Math.log2(TARGETS.length/NCAP) : 6.4;
     const target = over<=0 ? Math.round(NCAP*fill)
-                           : Math.round(NCAP*Math.pow(2, over*DOUB));
+                           : Math.min(TARGETS.length||NCAP, Math.round(NCAP*Math.pow(2, over*DOUB)));
     let added=0;
     const maxAdd=Math.max(30, Math.ceil(P.length*0.6));
     while(P.length<target && added<maxAdd){
@@ -357,7 +369,8 @@ steps[0].classList.add('is-on');
     const gkey=(x,y)=>x+'_'+y;
     for(let i=0;i<P.length;i++){ const p=P[i]; const k=gkey((p.x/cell)|0,(p.y/cell)|0); let a=grid.get(k); if(!a){ a=[]; grid.set(k,a); } a.push(i); }
 
-    for(let pass=0; pass<8; pass++){
+    const PASSES=P.length>6000?1:P.length>2000?2:P.length>600?4:8;   // ease cost as the spill swells to ~16k
+    for(let pass=0; pass<PASSES; pass++){
       for(let i=0;i<P.length;i++){
         const a=P[i]; const gx=(a.x/cell)|0, gy=(a.y/cell)|0;
         for(let ox=-1; ox<=1; ox++){
@@ -394,9 +407,12 @@ steps[0].classList.add('is-on');
     }
     for(const p of P){ p.vx*=0.84; p.vy*=0.9; if(Math.abs(p.vx)<0.03)p.vx=0; if(Math.abs(p.vy)<0.05 && p.y>H-p.r-1.5)p.vy=0; }
 
-    // DRAW — black U + identical red circles
+    // DRAW — the vessel fades out in place as the overflow swallows the screen, so it
+    // dissolves into the spilled circles instead of sliding up through them into Act 2.
+    let uT=(over-0.45)/0.5; uT=uT<0?0:uT>1?1:uT;
+    const uA=1-uT*uT*(3-2*uT);
     ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='#111111'; drawU(ctx,g);
+    if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
     ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
     for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
     requestAnimationFrame(step);
@@ -404,7 +420,9 @@ steps[0].classList.add('is-on');
 
   function drawU(ctx,g){
     const x=g.outL,y=g.rim,w=g.w,h=g.h,th=g.th;
-    const rad=Math.min(w*0.34, h*0.42), irad=Math.max(2,rad-th);
+    // Gentle outer bottom corners over a near-square interior floor — clean beaker,
+    // no cream "white space" clipping the lower corners.
+    const rad=Math.min(16, w*0.12, h*0.12), irad=Math.max(2,rad-th*0.4);
     ctx.beginPath();
     ctx.moveTo(x,y);
     ctx.lineTo(x,y+h-rad); ctx.quadraticCurveTo(x,y+h,x+rad,y+h);
