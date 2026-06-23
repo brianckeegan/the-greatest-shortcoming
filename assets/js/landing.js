@@ -1,9 +1,5 @@
-/* The Greatest Shortcoming — landing scrollytelling engine.
-   Drives the narration beats (steps, digital clock, "% full" readout, progress
-   bar, Act 3 text) from scroll position, and scrubs the pre-rendered background
-   <video> (#bcanvas) to match. The heavy bacteria → spill → hedcut simulation
-   that used to run live on a <canvas> here is now rendered offline to video
-   (see render/README.md); this file no longer simulates anything. No build step. */
+/* The Greatest Shortcoming — home scrollytelling engine + bottle/hedcut sim.
+   Ported verbatim from the standalone landing prototype. No build step. */
 (function () {
   function init() {
 /* ---------------- Chapter data (mirrors _data/chapters.yml, new structure) ---------------- */
@@ -107,7 +103,8 @@ const a3lines=[...document.querySelectorAll('.a3-line')];
 const steps=[...document.querySelectorAll('.pstep')];
 const pctEl=document.getElementById('pct');
 const clockEl=document.getElementById('clock');
-const clockTimeEl=document.getElementById('clockTime');
+const minHand=document.getElementById('minHand');
+const hourHand=document.getElementById('hourHand');
 function fmtClock(m){
   m=Math.round(m);
   if(m>=60) return '12:'+String(Math.min(99,m-60)).padStart(2,'0');
@@ -125,12 +122,10 @@ const KF=[
   {min:57, fill:0.12,   over:0},   // 7  11:57  12%
   {min:58, fill:0.25,   over:0},   // 8  11:58  quarter
   {min:59, fill:0.50,   over:0},   // 9  11:59  half
-  {min:60, fill:1.0,    over:0},    // 10 12:00  full (≈190)
-  {min:61, fill:1.0,    over:0.25}, // 11 12:01  spills out (≈580)
-  {min:62, fill:1.0,    over:0.50}, // 12 12:02  doubles again (≈1.8k)
-  {min:63, fill:1.0,    over:0.75}, // 13 12:03  fills the screen (≈5.4k)
-  {min:64, fill:1.0,    over:1.0},  // 14 12:04  one last doubling — full population (≈16k)
-  {min:64, fill:1.0,    over:1.0}   // 15 clear view -> the line
+  {min:60, fill:1.0,    over:0},   // 10 12:00  full
+  {min:61, fill:1.0,    over:0.18},// 11 12:01  spills out
+  {min:63, fill:1.0,    over:1.0}, // 12 12:03  fills the screen
+  {min:63, fill:1.0,    over:1.0}  // 13 clear view -> the line
 ];
 function onScroll(){
   const rect=act1.getBoundingClientRect();
@@ -149,21 +144,20 @@ function onScroll(){
   const t2=Math.max(1,act2.offsetHeight-window.innerHeight);
   const p2=Math.min(1,Math.max(0,(-r2.top)/t2));
   let morph=0;
-  // Linear here — render applies a single smoothstep. Completes by 20% of Act 2's
-  // scroll (was 45% + a second smoothstep, which dragged the finish badly).
-  if(p2>0) morph=Math.min(1,p2/0.20);
+  if(p2>0){ let x=Math.min(1,p2/0.45); morph=x*x*(3-2*x); }
   if(morph>0) over=1;                 // keep every circle for the portrait
   window.__fill=fill; window.__over=over; window.__morph=morph;
   pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
-  // digital watchface: HH:MM ticks from 11:00 toward noon as you scroll
-  if(clockTimeEl) clockTimeEl.textContent=fmtClock(minutes);
-  if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<14.6 && morph<0.02)?'1':'0';
-    clockEl.setAttribute('aria-label','digital watch reading '+fmtClock(minutes)); }
+  // analog face: minute hand sweeps the hour (6°/min), hour hand creeps 11 → 12
+  if(minHand) minHand.setAttribute('transform','rotate('+((minutes%60)*6)+' 50 50)');
+  if(hourHand) hourHand.setAttribute('transform','rotate('+((330+minutes*0.5)%360)+' 50 50)');
+  if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+    clockEl.setAttribute('aria-label','clock reading '+fmtClock(minutes)); }
   // The "% full" readout belongs to the filling beats — hidden through "picture a
   // bottle / eleven o'clock / a single bacterium / one→two→four" (a lone bacterium
   // is not "1% full"); it fades in only once the narration starts naming
   // percentages ("…three percent full", ~keyframe 5) and out again past the spill.
-  if(pctEl.parentElement) pctEl.parentElement.style.opacity=(bi>=4.5 && bi<10.6 && morph<0.02)?'1':'0';
+  if(pctEl.parentElement) pctEl.parentElement.style.opacity=(bi>=4.5 && bi<11.6 && morph<0.02)?'1':'0';
   if(a2quote) a2quote.classList.toggle('is-on', p2>0.7);
 
   // ACT 3 — sequential animated story lines
@@ -176,26 +170,18 @@ function onScroll(){
     a3lines.forEach((el,k)=>el.classList.toggle('is-on', inv3 && k===idx3));
   }
 
-  // The pre-rendered background <video> spans Act 1 + Act 2: scrub its time to
-  // scroll position and fade it in at the start / out as Act 2 ends. The scrub
-  // timeline matches render/scenes/landing.js phases — Act 1 → [0,0.70] (fill +
-  // spill), Act 2 → [0.70,1.0] (hedcut morph). The seek is eased toward this
-  // target by the scrubber loop below.
-  const vidEl=document.getElementById('bcanvas');
-  if(vidEl){
+  // canvas spans Act 1 + Act 2; fades in at the very start, out as Act 2 ends
+  const cvEl=document.getElementById('bcanvas');
+  if(cvEl){
     const a1vis=rect.bottom>0 && rect.top<window.innerHeight;
     const a2vis=r2.bottom>0 && r2.top<window.innerHeight;
     let op=Math.min(1,Math.max(0,bi/0.8));
     if(p2>0.58) op=Math.min(op, Math.max(0,1-(p2-0.58)/0.16));
-    vidEl.style.display=(a1vis||a2vis)?'block':'none';
-    vidEl.style.opacity=String(op);
-    window.__scrubTarget = p2>0 ? (0.70 + Math.min(1,p2)*0.30) : (p*0.70);
+    cvEl.style.display=(a1vis||a2vis)?'block':'none';
+    cvEl.style.opacity=String(op);
   }
 
-  let idx=Math.min(N-1,Math.max(0,Math.round(bi)));
-  // Hold "11:59 — half full" until the bottle is genuinely full (counter = 100%) so
-  // "Noon. The bottle is full." never appears before the fill completes.
-  if(idx>=10 && fill<0.999) idx=9;
+  const idx=Math.min(N-1,Math.max(0,Math.round(bi)));
   steps.forEach((st,k)=>st.classList.toggle('is-on',k===idx));
   const docH=document.documentElement.scrollHeight-window.innerHeight;
   const progEl=document.getElementById('progress');
@@ -215,64 +201,242 @@ onScroll();
 // init first step
 steps[0].classList.add('is-on');
 
-// One-shot "scroll to continue" cue at the foot of the opening screen. The element
-// is present only on the landing layout (not the home hub), and it dismisses itself
-// the first time the reader scrolls — or immediately if the page loaded mid-scroll.
+// One-shot "scroll to continue" cue at the foot of the opening screen; dismisses on the
+// first scroll (or immediately if the page loaded mid-scroll). Landing layout only.
 (function(){
   const cue=document.getElementById('scrollcue'); if(!cue) return;
   if((window.scrollY||window.pageYOffset||0)>4){ cue.remove(); return; }
   const hide=()=>{ cue.classList.add('is-hidden'); setTimeout(()=>{ if(cue.parentNode) cue.remove(); },700); };
   window.addEventListener('scroll',hide,{passive:true,once:true});
 })();
-
-// After 10 s with no scroll input, gently auto-advance Act I so the bottle plays itself;
-// any real scroll / touch / key cancels it and re-arms the 10 s idle timer. Act I only,
-// and never under prefers-reduced-motion.
 (function(){
-  const a1=document.getElementById('act1'); if(!a1) return;
-  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const IDLE=10000, SPEED=210;            // ms idle before auto-scroll; px per second
-  let timer=null, raf=0, last=0, auto=false;
-  const actEnd=()=>a1.offsetTop+a1.offsetHeight-window.innerHeight;
-  function stop(){ auto=false; if(raf){ cancelAnimationFrame(raf); raf=0; } }
-  function frame(ts){
-    if(!auto) return;
-    if(!last) last=ts;
-    const dt=Math.min(0.05,(ts-last)/1000); last=ts;
-    if((window.scrollY||window.pageYOffset||0) >= actEnd()-1){ stop(); return; }   // Act I finished
-    window.scrollBy(0, SPEED*dt);
-    raf=requestAnimationFrame(frame);
+  const cv=document.getElementById('bcanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const flask=document.getElementById('flask');
+  const RED=[176,56,42], BLACK=[17,17,17];
+  let W=0,H=0,dpr=1;
+  function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); W=window.innerWidth; H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); buildTargets(); }
+
+  /* ---- Act 2: stipple targets sampled from the Bartlett portrait ---- */
+  const IMG=new Image(); let imgReady=false;
+  IMG.onload=()=>{ imgReady=true; buildTargets(); };
+  IMG.onerror=()=>{ if(IMG.src.indexOf('.webp')>-1) IMG.src='assets/img/bartlett.jpg'; };  // legacy fallback
+  IMG.src='assets/img/bartlett.webp';
+  const off=document.createElement('canvas'); const octx=off.getContext('2d');
+  let TARGETS=[], assigned=false, wasMorph=false;
+  function buildTargets(){
+    if(!imgReady||!W||!H) return;
+    const aspect=IMG.width/IMG.height;
+    const ph=H*0.94, pw=ph*aspect;
+    const px=(W-pw)/2, py=(H-ph)/2;
+    const rows=150, cols=Math.round(rows*aspect);   // finer grid → more facial detail
+    off.width=cols; off.height=rows;
+    octx.drawImage(IMG,0,0,cols,rows);
+    const data=octx.getImageData(0,0,cols,rows).data;
+    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.60;   // smaller dots → more facial detail
+    // the face occupies roughly this normalized box of the portrait — give it extra ink
+    const faceCX=0.50, faceCY=0.30, faceRX=0.20, faceRY=0.22;
+    const T=[];
+    for(let j=0;j<rows;j++){
+      for(let i=0;i<cols;i++){
+        const idx=(j*cols+i)*4;
+        const r=data[idx], gC=data[idx+1], bC=data[idx+2];
+        const L=(0.299*r+0.587*gC+0.114*bC)/255;
+        const cx=px+(i+0.5)*sx, cy=py+(j+0.5)*sy;
+        const ndx=(cx-W/2)/(pw*0.55), ndy=(cy-H/2)/(ph*0.62);
+        const vig=Math.min(1,Math.max(0,1.16-Math.sqrt(ndx*ndx+ndy*ndy)));
+        // brass exponential trophy = saturated yellow-gold in the lower foreground → red dots
+        const warm=(j/rows)>0.42 && (r-bC)>52 && gC>92 && bC<gC*0.66 && r>138;
+        let ink, red=false;
+        if(warm){
+          ink=Math.min(1,0.5+(r-bC)/240);
+          red=false; // trophy rendered in black with the rest of the portrait
+        } else {
+          // extra contrast inside the face box so eyes/glasses/brow read.
+          // hi reaches into the highlights and a gamma lift recovers detail in
+          // the (otherwise blown-out) lit side of the face.
+          const fx=(i/cols-faceCX)/faceRX, fy=(j/rows-faceCY)/faceRY;
+          const inFace=(fx*fx+fy*fy)<1;
+          const hi=inFace?0.94:0.80, lo=inFace?0.0:0.08;
+          ink=Math.min(1,Math.max(0,(hi-L)/(hi-lo)))*vig;
+          if(inFace) ink=Math.pow(ink,0.68);
+        }
+        if(ink<0.07) continue;
+        T.push({x:cx+(Math.random()-0.5)*sx*0.45, y:cy+(Math.random()-0.5)*sy*0.45, r:Math.max(1.0,ink*maxR), red:red});
+      }
+    }
+    TARGETS=T; assigned=false;
   }
-  function start(){ if(auto||(window.scrollY||0)>=actEnd()-1) return; auto=true; last=0; raf=requestAnimationFrame(frame); }
-  function arm(){ clearTimeout(timer); timer=setTimeout(start, IDLE); }
-  function onInput(){ stop(); arm(); }    // real input cancels and restarts the countdown
-  ['wheel','touchstart','touchmove','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,onInput,{passive:true}));
-  arm();
-})();
+  resize(); window.addEventListener('resize',resize);
 
-/* ---------------- Scroll-scrubbed background video ----------------
-   Replaces the former live canvas particle sim. The heavy bacteria → spill →
-   hedcut simulation is now a pre-rendered, all-intra video
-   (render/scenes/landing.js); here we only seek it to the scroll position that
-   onScroll() publishes as window.__scrubTarget (0..1). currentTime is eased
-   toward the target each frame for smoothness across browsers. Honours
-   prefers-reduced-motion by freezing on the poster. (ScrollyVideo.js would be a
-   drop-in upgrade for iOS canvas-decoded seeking if stutter shows up there.) */
-(function(){
-  const vid=document.getElementById('bcanvas'); if(!vid||vid.tagName!=='VIDEO') return;
-  const reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce){ try{vid.pause();}catch(e){} return; }   // poster stands in
-  try{vid.pause();}catch(e){}                          // we drive currentTime manually
-  let duration=0;
-  function onMeta(){ duration=vid.duration||0; }
-  if(vid.readyState>=1) onMeta(); else vid.addEventListener('loadedmetadata',onMeta);
-  (function tick(){
-    requestAnimationFrame(tick);
-    if(!duration) return;
-    const target=Math.min(1,Math.max(0,window.__scrubTarget||0))*duration;
-    const cur=vid.currentTime||0;
-    if(Math.abs(target-cur)>0.001){ try{ vid.currentTime=cur+(target-cur)*0.18; }catch(e){} }
-  })();
+  // Bauhaus U vessel geometry from the flask anchor (viewport px)
+  function geo(){
+    const r=flask.getBoundingClientRect();
+    const cx=r.left+r.width/2;
+    const w=Math.min(212, r.width*0.94);
+    const h=Math.min(300, r.height*0.84);
+    const top=r.top+r.height*0.10;
+    const th=Math.max(18, w*0.155);
+    return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
+  }
+
+  const NCAP=190;     // bottle capacity at noon; overflow then doubles up to the hedcut count
+  const P=[];
+  function seed(g){ return {x:g.cx,y:g.bot-12,vx:0,vy:0,r:6.5}; }
+  function child(par){ const a=Math.random()*6.283, off=par.r*0.5;
+    return {x:par.x+Math.cos(a)*off, y:par.y+Math.sin(a)*off, vx:Math.cos(a)*0.4, vy:Math.sin(a)*0.4-0.3, r:6+Math.random()*2.4}; }
+
+  // circle vs solid axis-aligned rectangle (the U is three such solids)
+  function collideRect(p,x0,y0,x1,y1){
+    const cx=Math.max(x0,Math.min(p.x,x1)), cy=Math.max(y0,Math.min(p.y,y1));
+    const dx=p.x-cx, dy=p.y-cy, d2=dx*dx+dy*dy;
+    if(d2<p.r*p.r){
+      if(d2>0.0001){ const d=Math.sqrt(d2), ov=p.r-d, nx=dx/d, ny=dy/d; p.x+=nx*ov; p.y+=ny*ov;
+        const vn=p.vx*nx+p.vy*ny; if(vn<0){ p.vx-=nx*vn*1.1; p.vy-=ny*vn*1.1; } }
+      else { const dl=p.x-x0, dr=x1-p.x, dt=p.y-y0, db=y1-p.y, m=Math.min(dl,dr,dt,db);
+        if(m===dl)p.x=x0-p.r; else if(m===dr)p.x=x1+p.r; else if(m===dt)p.y=y0-p.r; else p.y=y1+p.r; }
+    }
+  }
+
+  function step(){
+    const g=geo();
+    const morph=Math.max(0,Math.min(1, window.__morph||0));
+    // ---- ACT 2: morph the circles into the hedcut ----
+    if(morph>0.001 && TARGETS.length){
+      wasMorph=true;          // visited the portrait — re-home the circles on return
+      const desired=TARGETS.length;
+      // spawn the full population up-front so assignment captures valid homes (no NaN)
+      while(P.length<desired){ P.push(P.length?child(P[(Math.random()*P.length)|0]):seed(g)); }
+      if(P.length>desired) P.splice(desired, P.length-desired);
+      if(!assigned){
+        for(const p of P){ if(!isFinite(p.x)||!isFinite(p.y)){ p.x=W/2; p.y=H/2; } }
+        const pord=P.map((p,i)=>i).sort((a,b)=>(P[a].y-P[b].y)||(P[a].x-P[b].x));
+        const tord=TARGETS.map((t,i)=>i).sort((a,b)=>(TARGETS[a].y-TARGETS[b].y)||(TARGETS[a].x-TARGETS[b].x));
+        for(let k=0;k<pord.length;k++){ const p=P[pord[k]]; p.ti=tord[k]; p.hx=p.x; p.hy=p.y; p.hr=p.r; }
+        assigned=true;
+      }
+      const m=morph*morph*(3-2*morph);
+      ctx.clearRect(0,0,W,H);
+      for(const p of P){
+        const t=TARGETS[p.ti]||{x:p.hx,y:p.hy,r:p.hr};
+        p.x=p.hx+(t.x-p.hx)*m; p.y=p.hy+(t.y-p.hy)*m; p.r=p.hr+(t.r-p.hr)*m;
+        const md=(t&&t.red)?0:m;
+        const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
+        ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill();
+      }
+      requestAnimationFrame(step);
+      return;
+    }
+    assigned=false;
+    if(wasMorph){
+      // Coming back from the Act 2 portrait: drop every circle cleanly back inside
+      // the bottle so Act 1 replays from a tidy state, not a scattered one.
+      for(const p of P){
+        p.x=g.inL+Math.random()*(g.inR-g.inL);
+        p.y=g.rim+(g.bot-g.rim)*(0.55+Math.random()*0.4);
+        p.vx=0; p.vy=0; p.r=6+Math.random()*2.4;
+      }
+      wasMorph=false;
+    }
+    const fill=Math.max(0,Math.min(1, window.__fill||0));
+    const over=Math.max(0,Math.min(1, window.__over||0));
+    // Before noon the bottle fills; after noon the population genuinely DOUBLES
+    // by division — target grows as 2^(over) and each new circle buds from an
+    // existing one, at a per-frame rate proportional to the current count.
+    // Before the bacterium is "dropped in" (fill still rounds to 0) there are no
+    // particles at all — the empty bottle stands alone through the first beats.
+    // The first dot appears only as fill crosses ~1/NCAP, on cue with the
+    // "…drop in a single bacterium" line.
+    // After noon the population doubles exponentially all the way up to the hedcut dot
+    // count, so the spill already matches the portrait when the morph begins (seamless).
+    const DOUB = TARGETS.length>NCAP ? Math.log2(TARGETS.length/NCAP) : 6.4;
+    const target = over<=0 ? Math.round(NCAP*fill)
+                           : Math.min(TARGETS.length||NCAP, Math.round(NCAP*Math.pow(2, over*DOUB)));
+    let added=0;
+    const maxAdd=Math.max(30, Math.ceil(P.length*0.6));
+    while(P.length<target && added<maxAdd){
+      if(P.length===0) P.push(seed(g)); else P.push(child(P[(Math.random()*P.length)|0]));
+      added++;
+    }
+    if(P.length>target) P.splice(target, P.length-target);
+
+    const G=0.16;
+    for(const p of P){ p.vy+=G; p.x+=p.vx; p.y+=p.vy; }
+
+    // broadphase grid
+    const cell=28, grid=new Map();
+    const gkey=(x,y)=>x+'_'+y;
+    for(let i=0;i<P.length;i++){ const p=P[i]; const k=gkey((p.x/cell)|0,(p.y/cell)|0); let a=grid.get(k); if(!a){ a=[]; grid.set(k,a); } a.push(i); }
+
+    const PASSES=P.length>6000?1:P.length>2000?2:P.length>600?4:8;   // ease cost as the spill swells to ~16k
+    for(let pass=0; pass<PASSES; pass++){
+      for(let i=0;i<P.length;i++){
+        const a=P[i]; const gx=(a.x/cell)|0, gy=(a.y/cell)|0;
+        for(let ox=-1; ox<=1; ox++){
+          for(let oy=-1; oy<=1; oy++){
+            const arr=grid.get(gkey(gx+ox,gy+oy)); if(!arr) continue;
+            for(let m=0;m<arr.length;m++){
+              const j=arr[m]; if(j<=i) continue; const b=P[j];
+              const dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy, rr=a.r+b.r;
+              if(d2<rr*rr && d2>0.0001){ const d=Math.sqrt(d2), ov=(rr-d)*0.5, nx=dx/d, ny=dy/d; a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov; }
+            }
+          }
+        }
+      }
+      for(let i=0;i<P.length;i++){
+        const p=P[i];
+        if(p.x<p.r){ p.x=p.r; if(p.vx<0)p.vx*=-0.3; }
+        if(p.x>W-p.r){ p.x=W-p.r; if(p.vx>0)p.vx*=-0.3; }
+        if(p.y>H-p.r){ p.y=H-p.r; if(p.vy>0)p.vy*=-0.16; }
+        // the bottle: two solid side bars + a solid base. Open at the top — so
+        // surplus particles climb over the rim and spill out under their own pressure.
+        collideRect(p, g.outL, g.rim, g.inL, g.outBot);
+        collideRect(p, g.inR,  g.rim, g.outR, g.outBot);
+        collideRect(p, g.outL, g.bot, g.outR, g.outBot);
+      }
+    }
+    // Pre-overflow, every circle belongs inside the vessel. If one strayed out
+    // (scrolling back up from the spill, or down from the Act 2 portrait), funnel
+    // it back through the open rim so Act 1 always restarts cleanly in the bottle.
+    if(over<=0.001){
+      for(const p of P){
+        if(p.x<g.inL+p.r) p.x=g.inL+p.r; else if(p.x>g.inR-p.r) p.x=g.inR-p.r;
+        if(p.y<g.rim+p.r){ p.y=g.rim+p.r; if(p.vy<0)p.vy=0; }
+      }
+    }
+    for(const p of P){ p.vx*=0.84; p.vy*=0.9; if(Math.abs(p.vx)<0.03)p.vx=0; if(Math.abs(p.vy)<0.05 && p.y>H-p.r-1.5)p.vy=0; }
+
+    // DRAW — the vessel fades out in place as the overflow swallows the screen, so it
+    // dissolves into the spilled circles instead of sliding up through them into Act 2.
+    let uT=(over-0.45)/0.5; uT=uT<0?0:uT>1?1:uT;
+    const uA=1-uT*uT*(3-2*uT);
+    ctx.clearRect(0,0,W,H);
+    if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
+    ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
+    for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
+    requestAnimationFrame(step);
+  }
+
+  function drawU(ctx,g){
+    const x=g.outL,y=g.rim,w=g.w,h=g.h,th=g.th;
+    // Gentle outer bottom corners over a near-square interior floor — clean beaker,
+    // no cream "white space" clipping the lower corners.
+    const rad=Math.min(16, w*0.12, h*0.12), irad=Math.max(2,rad-th*0.4);
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x,y+h-rad); ctx.quadraticCurveTo(x,y+h,x+rad,y+h);
+    ctx.lineTo(x+w-rad,y+h); ctx.quadraticCurveTo(x+w,y+h,x+w,y+h-rad);
+    ctx.lineTo(x+w,y);
+    ctx.lineTo(x+w-th,y);
+    ctx.lineTo(x+w-th,y+h-th-irad); ctx.quadraticCurveTo(x+w-th,y+h-th,x+w-th-irad,y+h-th);
+    ctx.lineTo(x+th+irad,y+h-th); ctx.quadraticCurveTo(x+th,y+h-th,x+th,y+h-th-irad);
+    ctx.lineTo(x+th,y);
+    ctx.closePath(); ctx.fill();
+  }
+
+  window.__pcount=()=>P.length;
+  requestAnimationFrame(step);
 })();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
