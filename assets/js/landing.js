@@ -214,59 +214,39 @@ steps[0].classList.add('is-on');
   const ctx=cv.getContext('2d');
   const flask=document.getElementById('flask');
   const RED=[176,56,42], BLACK=[17,17,17];
+  const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   let W=0,H=0,dpr=1;
-  function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); W=window.innerWidth; H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); buildTargets(); }
+  // dpr capped at 1.5 — soft dots don't need full retina, and it halves fill cost.
+  function resize(){ dpr=Math.min(1.5,window.devicePixelRatio||1); W=window.innerWidth; H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); if(reduce) renderCanvas(0); }
 
-  /* ---- Act 2: stipple targets sampled from the Bartlett portrait ---- */
-  const IMG=new Image(); let imgReady=false;
-  IMG.onload=()=>{ imgReady=true; buildTargets(); };
-  IMG.onerror=()=>{ if(IMG.src.indexOf('.webp')>-1) IMG.src='assets/img/bartlett.jpg'; };  // legacy fallback
-  IMG.src='assets/img/bartlett.webp';
-  const off=document.createElement('canvas'); const octx=off.getContext('2d');
-  let TARGETS=[], assigned=false, wasMorph=false;
-  function buildTargets(){
-    if(!imgReady||!W||!H) return;
-    const aspect=IMG.width/IMG.height;
-    const ph=H*0.94, pw=ph*aspect;
-    const px=(W-pw)/2, py=(H-ph)/2;
-    const rows=150, cols=Math.round(rows*aspect);   // finer grid → more facial detail
-    off.width=cols; off.height=rows;
-    octx.drawImage(IMG,0,0,cols,rows);
-    const data=octx.getImageData(0,0,cols,rows).data;
-    const sx=pw/cols, sy=ph/rows, maxR=Math.min(sx,sy)*0.60;   // smaller dots → more facial detail
-    // the face occupies roughly this normalized box of the portrait — give it extra ink
-    const faceCX=0.50, faceCY=0.30, faceRX=0.20, faceRY=0.22;
-    const T=[];
-    for(let j=0;j<rows;j++){
-      for(let i=0;i<cols;i++){
-        const idx=(j*cols+i)*4;
-        const r=data[idx], gC=data[idx+1], bC=data[idx+2];
-        const L=(0.299*r+0.587*gC+0.114*bC)/255;
-        const cx=px+(i+0.5)*sx, cy=py+(j+0.5)*sy;
-        const ndx=(cx-W/2)/(pw*0.55), ndy=(cy-H/2)/(ph*0.62);
-        const vig=Math.min(1,Math.max(0,1.16-Math.sqrt(ndx*ndx+ndy*ndy)));
-        // brass exponential trophy = saturated yellow-gold in the lower foreground → red dots
-        const warm=(j/rows)>0.42 && (r-bC)>52 && gC>92 && bC<gC*0.66 && r>138;
-        let ink, red=false;
-        if(warm){
-          ink=Math.min(1,0.5+(r-bC)/240);
-          red=false; // trophy rendered in black with the rest of the portrait
-        } else {
-          // extra contrast inside the face box so eyes/glasses/brow read.
-          // hi reaches into the highlights and a gamma lift recovers detail in
-          // the (otherwise blown-out) lit side of the face.
-          const fx=(i/cols-faceCX)/faceRX, fy=(j/rows-faceCY)/faceRY;
-          const inFace=(fx*fx+fy*fy)<1;
-          const hi=inFace?0.94:0.80, lo=inFace?0.0:0.08;
-          ink=Math.min(1,Math.max(0,(hi-L)/(hi-lo)))*vig;
-          if(inFace) ink=Math.pow(ink,0.68);
-        }
-        if(ink<0.07) continue;
-        T.push({x:cx+(Math.random()-0.5)*sx*0.45, y:cy+(Math.random()-0.5)*sy*0.45, r:Math.max(1.0,ink*maxR), red:red});
-      }
-    }
-    TARGETS=T; assigned=false;
+  /* ---- Prebaked positions (assets/data/landing-bake.v1.bin, produced by
+     render/bake-landing.mjs). Replaces the live solver: the runtime only splines
+     between baked keyframe states and draws — no collision, no per-frame alloc. ---- */
+  let BAKE=null, DOUB=6.4, lastActive=0;
+  fetch('assets/data/landing-bake.v1.bin').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const dv=new DataView(buf);
+    if(String.fromCharCode(dv.getUint8(0),dv.getUint8(1),dv.getUint8(2),dv.getUint8(3))!=='TGSB') throw new Error('bad magic');
+    const hl=dv.getUint32(8,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,12,hl)));
+    const data=new Int16Array(buf,12+hl,(buf.byteLength-12-hl)>>1);
+    const states={}, bStates=[];
+    for(const s of hdr.states){ states[s.name]={space:s.space,off:s.offset}; if(s.space==='bottle') bStates.push(s.name); }
+    BAKE={N:hdr.N, scale:hdr.scale, fills:hdr.fills, states, bStates, data};
+    DOUB=Math.log2(hdr.N/NCAP);
+    if(reduce) renderCanvas(0);   // static path: repaint once the artifact arrives
+  }).catch(e=>{ console.warn('landing: prebaked positions unavailable —', e && e.message); });
+
+  function smooth(u){ return u<=0?0:u>=1?1:u*u*(3-2*u); }
+  // read slot i of a baked state into out[0..2] (normalized units)
+  function rd(name,i,out){ const s=BAKE.states[name], d=BAKE.data, sc=BAKE.scale, o=s.off+i*3; out[0]=d[o]/sc; out[1]=d[o+1]/sc; out[2]=d[o+2]/sc; }
+  // remap out[0..2] from its coordinate space to viewport pixels, in place
+  function remap(space,out,g){
+    if(space==='bottle'){ out[0]=g.inL+out[0]*(g.inR-g.inL); out[1]=g.rim+out[1]*(g.bot-g.rim); out[2]=out[2]*(g.inR-g.inL); }
+    else if(space==='fill'){ out[0]*=W; out[1]*=H; out[2]*=H; }
+    else { out[0]=W/2+out[0]*H; out[1]=H/2+out[1]*H; out[2]=out[2]*H; }   // hcenter
   }
+  const A=[0,0,0], B=[0,0,0];
+  let T0=null;
   resize(); window.addEventListener('resize',resize);
 
   // Bauhaus U vessel geometry from the flask anchor (viewport px)
@@ -280,142 +260,75 @@ steps[0].classList.add('is-on');
     return {cx,w,h,top,th, inL:cx-w/2+th, inR:cx+w/2-th, outL:cx-w/2, outR:cx+w/2, bot:top+h-th, outBot:top+h, rim:top};
   }
 
-  const NCAP=190;     // bottle capacity at noon; overflow then doubles up to the hedcut count
-  const P=[];
-  function seed(g){ return {x:g.cx,y:g.bot-12,vx:0,vy:0,r:6.5}; }
-  function child(par){ const a=Math.random()*6.283, off=par.r*0.5;
-    return {x:par.x+Math.cos(a)*off, y:par.y+Math.sin(a)*off, vx:Math.cos(a)*0.4, vy:Math.sin(a)*0.4-0.3, r:6+Math.random()*2.4}; }
+  const NCAP=190;     // slots active when the bottle is full at noon (drives the doubling)
 
-  // circle vs solid axis-aligned rectangle (the U is three such solids)
-  function collideRect(p,x0,y0,x1,y1){
-    const cx=Math.max(x0,Math.min(p.x,x1)), cy=Math.max(y0,Math.min(p.y,y1));
-    const dx=p.x-cx, dy=p.y-cy, d2=dx*dx+dy*dy;
-    if(d2<p.r*p.r){
-      if(d2>0.0001){ const d=Math.sqrt(d2), ov=p.r-d, nx=dx/d, ny=dy/d; p.x+=nx*ov; p.y+=ny*ov;
-        const vn=p.vx*nx+p.vy*ny; if(vn<0){ p.vx-=nx*vn*1.1; p.vy-=ny*vn*1.1; } }
-      else { const dl=p.x-x0, dr=x1-p.x, dt=p.y-y0, db=y1-p.y, m=Math.min(dl,dr,dt,db);
-        if(m===dl)p.x=x0-p.r; else if(m===dr)p.x=x1+p.r; else if(m===dt)p.y=y0-p.r; else p.y=y1+p.r; }
-    }
-  }
-
-  function step(){
+  // Pure function of the scroll globals + the baked artifact: compute the active
+  // count, spline each active slot between its keyframe states, jitter, and draw.
+  function renderCanvas(now){
     const g=geo();
-    const morph=Math.max(0,Math.min(1, window.__morph||0));
-    // ---- ACT 2: morph the circles into the hedcut ----
-    if(morph>0.001 && TARGETS.length){
-      wasMorph=true;          // visited the portrait — re-home the circles on return
-      const desired=TARGETS.length;
-      // spawn the full population up-front so assignment captures valid homes (no NaN)
-      while(P.length<desired){ P.push(P.length?child(P[(Math.random()*P.length)|0]):seed(g)); }
-      if(P.length>desired) P.splice(desired, P.length-desired);
-      if(!assigned){
-        for(const p of P){ if(!isFinite(p.x)||!isFinite(p.y)){ p.x=W/2; p.y=H/2; } }
-        const pord=P.map((p,i)=>i).sort((a,b)=>(P[a].y-P[b].y)||(P[a].x-P[b].x));
-        const tord=TARGETS.map((t,i)=>i).sort((a,b)=>(TARGETS[a].y-TARGETS[b].y)||(TARGETS[a].x-TARGETS[b].x));
-        for(let k=0;k<pord.length;k++){ const p=P[pord[k]]; p.ti=tord[k]; p.hx=p.x; p.hy=p.y; p.hr=p.r; }
-        assigned=true;
-      }
-      const m=morph*morph*(3-2*morph);
-      ctx.clearRect(0,0,W,H);
-      for(const p of P){
-        const t=TARGETS[p.ti]||{x:p.hx,y:p.hy,r:p.hr};
-        p.x=p.hx+(t.x-p.hx)*m; p.y=p.hy+(t.y-p.hy)*m; p.r=p.hr+(t.r-p.hr)*m;
-        const md=(t&&t.red)?0:m;
-        const cr=(RED[0]+(BLACK[0]-RED[0])*md)|0, cg=(RED[1]+(BLACK[1]-RED[1])*md)|0, cb=(RED[2]+(BLACK[2]-RED[2])*md)|0;
-        ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill();
-      }
-      requestAnimationFrame(step);
-      return;
-    }
-    assigned=false;
-    if(wasMorph){
-      // Coming back from the Act 2 portrait: drop every circle cleanly back inside
-      // the bottle so Act 1 replays from a tidy state, not a scattered one.
-      for(const p of P){
-        p.x=g.inL+Math.random()*(g.inR-g.inL);
-        p.y=g.rim+(g.bot-g.rim)*(0.55+Math.random()*0.4);
-        p.vx=0; p.vy=0; p.r=6+Math.random()*2.4;
-      }
-      wasMorph=false;
-    }
+    ctx.clearRect(0,0,W,H);
     const fill=Math.max(0,Math.min(1, window.__fill||0));
     const over=Math.max(0,Math.min(1, window.__over||0));
-    // Before noon the bottle fills; after noon the population genuinely DOUBLES
-    // by division — target grows as 2^(over) and each new circle buds from an
-    // existing one, at a per-frame rate proportional to the current count.
-    // Before the bacterium is "dropped in" (fill still rounds to 0) there are no
-    // particles at all — the empty bottle stands alone through the first beats.
-    // The first dot appears only as fill crosses ~1/NCAP, on cue with the
-    // "…drop in a single bacterium" line.
-    // After noon the population doubles exponentially all the way up to the hedcut dot
-    // count, so the spill already matches the portrait when the morph begins (seamless).
-    const DOUB = TARGETS.length>NCAP ? Math.log2(TARGETS.length/NCAP) : 6.4;
-    const target = over<=0 ? Math.round(NCAP*fill)
-                           : Math.min(TARGETS.length||NCAP, Math.round(NCAP*Math.pow(2, over*DOUB)));
-    let added=0;
-    const maxAdd=Math.max(30, Math.ceil(P.length*0.6));
-    while(P.length<target && added<maxAdd){
-      if(P.length===0) P.push(seed(g)); else P.push(child(P[(Math.random()*P.length)|0]));
-      added++;
-    }
-    if(P.length>target) P.splice(target, P.length-target);
-
-    const G=0.16;
-    for(const p of P){ p.vy+=G; p.x+=p.vx; p.y+=p.vy; }
-
-    // broadphase grid
-    const cell=28, grid=new Map();
-    const gkey=(x,y)=>x+'_'+y;
-    for(let i=0;i<P.length;i++){ const p=P[i]; const k=gkey((p.x/cell)|0,(p.y/cell)|0); let a=grid.get(k); if(!a){ a=[]; grid.set(k,a); } a.push(i); }
-
-    const PASSES=P.length>6000?1:P.length>2000?2:P.length>600?4:8;   // ease cost as the spill swells to ~16k
-    for(let pass=0; pass<PASSES; pass++){
-      for(let i=0;i<P.length;i++){
-        const a=P[i]; const gx=(a.x/cell)|0, gy=(a.y/cell)|0;
-        for(let ox=-1; ox<=1; ox++){
-          for(let oy=-1; oy<=1; oy++){
-            const arr=grid.get(gkey(gx+ox,gy+oy)); if(!arr) continue;
-            for(let m=0;m<arr.length;m++){
-              const j=arr[m]; if(j<=i) continue; const b=P[j];
-              const dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy, rr=a.r+b.r;
-              if(d2<rr*rr && d2>0.0001){ const d=Math.sqrt(d2), ov=(rr-d)*0.5, nx=dx/d, ny=dy/d; a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov; }
-            }
-          }
-        }
-      }
-      for(let i=0;i<P.length;i++){
-        const p=P[i];
-        if(p.x<p.r){ p.x=p.r; if(p.vx<0)p.vx*=-0.3; }
-        if(p.x>W-p.r){ p.x=W-p.r; if(p.vx>0)p.vx*=-0.3; }
-        if(p.y>H-p.r){ p.y=H-p.r; if(p.vy>0)p.vy*=-0.16; }
-        // the bottle: two solid side bars + a solid base. Open at the top — so
-        // surplus particles climb over the rim and spill out under their own pressure.
-        collideRect(p, g.outL, g.rim, g.inL, g.outBot);
-        collideRect(p, g.inR,  g.rim, g.outR, g.outBot);
-        collideRect(p, g.outL, g.bot, g.outR, g.outBot);
-      }
-    }
-    // Pre-overflow, every circle belongs inside the vessel. If one strayed out
-    // (scrolling back up from the spill, or down from the Act 2 portrait), funnel
-    // it back through the open rim so Act 1 always restarts cleanly in the bottle.
-    if(over<=0.001){
-      for(const p of P){
-        if(p.x<g.inL+p.r) p.x=g.inL+p.r; else if(p.x>g.inR-p.r) p.x=g.inR-p.r;
-        if(p.y<g.rim+p.r){ p.y=g.rim+p.r; if(p.vy<0)p.vy=0; }
-      }
-    }
-    for(const p of P){ p.vx*=0.84; p.vy*=0.9; if(Math.abs(p.vx)<0.03)p.vx=0; if(Math.abs(p.vy)<0.05 && p.y>H-p.r-1.5)p.vy=0; }
-
-    // DRAW — the vessel fades out in place as the overflow swallows the screen, so it
-    // dissolves into the spilled circles instead of sliding up through them into Act 2.
+    const morph=Math.max(0,Math.min(1, window.__morph||0));
+    // The vessel is now a pure visual — no collision. It dissolves as the spill
+    // crests the rim (same curve as before), so no invisible walls survive it.
     let uT=(over-0.45)/0.5; uT=uT<0?0:uT>1?1:uT;
     const uA=1-uT*uT*(3-2*uT);
-    ctx.clearRect(0,0,W,H);
     if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
-    ctx.fillStyle='rgb('+RED[0]+','+RED[1]+','+RED[2]+')';
-    for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); }
-    requestAnimationFrame(step);
+    if(!BAKE) return;                       // artifact not loaded yet → vessel only
+
+    const N=BAKE.N;
+    let active = morph>0 ? N : over<=0 ? Math.round(NCAP*fill) : Math.min(N, Math.round(NCAP*Math.pow(2, over*DOUB)));
+    if(active<0) active=0; else if(active>N) active=N;
+    lastActive=active;
+    if(active===0) return;
+
+    if(T0==null) T0=now||0;
+    const t=((now||0)-T0)/1000;
+
+    // Every dot shares one colour per frame → batch into a single filled path.
+    const m=smooth(morph);
+    let cr=RED[0], cg=RED[1], cb=RED[2];
+    if(morph>0){ cr=(RED[0]+(BLACK[0]-RED[0])*m)|0; cg=(RED[1]+(BLACK[1]-RED[1])*m)|0; cb=(RED[2]+(BLACK[2]-RED[2])*m)|0; }
+    ctx.fillStyle='rgb('+cr+','+cg+','+cb+')';
+    ctx.beginPath();
+
+    if(morph>0){
+      const amp=reduce?0:1.1*morph;         // faint breathing shimmer at the portrait
+      for(let i=0;i<active;i++){
+        rd('v_screen',i,A); remap('fill',A,g);
+        rd('v_portrait',i,B); remap('hcenter',B,g);
+        let x=A[0]+(B[0]-A[0])*m, y=A[1]+(B[1]-A[1])*m; const r=A[2]+(B[2]-A[2])*m;
+        if(amp){ x+=Math.sin(t*1.7+i*0.7)*amp; y+=Math.cos(t*1.9+i*1.3)*amp; }
+        ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,6.283);
+      }
+    } else if(over>0){
+      const amp=reduce?0:3.4*over;          // turbulence that grows into the explosion
+      for(let i=0;i<active;i++){
+        if(i<NCAP){ rd('b_full',i,A); remap('bottle',A,g); }
+        else { rd('v_spill',i,A); remap('fill',A,g); }   // new particles erupt from the rim
+        rd('v_screen',i,B); remap('fill',B,g);
+        const birth = i<NCAP ? 0 : Math.log2(i/NCAP)/DOUB;
+        const denom=1-birth; let u = denom>1e-6 ? (over-birth)/denom : 1; u=smooth(u);
+        let x=A[0]+(B[0]-A[0])*u, y=A[1]+(B[1]-A[1])*u; const r=A[2]+(B[2]-A[2])*u;
+        if(amp){ const jj=amp*u; x+=Math.sin(t*2.3+i*0.7)*jj; y+=Math.cos(t*2.7+i*1.3)*jj; }
+        ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,6.283);
+      }
+    } else {
+      // fill phase — bracket the bottle knots by fill and spline between them
+      const fills=BAKE.fills, bs=BAKE.bStates;
+      let k=0; while(k<fills.length-1 && fill>fills[k+1]) k++;
+      const nameA=bs[k], nameB=bs[Math.min(bs.length-1,k+1)];
+      const f0=fills[k], f1=fills[Math.min(fills.length-1,k+1)];
+      const u = f1>f0 ? smooth((fill-f0)/(f1-f0)) : 0;
+      for(let i=0;i<active;i++){
+        rd(nameA,i,A); remap('bottle',A,g);
+        rd(nameB,i,B); remap('bottle',B,g);
+        const x=A[0]+(B[0]-A[0])*u, y=A[1]+(B[1]-A[1])*u, r=A[2]+(B[2]-A[2])*u;
+        ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,6.283);
+      }
+    }
+    ctx.fill();
   }
 
   function drawU(ctx,g){
@@ -435,8 +348,28 @@ steps[0].classList.add('is-on');
     ctx.closePath(); ctx.fill();
   }
 
-  window.__pcount=()=>P.length;
-  requestAnimationFrame(step);
+  window.__pcount=()=>lastActive;
+
+  let running=false, rafId=0;
+  function loop(now){ if(!running) return; renderCanvas(now); rafId=requestAnimationFrame(loop); }
+  function start(){ if(!running){ running=true; rafId=requestAnimationFrame(loop); } }
+  function stop(){ running=false; if(rafId){ cancelAnimationFrame(rafId); rafId=0; } }
+
+  if(reduce){
+    // Honour prefers-reduced-motion: no autonomous rAF. The canvas tracks the
+    // user's own scroll only (jitter forced off above), so nothing moves on its own.
+    window.addEventListener('scroll',()=>renderCanvas(0),{passive:true});
+    renderCanvas(0);
+  } else {
+    // Idle the loop whenever neither act is on screen (mirrors titlecard-growth.js).
+    const act1=document.getElementById('act1'), act2=document.getElementById('act2');
+    if('IntersectionObserver' in window && (act1||act2)){
+      const vis={};
+      const io=new IntersectionObserver((es)=>{ es.forEach(en=>{ vis[en.target.id]=en.isIntersecting; }); (vis.act1||vis.act2)?start():stop(); },{threshold:0});
+      if(act1) io.observe(act1); if(act2) io.observe(act2);
+    }
+    start();
+  }
 })();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

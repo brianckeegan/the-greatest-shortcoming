@@ -10,7 +10,8 @@
     "dev:css": "tailwindcss -i assets/css/src/main.css -o assets/css/dist/main.css --watch",
     "render": "node render/harness/capture.mjs",
     "encode": "node render/encode.mjs",
-    "render:all": "npm run render && npm run encode"
+    "render:all": "npm run render && npm run encode",
+    "bake:landing": "node render/bake-landing.mjs"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",

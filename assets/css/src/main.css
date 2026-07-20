@@ -267,10 +267,16 @@
 .brand-2{font-family:var(--emph);font-style:italic;font-weight:700}
 @media (max-width:860px){
   .stage{grid-template-columns:1fr}
-  /* bottle drops to the lower half of the stage; the narration rides above it */
-  .stage-visual{position:absolute;left:0;right:0;bottom:0;height:48vh}
+  /* bottle drops to the lower third; the narration sits in a stable band above it */
+  .stage-visual{position:absolute;left:0;right:0;bottom:0;height:46vh}
   .flask-wrap{transform:scale(.74)}
-  .pstep{left:0;width:100%;padding:0 24px;top:7vh;bottom:auto}
+  /* cream scrim behind the narration so the dot field never eats the text */
+  .stage::before{content:"";position:absolute;left:0;right:0;top:0;height:60vh;pointer-events:none;
+    background:linear-gradient(to bottom,var(--canvas) 0%,var(--canvas) 46%,rgba(233,226,208,.6) 74%,rgba(233,226,208,0) 100%)}
+  /* each .pstep fills the top region and centres its own text (only the is-on one shows),
+     clearing the brandbar — no more text stranded at the very top or bottom edge */
+  .pstep{left:0;top:0;bottom:auto;width:100%;height:54vh;padding:calc(64px + env(safe-area-inset-top,0px)) 24px 0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
   .pstep p{font-size:clamp(20px,5.4vw,26px)}
 }
 
@@ -393,6 +399,9 @@
 .landing .kicker{font-family:var(--serif);font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);font-size:12px}
 
 @media (prefers-reduced-motion: reduce){
-  .reveal,.pstep,.titlecard .bigtitle{transition:none;opacity:1;transform:none}
+  .reveal,.titlecard .bigtitle{transition:none;opacity:1;transform:none}
+  /* Keep the scroll-driven step reveal (JS toggles .is-on) but without the fade,
+     so the narration doesn't stack all 13 beats on top of each other. */
+  .pstep{transition:none;transform:none}
   .scrollcue,.scrollcue-arrow{animation:none}
 }
