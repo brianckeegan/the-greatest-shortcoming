@@ -7,7 +7,7 @@
    fixed string, so re-baking is byte-identical. Re-run after changing the portrait
    or the KF fill schedule; bump the versioned output filename when you do.
 
-   Usage:  npm run bake:landing        (→ assets/data/landing-bake.v1.bin)
+   Usage:  npm run bake:landing        (→ assets/data/landing-bake.v2.bin)
 
    Coordinate spaces written to the artifact (remapped to pixels at runtime):
      bottle  — (x-inL)/Wb, (y-rim)/Hb, r/Wb   [tracks the #flask element via geo()]
@@ -23,7 +23,7 @@ import { makePRNG } from './harness/prng.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = join(__dirname, '..');
 const IMG = join(REPO, 'assets', 'img', 'bartlett.webp');
-const OUT = join(REPO, 'assets', 'data', 'landing-bake.v1.bin');
+const OUT = join(REPO, 'assets', 'data', 'landing-bake.v2.bin');
 
 const SCALE = 10000;                 // Int16 fixed-point: round(norm * SCALE)
 const NCAP = 190;                    // slots active when the bottle is full at noon
@@ -185,31 +185,74 @@ async function main() {
   }
   const bFull = bottle[bottle.length - 1];
 
-  // 2) v_screen — jittered full-viewport scatter (fill-space), all N slots
-  const vScreen = new Int16Array(N * 3);
-  const gcols = Math.ceil(Math.sqrt(N * (W / H))), grows = Math.ceil(N / gcols);
-  for (let i = 0; i < N; i++) {
-    const gx = i % gcols, gy = (i / gcols) | 0;
-    const x = (gx + 0.15 + rnd() * 0.7) / gcols * W;
-    const y = (gy + 0.15 + rnd() * 0.7) / grows * H;
-    vScreen[i * 3] = q(x / W); vScreen[i * 3 + 1] = q(y / H); vScreen[i * 3 + 2] = q((3.2 + rnd() * 1.6) / H);
-  }
+  // 2) FLUID SPILL — continue the sim past noon: the population keeps doubling and
+  //    overflows the beaker under gravity, pouring down and piling up until it fills
+  //    the viewport. Captured as F frames (fill-space) that the runtime replays while
+  //    scrubbing the spill. Frame 0 = the full bottle; the last frame = the screen-full
+  //    pile used as the morph start. Beaker walls drop at ~12:02 so dots fill freely.
+  const F = 24;                 // captured spill frames
+  const SUB = 14;               // solver substeps between captured frames (settle the pile)
+  const DOUB = Math.log2(N / NCAP);
+  const WALLS_OFF = 0.35;       // spill progress at which the beaker walls disappear
 
-  // 3) v_spill (fill-space): i<NCAP ride b_full (unused at runtime); i>=NCAP erupt from the rim
-  const vSpill = new Int16Array(N * 3);
-  for (let i = 0; i < N; i++) {
-    let x, y, r;
-    if (i < NCAP) {
-      x = G.inL + (bFull[i * 3] / SCALE) * Wb; y = G.rim + (bFull[i * 3 + 1] / SCALE) * Hb; r = (bFull[i * 3 + 2] / SCALE) * Wb;
-    } else {
-      x = G.inL + rnd() * Wb; y = G.rim + (rnd() - 0.6) * 22; r = 6 + rnd() * 2.4;
+  function solveSpill(applyWalls) {
+    const GR = applyWalls ? 0.24 : 0;   // gravity while the beaker pours; then the freed mass spreads to fill
+    for (let i = 0; i < activeCount; i++) { const p = slots[i]; p.vy += GR; p.x += p.vx; p.y += p.vy; }
+    const cell = 16, grid = new Map();
+    for (let i = 0; i < activeCount; i++) { const p = slots[i]; const k = ((p.x / cell) | 0) + '_' + ((p.y / cell) | 0); let a = grid.get(k); if (!a) { a = []; grid.set(k, a); } a.push(i); }
+    for (let pass = 0; pass < 6; pass++) {
+      for (let i = 0; i < activeCount; i++) {
+        const a = slots[i], gx = (a.x / cell) | 0, gy = (a.y / cell) | 0;
+        for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
+          const arr = grid.get((gx + ox) + '_' + (gy + oy)); if (!arr) continue;
+          for (let m = 0; m < arr.length; m++) {
+            const j = arr[m]; if (j <= i) continue; const b = slots[j];
+            const dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy, rr = a.r + b.r;
+            if (d2 < rr * rr && d2 > 0.0001) { const d = Math.sqrt(d2), ov = (rr - d) * 0.5, nx = dx / d, ny = dy / d; a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov; }
+          }
+        }
+      }
+      for (let i = 0; i < activeCount; i++) {
+        const p = slots[i];
+        if (p.x < p.r) { p.x = p.r; if (p.vx < 0) p.vx *= -0.3; }
+        if (p.x > W - p.r) { p.x = W - p.r; if (p.vx > 0) p.vx *= -0.3; }
+        if (p.y > H - p.r) { p.y = H - p.r; if (p.vy > 0) p.vy *= -0.16; }
+        if (p.y < p.r) { p.y = p.r; if (p.vy < 0) p.vy *= -0.3; }
+        if (applyWalls) {
+          collideRect(p, G.outL, G.rim, G.inL, G.outBot);
+          collideRect(p, G.inR, G.rim, G.outR, G.outBot);
+          collideRect(p, G.outL, G.bot, G.outR, G.outBot);
+        }
+      }
     }
-    vSpill[i * 3] = q(x / W); vSpill[i * 3 + 1] = q(y / H); vSpill[i * 3 + 2] = q(r / H);
+    for (let i = 0; i < activeCount; i++) { const p = slots[i]; p.vx *= 0.86; p.vy *= 0.92; }
   }
 
-  // 4) portrait assignment — sort slots by v_screen (y,x), targets by (y,x), match k-th
+  function snapSpill() {
+    const arr = new Int16Array(N * 2);
+    for (let i = 0; i < N; i++) {
+      let j = i; while (j >= activeCount) j = parent[j];   // unborn slots ride their ancestor
+      const p = slots[j];
+      arr[i * 2] = q(p.x / W); arr[i * 2 + 1] = q(p.y / H);
+    }
+    return arr;
+  }
+
+  const spillFrames = [snapSpill()];          // frame 0 = the full bottle (activeCount = NCAP)
+  for (let f = 1; f < F; f++) {
+    const sub = f >= F - 6 ? 30 : SUB;        // extra settling once the late burst has spawned
+    for (let s = 0; s < sub; s++) {
+      const over = (f - 1 + (s + 1) / sub) / (F - 1);
+      ensureActive(Math.min(N, Math.round(NCAP * Math.pow(2, over * DOUB))));
+      solveSpill(over < WALLS_OFF);
+    }
+    spillFrames.push(snapSpill());
+  }
+  const lastSpill = spillFrames[F - 1];
+
+  // 3) portrait assignment — sort slots by the final pile (y,x), targets by (y,x), match k-th
   const slotOrder = Array.from({ length: N }, (_, i) => i)
-    .sort((a, b) => (vScreen[a * 3 + 1] - vScreen[b * 3 + 1]) || (vScreen[a * 3] - vScreen[b * 3]));
+    .sort((a, b) => (lastSpill[a * 2 + 1] - lastSpill[b * 2 + 1]) || (lastSpill[a * 2] - lastSpill[b * 2]));
   const tgtOrder = Array.from({ length: N }, (_, i) => i)
     .sort((a, b) => (targets[a].y - targets[b].y) || (targets[a].x - targets[b].x));
   const vPortrait = new Int16Array(N * 3);
@@ -218,18 +261,19 @@ async function main() {
     vPortrait[s * 3] = q((t.x - W / 2) / H); vPortrait[s * 3 + 1] = q((t.y - H / 2) / H); vPortrait[s * 3 + 2] = q(t.r / H);
   }
 
-  // 5) assemble the artifact
+  // 4) assemble the artifact
   const states = [];
   const chunks = [];
   let off = 0;
   const push = (name, space, slotCount, arr) => { states.push({ name, space, slotCount, offset: off }); chunks.push(arr); off += arr.length; };
   const bnames = ['b_seed', 'b_03', 'b_06', 'b_12', 'b_25', 'b_50', 'b_full'];
   bottle.forEach((arr, k) => push(bnames[k], 'bottle', NCAP, arr));
-  push('v_spill', 'fill', N, vSpill);
-  push('v_screen', 'fill', N, vScreen);
   push('v_portrait', 'hcenter', N, vPortrait);
+  const spillOffset = off;                      // spill frames follow the named states
+  for (let f = 0; f < F; f++) { chunks.push(spillFrames[f]); off += spillFrames[f].length; }
 
-  const header = { magic: 'TGSB', version: 1, N, NCAP, scale: SCALE, fills: FILLS, states };
+  const header = { magic: 'TGSB', version: 2, N, NCAP, scale: SCALE, fills: FILLS, states,
+    spill: { frames: F, count: N, space: 'fill', stride: 2, offset: spillOffset } };
   let headerJSON = JSON.stringify(header);
   while ((headerJSON.length) % 4 !== 0) headerJSON += ' ';
   const headerBuf = Buffer.from(headerJSON, 'utf8');
@@ -239,7 +283,7 @@ async function main() {
 
   const out = Buffer.alloc(12 + headerBuf.length + payload.byteLength);
   out.write('TGSB', 0, 'ascii');
-  out.writeUInt32LE(1, 4);
+  out.writeUInt32LE(2, 4);
   out.writeUInt32LE(headerBuf.length, 8);
   headerBuf.copy(out, 12);
   Buffer.from(payload.buffer, payload.byteOffset, payload.byteLength).copy(out, 12 + headerBuf.length);
@@ -248,6 +292,7 @@ async function main() {
   writeFileSync(OUT, out);
   console.log(`wrote ${OUT}`);
   console.log(`  states: ${states.map((s) => s.name).join(', ')}`);
+  console.log(`  spill: ${F} frames x ${N} slots`);
   console.log(`  size: ${(out.length / 1024).toFixed(1)} KB (header ${headerBuf.length} B, payload ${(payload.byteLength / 1024).toFixed(1)} KB)`);
 }
 

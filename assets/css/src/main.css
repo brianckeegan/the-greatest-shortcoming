@@ -196,9 +196,12 @@
 
 /* ACT 1 */
 .act1{position:relative;z-index:1;background:transparent}
-.stage{position:sticky;top:0;height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;overflow:hidden}
-.stage-visual{position:relative;height:100%;display:flex;align-items:center;justify-content:center}
+.stage{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage-visual{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .stage-steps{position:absolute;inset:0;pointer-events:none}
+/* cream scrim under the top caption band so the dot field never eats the text */
+.stage::before{content:"";position:absolute;left:0;right:0;top:0;height:34vh;pointer-events:none;
+  background:linear-gradient(to bottom,var(--canvas) 0%,rgba(233,226,208,.72) 45%,rgba(233,226,208,0) 100%)}
 .flask-wrap{position:relative;width:300px;height:440px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
 .clock{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:74px;height:74px;opacity:0;transition:opacity .5s ease;
   filter:drop-shadow(0 0 10px var(--canvas)) drop-shadow(0 0 8px var(--canvas))}
@@ -223,15 +226,22 @@
   transform:rotate(45deg);animation:cue-bob 1.8s ease-in-out infinite}
 @keyframes cue-in{from{opacity:0}to{opacity:1}}
 @keyframes cue-bob{0%,100%{transform:translateY(0) rotate(45deg)}50%{transform:translateY(6px) rotate(45deg)}}
-.pstep{position:absolute;left:50%;top:40%;width:min(46%,520px);padding:0 10px;opacity:0;transform:translateY(24px);
-  transition:opacity .6s ease,transform .6s ease}
-.pstep.is-on{opacity:1;transform:none}
+.pstep{position:absolute;left:50%;top:12vh;width:min(90%,720px);padding:0 20px;text-align:center;opacity:0;
+  transform:translate(-50%,22px);transition:opacity .6s ease,transform .6s ease}
+.pstep.is-on{opacity:1;transform:translate(-50%,0)}
 .pstep p{font-family:var(--serif);font-size:clamp(22px,2.5vw,32px);line-height:1.3;font-weight:300;color:var(--ink);margin:0;
   text-shadow:0 1px 0 var(--canvas),0 0 16px var(--canvas),0 0 16px var(--canvas)}
 .pstep .small{font-family:var(--sans);font-size:14px;letter-spacing:.02em;color:var(--mist);margin-top:14px;line-height:1.6;font-weight:400}
 .pstep.finale{width:min(60%,640px)}
 .pstep.finale p{font-size:clamp(20px,2.2vw,30px);line-height:1.32}
 .pscene{height:100vh}
+/* fill counter — fixed at the bottom, shown between the 3% beat and 12:02 */
+.counter{position:fixed;left:50%;bottom:5vh;transform:translateX(-50%);z-index:6;pointer-events:none;text-align:center;
+  opacity:0;transition:opacity .4s ease;text-shadow:0 0 12px var(--canvas),0 0 12px var(--canvas)}
+.counter .pct{font-family:var(--serif);font-size:clamp(30px,5vw,48px);font-variant-numeric:tabular-nums;color:var(--alarm);font-weight:500}
+.counter .lbl{font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mist)}
+/* opaque cream card that fades in behind the final line, then out as the flood fills */
+.endcard{position:fixed;inset:0;z-index:1;background:var(--canvas);opacity:0;pointer-events:none}
 #bcanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
 .act1{position:relative;z-index:1;background:transparent}
 .flask{background:transparent}
@@ -266,18 +276,12 @@
 .brand-1{font-family:var(--serif);font-style:normal;font-weight:500}
 .brand-2{font-family:var(--emph);font-style:italic;font-weight:700}
 @media (max-width:860px){
-  .stage{grid-template-columns:1fr}
-  /* bottle drops to the lower third; the narration sits in a stable band above it */
-  .stage-visual{position:absolute;left:0;right:0;bottom:0;height:46vh}
-  .flask-wrap{transform:scale(.74)}
-  /* cream scrim behind the narration so the dot field never eats the text */
-  .stage::before{content:"";position:absolute;left:0;right:0;top:0;height:60vh;pointer-events:none;
-    background:linear-gradient(to bottom,var(--canvas) 0%,var(--canvas) 46%,rgba(233,226,208,.6) 74%,rgba(233,226,208,0) 100%)}
-  /* each .pstep fills the top region and centres its own text (only the is-on one shows),
-     clearing the brandbar — no more text stranded at the very top or bottom edge */
-  .pstep{left:0;top:0;bottom:auto;width:100%;height:54vh;padding:calc(64px + env(safe-area-inset-top,0px)) 24px 0;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-  .pstep p{font-size:clamp(20px,5.4vw,26px)}
+  /* the centred cinematic is universal; mobile only trims sizes */
+  .flask-wrap{transform:scale(.72)}
+  .pstep{top:10vh;width:94%}
+  .pstep p{font-size:clamp(20px,5.4vw,27px)}
+  .counter{bottom:6vh}
+  .counter .pct{font-size:clamp(26px,8vw,40px)}
 }
 
 /* reveals */
@@ -401,7 +405,8 @@
 @media (prefers-reduced-motion: reduce){
   .reveal,.titlecard .bigtitle{transition:none;opacity:1;transform:none}
   /* Keep the scroll-driven step reveal (JS toggles .is-on) but without the fade,
-     so the narration doesn't stack all 13 beats on top of each other. */
-  .pstep{transition:none;transform:none}
+     so the narration doesn't stack all the beats on top of each other. Preserve the
+     -50% centring transform (dropping it would shove the captions off-centre). */
+  .pstep{transition:none;transform:translate(-50%,0)}
   .scrollcue,.scrollcue-arrow{animation:none}
 }
