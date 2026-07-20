@@ -96,7 +96,6 @@ if(bigtitle&&titlecardEl){
 /* ---------------- ACT 1 scroll engine: bottle fill + steps ---------------- */
 const act1=document.getElementById('act1');
 const act2=document.getElementById('act2');
-const a2text=document.getElementById('a2text');
 const a2quote=document.getElementById('a2quote');
 const act3=document.getElementById('act3');
 const a3lines=[...document.querySelectorAll('.a3-line')];
@@ -110,54 +109,72 @@ function fmtClock(m){
   if(m>=60) return '12:'+String(Math.min(99,m-60)).padStart(2,'0');
   return '11:'+String(Math.max(0,m)).padStart(2,'0');
 }
-// Act 1 storyboard — one keyframe per narrated beat
-const KF=[
-  {min:0,  fill:0,      over:0},   // 0  picture a bottle (vessel fades in)
-  {min:0,  fill:0,      over:0},   // 1  at eleven o'clock (clock appears)
-  {min:0,  fill:1/190,  over:0},   // 2  a single bacterium
-  {min:1,  fill:2/190,  over:0},   // 3  11:01 — one becomes two
-  {min:2,  fill:4/190,  over:0},   // 4  11:02 — two become four
-  {min:55, fill:0.03,   over:0},   // 5  11:55  3%
-  {min:56, fill:0.06,   over:0},   // 6  11:56  6%
-  {min:57, fill:0.12,   over:0},   // 7  11:57  12%
-  {min:58, fill:0.25,   over:0},   // 8  11:58  quarter
-  {min:59, fill:0.50,   over:0},   // 9  11:59  half
-  {min:60, fill:1.0,    over:0},   // 10 12:00  full
-  {min:61, fill:1.0,    over:0.18},// 11 12:01  spills out
-  {min:63, fill:1.0,    over:1.0}, // 12 12:03  fills the screen
-  {min:63, fill:1.0,    over:1.0}  // 13 clear view -> the line
+// Act 1 storyboard — an explicit beat table (one stop per scripted action).
+// text = caption index into .pstep (null holds the previous caption, so the line
+// LEADS and the figure follows); pct = counter number (null holds); clock/counter =
+// element visibility (0/1, lerped for a fade); card = cream backing behind the last line.
+const BEATS=[
+  {min:0,  fill:0,      over:0,    text:0,    pct:null, clock:0, counter:0, card:0}, //  0 picture an empty bottle
+  {min:0,  fill:0,      over:0,    text:1,    pct:null, clock:1, counter:0, card:0}, //  1 at eleven o'clock — clock appears
+  {min:0,  fill:0.006,  over:0,    text:2,    pct:null, clock:1, counter:0, card:0}, //  2 drop a single bacterium
+  {min:0,  fill:0.010,  over:0,    text:3,    pct:null, clock:1, counter:0, card:0}, //  3 it divides once a minute
+  {min:1,  fill:0.013,  over:0,    text:null, pct:null, clock:1, counter:0, card:0}, //  4 clock → 11:01
+  {min:1,  fill:0.016,  over:0,    text:4,    pct:null, clock:1, counter:0, card:0}, //  5 one becomes two
+  {min:2,  fill:0.020,  over:0,    text:5,    pct:null, clock:1, counter:0, card:0}, //  6 at 11:02, two become four
+  {min:3,  fill:0.026,  over:0,    text:6,    pct:null, clock:1, counter:0, card:0}, //  7 four become eight
+  {min:3,  fill:0.030,  over:0,    text:7,    pct:null, clock:1, counter:0, card:0}, //  8 after fifty minutes of doubling
+  {min:52, fill:0.03,   over:0,    text:8,    pct:3,    clock:1, counter:1, card:0}, //  9 11:52 · three percent · counter in
+  {min:52, fill:0.03,   over:0,    text:9,    pct:3,    clock:1, counter:1, card:0}, // 10 when would they realize?
+  {min:57, fill:0.12,   over:0,    text:10,   pct:12,   clock:1, counter:1, card:0}, // 11 11:57 · 12%
+  {min:58, fill:0.25,   over:0,    text:11,   pct:25,   clock:1, counter:1, card:0}, // 12 11:58 · quarter
+  {min:59, fill:0.50,   over:0,    text:12,   pct:50,   clock:1, counter:1, card:0}, // 13 11:59 · half
+  {min:60, fill:1.0,    over:0,    text:13,   pct:100,  clock:1, counter:1, card:0}, // 14 noon · full
+  {min:61, fill:1.0,    over:0.10, text:14,   pct:100,  clock:1, counter:1, card:0}, // 15 12:01 · spills out
+  {min:62, fill:1.0,    over:0.35, text:15,   pct:null, clock:0, counter:0, card:0}, // 16 12:02 · container/clock/counter gone
+  {min:62, fill:1.0,    over:0.65, text:16,   pct:null, clock:0, counter:0, card:1}, // 17 the end of the line (cream card)
+  {min:62, fill:1.0,    over:1.0,  text:null, pct:null, clock:0, counter:0, card:0}  // 18 fills the full screen
 ];
+// carry-forward the caption + counter number through figure-only beats (null = hold)
+const CAP=BEATS.map(b=>b.text), PCT=BEATS.map(b=>b.pct);
+for(let i=1;i<BEATS.length;i++){ if(CAP[i]==null)CAP[i]=CAP[i-1]; if(PCT[i]==null)PCT[i]=PCT[i-1]; }
 function onScroll(){
   const rect=act1.getBoundingClientRect();
   const total=Math.max(1,act1.offsetHeight-window.innerHeight);
   const p=Math.min(1,Math.max(0,(-rect.top)/total));
-  const N=KF.length, bi=p*(N-1);
-  const i0=Math.min(N-1,Math.floor(bi)), i1=Math.min(N-1,i0+1), fr=bi-i0;
+  const NB=BEATS.length, bi=p*(NB-1);
+  const i0=Math.min(NB-1,Math.floor(bi)), i1=Math.min(NB-1,i0+1), fr=bi-i0;
   const ease=fr*fr*(3-2*fr);
-  const a=KF[i0], b=KF[i1];
+  const a=BEATS[i0], b=BEATS[i1];
   let fill=a.fill+(b.fill-a.fill)*ease;
   let over=a.over+(b.over-a.over)*ease;
   const minutes=a.min+(b.min-a.min)*fr;
 
-  // ACT 2 — the circles reorganize into the Bartlett hedcut
+  // ACT 2 — the particles reorganize into the Bartlett hedcut
   const r2=act2.getBoundingClientRect();
   const t2=Math.max(1,act2.offsetHeight-window.innerHeight);
   const p2=Math.min(1,Math.max(0,(-r2.top)/t2));
   let morph=0;
   if(p2>0){ let x=Math.min(1,p2/0.45); morph=x*x*(3-2*x); }
-  if(morph>0) over=1;                 // keep every circle for the portrait
+  if(morph>0) over=1;                 // keep every particle for the portrait
   window.__fill=fill; window.__over=over; window.__morph=morph;
-  pctEl.textContent=Math.max(1,Math.round(fill*100))+'% full';
-  // analog face: minute hand sweeps the hour (6°/min), hour hand creeps 11 → 12
+
+  // clock — analog face driven by the interpolated minute; visibility from the beat
   if(minHand) minHand.setAttribute('transform','rotate('+((minutes%60)*6)+' 50 50)');
   if(hourHand) hourHand.setAttribute('transform','rotate('+((330+minutes*0.5)%360)+' 50 50)');
-  if(clockEl){ clockEl.style.opacity=(bi>=0.7 && bi<12.5 && morph<0.02)?'1':'0';
+  const gone=morph<0.02?1:0;
+  if(clockEl){ clockEl.style.opacity=String((a.clock+(b.clock-a.clock)*ease)*gone);
     clockEl.setAttribute('aria-label','clock reading '+fmtClock(minutes)); }
-  // The "% full" readout belongs to the filling beats — hidden through "picture a
-  // bottle / eleven o'clock / a single bacterium / one→two→four" (a lone bacterium
-  // is not "1% full"); it fades in only once the narration starts naming
-  // percentages ("…three percent full", ~keyframe 5) and out again past the spill.
-  if(pctEl.parentElement) pctEl.parentElement.style.opacity=(bi>=4.5 && bi<11.6 && morph<0.02)?'1':'0';
+
+  // counter — number straight from the beat table (script's %), fixed at screen bottom;
+  // fades in at the three-percent beat and out with the clock + container at 12:02.
+  const counterEl=document.getElementById('counter');
+  if(pctEl) pctEl.textContent=(PCT[Math.min(NB-1,Math.round(bi))]||0)+'%';
+  if(counterEl) counterEl.style.opacity=String((a.counter+(b.counter-a.counter)*ease)*gone);
+
+  // cream card behind "the end of the line"
+  const cardEl=document.getElementById('endcard');
+  if(cardEl) cardEl.style.opacity=String(a.card+(b.card-a.card)*ease);
+
   if(a2quote) a2quote.classList.toggle('is-on', p2>0.7);
 
   // ACT 3 — sequential animated story lines
@@ -181,8 +198,9 @@ function onScroll(){
     cvEl.style.opacity=String(op);
   }
 
-  const idx=Math.min(N-1,Math.max(0,Math.round(bi)));
-  steps.forEach((st,k)=>st.classList.toggle('is-on',k===idx));
+  // caption — the most recent beat that carries text (holds through figure-only beats)
+  const active=CAP[Math.min(NB-1,Math.max(0,Math.floor(bi)))];
+  steps.forEach((st,k)=>st.classList.toggle('is-on',k===active));
   const docH=document.documentElement.scrollHeight-window.innerHeight;
   const progEl=document.getElementById('progress');
   if(progEl) progEl.style.width=(docH>0?(window.scrollY/docH*100):0)+'%';
@@ -219,11 +237,11 @@ steps[0].classList.add('is-on');
   // dpr capped at 1.5 — soft dots don't need full retina, and it halves fill cost.
   function resize(){ dpr=Math.min(1.5,window.devicePixelRatio||1); W=window.innerWidth; H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); if(reduce) renderCanvas(0); }
 
-  /* ---- Prebaked positions (assets/data/landing-bake.v1.bin, produced by
-     render/bake-landing.mjs). Replaces the live solver: the runtime only splines
-     between baked keyframe states and draws — no collision, no per-frame alloc. ---- */
-  let BAKE=null, DOUB=6.4, lastActive=0, PARENT=null, PX=null, PY=null, PR=null;
-  fetch('assets/data/landing-bake.v1.bin').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); }).then(buf=>{
+  /* ---- Prebaked positions (assets/data/landing-bake.v2.bin, from
+     render/bake-landing.mjs). The runtime splines the bottle-fill states, replays the
+     baked fluid spill frames, and morphs to the portrait — no live solver. ---- */
+  let BAKE=null, DOUB=6.4, lastActive=0;
+  fetch('assets/data/landing-bake.v2.bin').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); }).then(buf=>{
     const dv=new DataView(buf);
     if(String.fromCharCode(dv.getUint8(0),dv.getUint8(1),dv.getUint8(2),dv.getUint8(3))!=='TGSB') throw new Error('bad magic');
     const hl=dv.getUint32(8,true);
@@ -231,25 +249,23 @@ steps[0].classList.add('is-on');
     const data=new Int16Array(buf,12+hl,(buf.byteLength-12-hl)>>1);
     const states={}, bStates=[];
     for(const s of hdr.states){ states[s.name]={space:s.space,off:s.offset}; if(s.space==='bottle') bStates.push(s.name); }
-    BAKE={N:hdr.N, scale:hdr.scale, fills:hdr.fills, states, bStates, data};
+    BAKE={N:hdr.N, scale:hdr.scale, fills:hdr.fills, states, bStates, data, spill:hdr.spill};
     DOUB=Math.log2(hdr.N/NCAP);
-    // Per-frame position scratch + a deterministic budding tree so every spillover
-    // particle divides from an existing one (PARENT[i] < i). Any valid tree works.
-    const Nn=hdr.N; PX=new Float32Array(Nn); PY=new Float32Array(Nn); PR=new Float32Array(Nn); PARENT=new Int32Array(Nn);
-    let sd=0x9e3779b9>>>0; const rng=()=>{ sd=(sd+0x6d2b79f5)|0; let x=Math.imul(sd^(sd>>>15),1|sd); x=(x+Math.imul(x^(x>>>7),61|x))^x; return ((x^(x>>>14))>>>0)/4294967296; };
-    PARENT[0]=-1; for(let i=1;i<Nn;i++) PARENT[i]=(rng()*i)|0;
     if(reduce) renderCanvas(0);   // static path: repaint once the artifact arrives
   }).catch(e=>{ console.warn('landing: prebaked positions unavailable —', e && e.message); });
 
   function smooth(u){ return u<=0?0:u>=1?1:u*u*(3-2*u); }
   // read slot i of a baked state into out[0..2] (normalized units)
   function rd(name,i,out){ const s=BAKE.states[name], d=BAKE.data, sc=BAKE.scale, o=s.off+i*3; out[0]=d[o]/sc; out[1]=d[o+1]/sc; out[2]=d[o+2]/sc; }
+  // read spill frame f, slot i → out[0..1] (fill-space normalized)
+  function rdFrame(f,i,out){ const sp=BAKE.spill, d=BAKE.data, sc=BAKE.scale, o=sp.offset+f*sp.count*2+i*2; out[0]=d[o]/sc; out[1]=d[o+1]/sc; }
   // remap out[0..2] from its coordinate space to viewport pixels, in place
   function remap(space,out,g){
     if(space==='bottle'){ out[0]=g.inL+out[0]*(g.inR-g.inL); out[1]=g.rim+out[1]*(g.bot-g.rim); out[2]=out[2]*(g.inR-g.inL); }
     else if(space==='fill'){ out[0]*=W; out[1]*=H; out[2]*=H; }
     else { out[0]=W/2+out[0]*H; out[1]=H/2+out[1]*H; out[2]=out[2]*H; }   // hcenter
   }
+  const SPILL_R=0.006;            // spill/pile dot radius as a fraction of viewport height
   const A=[0,0,0], B=[0,0,0];
   let T0=null;
   resize(); window.addEventListener('resize',resize);
@@ -275,9 +291,9 @@ steps[0].classList.add('is-on');
     const fill=Math.max(0,Math.min(1, window.__fill||0));
     const over=Math.max(0,Math.min(1, window.__over||0));
     const morph=Math.max(0,Math.min(1, window.__morph||0));
-    // The vessel is now a pure visual — no collision. It dissolves as the spill
-    // crests the rim (same curve as before), so no invisible walls survive it.
-    let uT=(over-0.45)/0.5; uT=uT<0?0:uT>1?1:uT;
+    // The vessel is a pure visual. It dissolves as the spill pours out and is fully
+    // gone by over≈0.35 (12:02), in sync with the bake dropping the beaker walls.
+    let uT=(over-0.12)/0.23; uT=uT<0?0:uT>1?1:uT;
     const uA=1-uT*uT*(3-2*uT);
     if(uA>0.001){ ctx.save(); ctx.globalAlpha=uA; ctx.fillStyle='#111111'; drawU(ctx,g); ctx.restore(); }
     if(!BAKE) return;                       // artifact not loaded yet → vessel only
@@ -300,34 +316,25 @@ steps[0].classList.add('is-on');
 
     if(morph>0){
       const amp=reduce?0:1.1*morph;         // faint breathing shimmer at the portrait
+      const lastF=BAKE.spill.frames-1, ar=SPILL_R*H;
       for(let i=0;i<active;i++){
-        rd('v_screen',i,A); remap('fill',A,g);
+        rdFrame(lastF,i,A);                  // A = the screen-full pile (fill space)
+        const ax=A[0]*W, ay=A[1]*H;
         rd('v_portrait',i,B); remap('hcenter',B,g);
-        let x=A[0]+(B[0]-A[0])*m, y=A[1]+(B[1]-A[1])*m; const r=A[2]+(B[2]-A[2])*m;
+        let x=ax+(B[0]-ax)*m, y=ay+(B[1]-ay)*m; const r=ar+(B[2]-ar)*m;
         if(amp){ x+=Math.sin(t*1.7+i*0.7)*amp; y+=Math.cos(t*1.9+i*1.3)*amp; }
         ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,6.283);
       }
     } else if(over>0){
-      const amp=reduce?0:3.4*over;          // turbulence that grows into the explosion
-      const so=smooth(over);
+      // Replay the baked fluid spill: pick the two bracketing frames and lerp.
+      const sp=BAKE.spill, F=sp.frames;
+      const ff=over*(F-1); let f0=ff|0; if(f0>F-2)f0=F-2; const fr2=ff-f0;
+      const ar=SPILL_R*H, amp=reduce?0:2.0;
       for(let i=0;i<active;i++){
-        let bx,by,br,u;
-        if(i<NCAP){                          // the packed bottle erupts from the beaker itself
-          rd('b_full',i,A); remap('bottle',A,g);
-          bx=A[0]; by=A[1]; br=A[2]; u=so;
-        } else {                             // new particles divide adjacent to their parent
-          const p=PARENT[i]; bx=PX[p]; by=PY[p]; br=PR[p];
-          const hb=Math.imul(i,2654435761)>>>0, ang=hb*(6.283/4294967296), off=br*0.6;
-          bx+=Math.cos(ang)*off; by+=Math.sin(ang)*off;
-          const birth=Math.log2(i/NCAP)/DOUB, denom=1-birth;
-          u=smooth(denom>1e-6 ? (over-birth)/denom : 1);
-        }
-        rd('v_screen',i,B); remap('fill',B,g);
-        const x=bx+(B[0]-bx)*u, y=by+(B[1]-by)*u, r=br+(B[2]-br)*u;
-        PX[i]=x; PY[i]=y; PR[i]=r;           // pre-jitter: children read a stable parent
-        let dx=x, dy=y;
-        if(amp){ const jj=amp*u; dx+=Math.sin(t*2.3+i*0.7)*jj; dy+=Math.cos(t*2.7+i*1.3)*jj; }
-        ctx.moveTo(dx+r,dy); ctx.arc(dx,dy,r,0,6.283);
+        rdFrame(f0,i,A); rdFrame(f0+1,i,B);
+        let x=(A[0]+(B[0]-A[0])*fr2)*W, y=(A[1]+(B[1]-A[1])*fr2)*H;
+        if(amp){ x+=Math.sin(t*2.1+i*0.7)*amp; y+=Math.cos(t*2.5+i*1.3)*amp; }
+        ctx.moveTo(x+ar,y); ctx.arc(x,y,ar,0,6.283);
       }
     } else {
       // fill phase — bracket the bottle knots by fill and spline between them
