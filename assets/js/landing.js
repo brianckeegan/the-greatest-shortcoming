@@ -222,7 +222,7 @@ steps[0].classList.add('is-on');
   /* ---- Prebaked positions (assets/data/landing-bake.v1.bin, produced by
      render/bake-landing.mjs). Replaces the live solver: the runtime only splines
      between baked keyframe states and draws — no collision, no per-frame alloc. ---- */
-  let BAKE=null, DOUB=6.4, lastActive=0;
+  let BAKE=null, DOUB=6.4, lastActive=0, PARENT=null, PX=null, PY=null, PR=null;
   fetch('assets/data/landing-bake.v1.bin').then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); }).then(buf=>{
     const dv=new DataView(buf);
     if(String.fromCharCode(dv.getUint8(0),dv.getUint8(1),dv.getUint8(2),dv.getUint8(3))!=='TGSB') throw new Error('bad magic');
@@ -233,6 +233,11 @@ steps[0].classList.add('is-on');
     for(const s of hdr.states){ states[s.name]={space:s.space,off:s.offset}; if(s.space==='bottle') bStates.push(s.name); }
     BAKE={N:hdr.N, scale:hdr.scale, fills:hdr.fills, states, bStates, data};
     DOUB=Math.log2(hdr.N/NCAP);
+    // Per-frame position scratch + a deterministic budding tree so every spillover
+    // particle divides from an existing one (PARENT[i] < i). Any valid tree works.
+    const Nn=hdr.N; PX=new Float32Array(Nn); PY=new Float32Array(Nn); PR=new Float32Array(Nn); PARENT=new Int32Array(Nn);
+    let sd=0x9e3779b9>>>0; const rng=()=>{ sd=(sd+0x6d2b79f5)|0; let x=Math.imul(sd^(sd>>>15),1|sd); x=(x+Math.imul(x^(x>>>7),61|x))^x; return ((x^(x>>>14))>>>0)/4294967296; };
+    PARENT[0]=-1; for(let i=1;i<Nn;i++) PARENT[i]=(rng()*i)|0;
     if(reduce) renderCanvas(0);   // static path: repaint once the artifact arrives
   }).catch(e=>{ console.warn('landing: prebaked positions unavailable —', e && e.message); });
 
@@ -304,15 +309,25 @@ steps[0].classList.add('is-on');
       }
     } else if(over>0){
       const amp=reduce?0:3.4*over;          // turbulence that grows into the explosion
+      const so=smooth(over);
       for(let i=0;i<active;i++){
-        if(i<NCAP){ rd('b_full',i,A); remap('bottle',A,g); }
-        else { rd('v_spill',i,A); remap('fill',A,g); }   // new particles erupt from the rim
+        let bx,by,br,u;
+        if(i<NCAP){                          // the packed bottle erupts from the beaker itself
+          rd('b_full',i,A); remap('bottle',A,g);
+          bx=A[0]; by=A[1]; br=A[2]; u=so;
+        } else {                             // new particles divide adjacent to their parent
+          const p=PARENT[i]; bx=PX[p]; by=PY[p]; br=PR[p];
+          const hb=Math.imul(i,2654435761)>>>0, ang=hb*(6.283/4294967296), off=br*0.6;
+          bx+=Math.cos(ang)*off; by+=Math.sin(ang)*off;
+          const birth=Math.log2(i/NCAP)/DOUB, denom=1-birth;
+          u=smooth(denom>1e-6 ? (over-birth)/denom : 1);
+        }
         rd('v_screen',i,B); remap('fill',B,g);
-        const birth = i<NCAP ? 0 : Math.log2(i/NCAP)/DOUB;
-        const denom=1-birth; let u = denom>1e-6 ? (over-birth)/denom : 1; u=smooth(u);
-        let x=A[0]+(B[0]-A[0])*u, y=A[1]+(B[1]-A[1])*u; const r=A[2]+(B[2]-A[2])*u;
-        if(amp){ const jj=amp*u; x+=Math.sin(t*2.3+i*0.7)*jj; y+=Math.cos(t*2.7+i*1.3)*jj; }
-        ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,6.283);
+        const x=bx+(B[0]-bx)*u, y=by+(B[1]-by)*u, r=br+(B[2]-br)*u;
+        PX[i]=x; PY[i]=y; PR[i]=r;           // pre-jitter: children read a stable parent
+        let dx=x, dy=y;
+        if(amp){ const jj=amp*u; dx+=Math.sin(t*2.3+i*0.7)*jj; dy+=Math.cos(t*2.7+i*1.3)*jj; }
+        ctx.moveTo(dx+r,dy); ctx.arc(dx,dy,r,0,6.283);
       }
     } else {
       // fill phase — bracket the bottle knots by fill and spline between them
