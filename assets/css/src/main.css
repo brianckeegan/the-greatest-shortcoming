@@ -203,7 +203,9 @@
 .stage::before{content:"";position:absolute;left:0;right:0;top:0;height:34vh;pointer-events:none;
   background:linear-gradient(to bottom,var(--canvas) 0%,rgba(233,226,208,.72) 45%,rgba(233,226,208,0) 100%)}
 .flask-wrap{position:relative;width:300px;height:440px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
-.clock{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:74px;height:74px;opacity:0;transition:opacity .5s ease;
+/* clock — pinned to the fixed hcenter beaker (rim at 36.2vh, see geoU/BEAKER in landing.js),
+   so it always sits just above the drawn beaker regardless of viewport height */
+.clock{position:fixed;left:50%;top:36.2vh;transform:translate(-50%,calc(-100% - 16px));width:74px;height:74px;z-index:6;opacity:0;transition:opacity .5s ease;
   filter:drop-shadow(0 0 10px var(--canvas)) drop-shadow(0 0 8px var(--canvas))}
 .clock .clockface{width:100%;height:100%;display:block;overflow:visible}
 .clock .cf-rim{fill:var(--canvas);stroke:var(--ink);stroke-width:2}
@@ -240,8 +242,6 @@
   opacity:0;transition:opacity .4s ease;text-shadow:0 0 12px var(--canvas),0 0 12px var(--canvas)}
 .counter .pct{font-family:var(--serif);font-size:clamp(30px,5vw,48px);font-variant-numeric:tabular-nums;color:var(--alarm);font-weight:500}
 .counter .lbl{font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mist)}
-/* opaque cream card that fades in behind the final line, then out as the flood fills */
-.endcard{position:fixed;inset:0;z-index:1;background:var(--canvas);opacity:0;pointer-events:none}
 #bcanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
 .act1{position:relative;z-index:1;background:transparent}
 .flask{background:transparent}
@@ -276,8 +276,10 @@
 .brand-1{font-family:var(--serif);font-style:normal;font-weight:500}
 .brand-2{font-family:var(--emph);font-style:italic;font-weight:700}
 @media (max-width:860px){
-  /* the centred cinematic is universal; mobile only trims sizes */
-  .flask-wrap{transform:scale(.72)}
+  /* the centred cinematic is universal; mobile only trims sizes.
+     NB: no transform on .flask-wrap — it would become the containing block for the
+     position:fixed clock and knock it off the beaker. */
+  .clock{width:58px;height:58px}
   .pstep{top:10vh;width:94%}
   .pstep p{font-size:clamp(20px,5.4vw,27px)}
   .counter{bottom:6vh}
