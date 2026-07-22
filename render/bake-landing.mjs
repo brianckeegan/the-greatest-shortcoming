@@ -95,11 +95,14 @@ function ensureActive(n) {
   }
 }
 
-function solve(applyWalls, gravity, burst) {
+function solve(applyWalls, gravity, radial) {
   for (let i = 0; i < activeCount; i++) {
     const p = slots[i];
     if (gravity) p.vy += gravity;
-    if (burst) { const dx = p.x - BURST_CX, dy = p.y - BURST_CY, d = Math.hypot(dx, dy) || 1; const bm = p.bm == null ? 1 : p.bm; p.vx += dx / d * burst * bm; p.vy += dy / d * burst * bm; }
+    // radial > 0 pushes outward (explosion), radial < 0 pulls inward (implosion) —
+    // same per-particle bm scaling either way, so the same particles that later
+    // rocket outward fastest are also the ones compressed hardest just before.
+    if (radial) { const dx = p.x - BURST_CX, dy = p.y - BURST_CY, d = Math.hypot(dx, dy) || 1; const bm = p.bm == null ? 1 : p.bm; p.vx += dx / d * radial * bm; p.vy += dy / d * radial * bm; }
     p.x += p.vx; p.y += p.vy;
   }
   const cell = 16, grid = new Map();
@@ -175,10 +178,18 @@ async function main() {
   const N = targets.length;
   console.log(`portrait stipple: N = ${N} slots`);
 
-  // ---- one continuous sim: fill → overflow (walls) → radial burst → screen-fill ----
+  // ---- one continuous sim: fill → implosion → overflow (walls) → explosion → screen-fill ----
   const F = 30;                       // captured frames across the whole arc
   const T_NOON = 0.42;                // t at which the bottle is full (noon)
   const T_WALLS = 0.52;              // t at which the beaker walls vanish (12:02)
+  // Bartlett wasn't only the exponential-function lecturer — he was a Los Alamos-era
+  // physicist who photographed nuclear tests. The noon-full mass gets a beat borrowed
+  // from an implosion-type device: a brief inward compression right before detonation,
+  // then the chain reaction runs away outward. T_IMPLODE opens that compression window;
+  // it closes at T_WALLS, where the vessel vanishes and the explosion (below) takes over.
+  const T_IMPLODE = T_WALLS - 0.05;
+  const IMPLODE_MAG = -0.5;
+  const EXPLODE_MAG = 0.6;
   const DOUB = Math.log2(N / NCAP);
   const hc = (p, out, i) => { out[i * 2] = q((p.x - W / 2) / H); out[i * 2 + 1] = q((p.y - H / 2) / H); };
 
@@ -230,12 +241,13 @@ async function main() {
         const tt = (f - 1 + s / SUB) / (F - 1);
         ensureActive(targetAt(tt));
         const walls = tt < T_WALLS;
-        // The radial push persists for the rest of the arc, not just a short window —
-        // scaled per-particle by bm, fast movers keep travelling all the way to the
-        // screen edges (restoring the old reach) while slow (low-bm) ones stay put
-        // near the origin, so the disc keeps a filled centre AND a wide spread.
-        const burst = !walls ? 0.6 : 0;
-        solve(walls, walls ? 0.30 : 0, burst);
+        // Implosion (compress inward, walls still up) → explosion (persistent outward
+        // push once the walls vanish). The explosion push persists for the rest of the
+        // arc, not just a short window — scaled per-particle by bm, fast movers keep
+        // travelling all the way to the screen edges while slow ones stay put near the
+        // origin, so the disc keeps a filled centre AND a wide spread.
+        const radial = walls ? (tt >= T_IMPLODE ? IMPLODE_MAG : 0) : EXPLODE_MAG;
+        solve(walls, walls ? 0.30 : 0, radial);
       }
     }
     frames.push(snapHC());
