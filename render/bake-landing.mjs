@@ -63,51 +63,57 @@ function collideRect(p, x0, y0, x1, y1) {
 const slots = [];           // {x,y,vx,vy,r,bm}
 let activeCount = 0;
 
-// Per-particle burst-speed multiplier. A uniform multiplier would send every particle
-// outward at the same rate — since they all start clustered at ~the same point, that
-// produces a thin expanding ring (a donut hole) rather than a filled disc. Sampling
-// bm ∝ sqrt(rnd()) gives an area-uniform radius distribution instead: some particles
-// barely move and stay near the centre, others travel far, so the burst fills a solid
-// disc as it expands.
-const BURST_BM_MAX = 1.5;
-const burstBM = () => BURST_BM_MAX * Math.sqrt(rnd());
+// parent[i] = the dot that dot i divided from (-1 for the initial beaker fill, whose
+// positions come from the hex pack). Built in main() as a literal doubling tree: to go
+// from a population of s to 2s, dot s+k is the child of dot k — i.e. every dot currently
+// on screen spawns exactly one child. So the whole visible population doubles in place;
+// growth is never a single point sputtering out new dots at the centre.
+const parent = [];
 
-// Every division past the initial beaker fill is modeled as still happening back at
-// the vanished vessel's location, not wherever the existing mass has already drifted
-// to. Budding "adjacent to a random existing particle" would just keep extending
-// whatever ring the earlier mass has already formed — since by the time a particle
-// buds, its potential parents have almost all evacuated the centre together, no new
-// mass ever re-seeds there and the ring's hollow centre never closes. Spawning each
-// new bacterium at the origin instead, with its own random outward kick (same
-// area-uniform bm as the initial burst), keeps the centre continuously reseeded as
-// the front marches outward — an expanding, density-graded disc, not a thin shell.
+// A newborn appears right next to its parent's CURRENT position with only a tiny random
+// nudge — no inherited velocity, no imposed outward "burst". This is the crux of both
+// past failure modes:
+//   - Spawning children at a fixed origin (screen centre) read as a sink-faucet
+//     sputtering out dots instead of the on-screen dots dividing. → bud at the parent.
+//   - Giving every dot an outward velocity from the centre (the old "explosion") drove
+//     the whole mass outward together and hollowed the middle into a donut/ring. → let
+//     the mass expand by COLLISION PRESSURE instead: as the population doubles in place,
+//     the dots can no longer fit and shove each other apart, so the disc grows from the
+//     centre outward, always densest in the middle. 16509 dots at this radius exceed the
+//     viewport's area, so once relaxed they're forced to fill the whole screen — no ring
+//     can form because the centre is where division is densest and pressure is highest.
+const BUD_OFF = DOTR * 0.6;    // how far a newborn sits from its parent
+const BUD_KICK = 0.35;         // tiny isotropic kick so newborns aren't perfectly coincident
 function ensureActive(n) {
   while (activeCount < n) {
     const i = activeCount;
-    if (i === 0) {
-      slots[i] = { x: G.cx, y: G.bot - 12, vx: 0, vy: 0, r: DOTR, bm: burstBM() };
+    if (parent[i] < 0) {
+      // A beaker-fill root with no live position yet (only reachable before the spill
+      // seeds the pack); the spill overwrites these, so a safe placeholder is enough.
+      slots[i] = { x: G.cx, y: G.bot - 12, vx: 0, vy: 0, r: DOTR };
     } else {
-      const a = rnd() * 6.283, r0 = rnd() * DOTR * 2, bm = burstBM();
-      slots[i] = { x: BURST_CX + Math.cos(a) * r0, y: BURST_CY + Math.sin(a) * r0,
-        vx: Math.cos(a) * 0.5 * bm, vy: Math.sin(a) * 0.5 * bm - 0.15, r: DOTR, bm };
+      const par = slots[parent[i]];
+      const a = rnd() * 6.283;
+      slots[i] = { x: par.x + Math.cos(a) * BUD_OFF, y: par.y + Math.sin(a) * BUD_OFF,
+        vx: Math.cos(a) * BUD_KICK, vy: Math.sin(a) * BUD_KICK, r: DOTR };
     }
     activeCount++;
   }
 }
 
-function solve(applyWalls, gravity, radial) {
+function solve(applyWalls, gravity, radial, passes = 5) {
   for (let i = 0; i < activeCount; i++) {
     const p = slots[i];
     if (gravity) p.vy += gravity;
-    // radial > 0 pushes outward (explosion), radial < 0 pulls inward (implosion) —
-    // same per-particle bm scaling either way, so the same particles that later
-    // rocket outward fastest are also the ones compressed hardest just before.
-    if (radial) { const dx = p.x - BURST_CX, dy = p.y - BURST_CY, d = Math.hypot(dx, dy) || 1; const bm = p.bm == null ? 1 : p.bm; p.vx += dx / d * radial * bm; p.vy += dy / d * radial * bm; }
+    // radial < 0 pulls the freed mass inward (the implosion "breath in"). There is no
+    // outward counterpart — the explosion is driven by collision pressure from the
+    // in-place doubling, not by an imposed velocity, so the centre never empties.
+    if (radial) { const dx = p.x - BURST_CX, dy = p.y - BURST_CY, d = Math.hypot(dx, dy) || 1; p.vx += dx / d * radial; p.vy += dy / d * radial; }
     p.x += p.vx; p.y += p.vy;
   }
   const cell = 16, grid = new Map();
   for (let i = 0; i < activeCount; i++) { const p = slots[i]; const k = ((p.x / cell) | 0) + '_' + ((p.y / cell) | 0); let a = grid.get(k); if (!a) { a = []; grid.set(k, a); } a.push(i); }
-  for (let pass = 0; pass < 5; pass++) {
+  for (let pass = 0; pass < passes; pass++) {
     for (let i = 0; i < activeCount; i++) {
       const a = slots[i], gx = (a.x / cell) | 0, gy = (a.y / cell) | 0;
       for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
@@ -178,30 +184,47 @@ async function main() {
   const N = targets.length;
   console.log(`portrait stipple: N = ${N} slots`);
 
-  // ---- one continuous sim: fill → implosion → overflow (walls) → explosion → screen-fill ----
+  // ---- one continuous sim: fill → overflow (walls) → implosion → doubling explosion → screen-fill ----
   const F = 30;                       // captured frames across the whole arc
   const T_NOON = 0.42;                // t at which the bottle is full (noon)
   const T_WALLS = 0.52;              // t at which the beaker walls vanish (12:02)
   // Bartlett wasn't only the exponential-function lecturer — he was a Los Alamos-era
-  // physicist who photographed nuclear tests. The noon-full mass gets a beat borrowed
-  // from an implosion-type device: a brief inward compression right before detonation,
-  // then the chain reaction runs away outward. T_IMPLODE opens that compression window;
-  // it closes at T_WALLS, where the vessel vanishes and the explosion (below) takes over.
-  const T_IMPLODE = T_WALLS - 0.05;
+  // physicist who photographed nuclear tests. The freed mass gets a beat borrowed from
+  // an implosion-type device: a brief inward compression, then the chain reaction runs
+  // away outward. This has to happen strictly AFTER the walls vanish, not before — while
+  // the vessel is still visible and "full," pulling the mass inward reads as the bottle
+  // un-filling itself (it looks less than 100% full right when the script says it's
+  // fullest). Once the walls are gone there's nothing to visually contradict, so the
+  // compression reads as a breath drawn in before the explosion. The explosion itself is
+  // then the doubling: the compressed, overlapping mass blows apart under collision
+  // pressure as it keeps dividing (see ensureActive / solve).
+  const T_IMPLODE_END = T_WALLS + 0.03;
   const IMPLODE_MAG = -0.5;
-  const EXPLODE_MAG = 0.6;
   const DOUB = Math.log2(N / NCAP);
   const hc = (p, out, i) => { out[i * 2] = q((p.x - W / 2) / H); out[i * 2 + 1] = q((p.y - H / 2) / H); };
 
-  // Not-yet-active slots have no real position; fall back to where they'll actually
-  // first appear (their eventual pack slot, or the burst origin for overflow growth)
-  // so the lerp into their first active frame doesn't pop from a stale/undefined spot.
+  // literal doubling tree: population s → 2s means dot s+k is the child of dot k, so every
+  // dot on screen spawns exactly one child each generation. The last generation is partial
+  // (N isn't a power-of-two multiple of NCAP) — those leftover children just bud from the
+  // first (N - lastGenStart) dots.
+  for (let i = 0; i < N; i++) {
+    if (i < NCAP) { parent[i] = -1; continue; }
+    const s = NCAP * Math.pow(2, Math.floor(Math.log2(i / NCAP)));   // generation start size
+    parent[i] = i - Math.round(s);
+  }
+
+  // Not-yet-active slots have no live position; sit each on its nearest already-active
+  // ANCESTOR so that when it activates (budding at parent + a tiny offset) the runtime
+  // lerp is a hair's move, never a streak across the screen. Pre-spill, an inactive root
+  // falls back to its eventual hex-pack slot.
   function snapHC() {
     const arr = new Int16Array(N * 2);
     for (let i = 0; i < N; i++) {
-      if (i < activeCount) hc(slots[i], arr, i);
-      else if (i < NCAP) hc(pack[Math.min(i, NCAP - 1)], arr, i);
-      else hc({ x: BURST_CX, y: BURST_CY }, arr, i);
+      if (i < activeCount) { hc(slots[i], arr, i); continue; }
+      let j = i;
+      while (j >= activeCount && parent[j] >= 0) j = parent[j];
+      if (j < activeCount) hc(slots[j], arr, i);
+      else hc(pack[Math.min(j, NCAP - 1)], arr, i);
     }
     return arr;
   }
@@ -233,21 +256,25 @@ async function main() {
       for (let i = 0; i < n; i++) { const pk = pack[Math.min(i, NCAP - 1)]; slots[i] = { x: pk.x, y: pk.y, vx: 0, vy: 0, r: DOTR }; }
     } else {                                      // SPILL — physics from the packed state
       if (!spillStarted) {
-        for (let i = 0; i < NCAP; i++) slots[i] = { x: pack[i].x, y: pack[i].y, vx: 0, vy: 0, r: DOTR, bm: burstBM() };
+        for (let i = 0; i < NCAP; i++) slots[i] = { x: pack[i].x, y: pack[i].y, vx: 0, vy: 0, r: DOTR };
         activeCount = NCAP; spillStarted = true;
       }
-      const SUB = f >= F - 8 ? 40 : 22;           // settle hard through the late burst
+      // The screen-fill is entirely collision-relaxation driven, so the late frames need
+      // a big iteration budget: 16509 dots at this radius exceed the viewport's area, so
+      // full relaxation is what forces the incompressible mass out against all four edges
+      // (a circular blob would otherwise leave the left/right margins of a 16:9 frame
+      // empty). More collision passes = the separation propagates farther per frame.
+      const late = f >= F - 12;
+      const SUB = late ? 60 : 22, PASS = late ? 10 : 5;
       for (let s = 1; s <= SUB; s++) {
         const tt = (f - 1 + s / SUB) / (F - 1);
         ensureActive(targetAt(tt));
         const walls = tt < T_WALLS;
-        // Implosion (compress inward, walls still up) → explosion (persistent outward
-        // push once the walls vanish). The explosion push persists for the rest of the
-        // arc, not just a short window — scaled per-particle by bm, fast movers keep
-        // travelling all the way to the screen edges while slow ones stay put near the
-        // origin, so the disc keeps a filled centre AND a wide spread.
-        const radial = walls ? (tt >= T_IMPLODE ? IMPLODE_MAG : 0) : EXPLODE_MAG;
-        solve(walls, walls ? 0.30 : 0, radial);
+        // Walls up: plain overflow physics. The instant they vanish: a brief implosion
+        // (compress inward), then no imposed force — the doubling itself, resolved by the
+        // collision solver, is the explosion that fills the screen from the centre out.
+        const radial = walls ? 0 : (tt < T_IMPLODE_END ? IMPLODE_MAG : 0);
+        solve(walls, walls ? 0.30 : 0, radial, PASS);
       }
     }
     frames.push(snapHC());
