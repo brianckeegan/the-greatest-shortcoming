@@ -14,8 +14,9 @@
    hcenter: nx=(x-W/2)/H, ny=(y-H/2)/H  → runtime px: x=W/2+nx·H, y=H/2+ny·H
 */
 import sharp from 'sharp';
+import PoissonDiskSampling from 'poisson-disk-sampling';
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makePRNG } from './harness/prng.js';
 
@@ -79,9 +80,10 @@ const parent = [];
 //     the whole mass outward together and hollowed the middle into a donut/ring. → let
 //     the mass expand by COLLISION PRESSURE instead: as the population doubles in place,
 //     the dots can no longer fit and shove each other apart, so the disc grows from the
-//     centre outward, always densest in the middle. 16509 dots at this radius exceed the
-//     viewport's area, so once relaxed they're forced to fill the whole screen — no ring
-//     can form because the centre is where division is densest and pressure is highest.
+//     centre outward, always densest in the middle. The final population at this radius
+//     exceeds the viewport's area, so once relaxed they're forced to fill the whole
+//     screen — no ring can form because the centre is where division is densest and
+//     pressure is highest.
 const BUD_OFF = DOTR * 0.6;    // how far a newborn sits from its parent
 const BUD_KICK = 0.35;         // tiny isotropic kick so newborns aren't perfectly coincident
 function ensureActive(n) {
@@ -141,38 +143,122 @@ function solve(applyWalls, gravity, radial, passes = 5) {
   for (let i = 0; i < activeCount; i++) { const p = slots[i]; p.vx *= 0.88; p.vy *= 0.9; }
 }
 
-/* ---- portrait stipple (port of buildTargets() in landing.js, via sharp) ---- */
+/* ---- portrait stipple: variable-density Poisson-disk sampling ----------------
+   The dot LAYOUT is a Poisson-disk sample whose disk radius varies with the local
+   tone of the photograph: dark regions get a small minimum spacing (dots crowd in),
+   light regions a large one (dots thin out). So tone is carried by DENSITY, the way
+   a stipple engraving/hedcut actually works, instead of by a fixed lattice of
+   size-modulated dots — which is what the previous 150-row grid did, and why it
+   read as a screen-door rather than an engraving.
+
+   Poisson-disk sampling also guarantees the blue-noise property the grid lacked: no
+   two dots closer than the local radius (no clumping) and no large empty pockets
+   (no holes), with none of the axis-aligned rows/moiré a jittered grid leaves behind.
+
+   Radius modulation uses poisson-disk-sampling's distanceFunction, which maps a
+   0..1 value per position onto minDistance..maxDistance. We feed it 1 - ink, so
+   ink 1 (black) → DOT_MIN_D and ink 0 (paper) → DOT_MAX_D. bias 0 makes the tighter
+   of two competing constraints win, which preserves detail on tonal edges.
+   (Note: the sibling library fast-2d-poisson-disk-sampling is faster but fixed
+   radius only, so it can't express the density ramp this needs.)
+
+   The tone mapping itself — vignette, face-region gamma, warm/skin detection — is
+   carried over unchanged from the grid version; it's tuned for this photograph. ---- */
+const DOT_MIN_D = 2.9;    // spacing in the blackest areas  (reference px)
+const DOT_MAX_D = 10.5;   // spacing in the lightest kept areas
+const INK_MIN = 0.07;     // below this the pixel is paper — drop the dot
+const DOT_R_MIN = 0.9, DOT_R_MAX = 2.0;   // drawn dot radius ramps with ink
+const BG_L = 0.09;        // luminance below which a border-connected pixel is backdrop
+const TONE_HI = 0.95, TONE_LO = 0.06, TONE_GAMMA = 0.85;   // subject tone curve
+
 async function buildTargets() {
   const meta = await sharp(IMG).metadata();
   const aspect = meta.width / meta.height;
-  const rows = 150, cols = Math.round(rows * aspect);
+  // Sample the photo finer than the tightest dot spacing so the density field is
+  // smooth (the grid version only ever needed 150 rows because it *was* the grid).
+  const rows = 465, cols = Math.round(rows * aspect);
   const buf = await sharp(IMG).resize(cols, rows, { fit: 'fill' }).removeAlpha().raw().toBuffer();
   const ph = H * 0.94, pw = ph * aspect, px = (W - pw) / 2, py = (H - ph) / 2;
-  const sx = pw / cols, sy = ph / rows, maxR = Math.min(sx, sy) * 0.60;
-  const faceCX = 0.50, faceCY = 0.30, faceRX = 0.20, faceRY = 0.22;
-  const T = [];
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      const idx = (j * cols + i) * 3;
-      const r = buf[idx], gC = buf[idx + 1], bC = buf[idx + 2];
-      const L = (0.299 * r + 0.587 * gC + 0.114 * bC) / 255;
-      const cx = px + (i + 0.5) * sx, cy = py + (j + 0.5) * sy;
-      const ndx = (cx - W / 2) / (pw * 0.55), ndy = (cy - H / 2) / (ph * 0.62);
-      const vig = Math.min(1, Math.max(0, 1.16 - Math.sqrt(ndx * ndx + ndy * ndy)));
-      const warm = (j / rows) > 0.42 && (r - bC) > 52 && gC > 92 && bC < gC * 0.66 && r > 138;
-      let ink;
-      if (warm) {
-        ink = Math.min(1, 0.5 + (r - bC) / 240);
-      } else {
-        const fx = (i / cols - faceCX) / faceRX, fy = (j / rows - faceCY) / faceRY;
-        const inFace = (fx * fx + fy * fy) < 1;
-        const hi = inFace ? 0.94 : 0.80, lo = inFace ? 0.0 : 0.08;
-        ink = Math.min(1, Math.max(0, (hi - L) / (hi - lo))) * vig;
-        if (inFace) ink = Math.pow(ink, 0.68);
-      }
-      if (ink < 0.07) continue;
-      T.push({ x: cx + (rnd() - 0.5) * sx * 0.45, y: cy + (rnd() - 0.5) * sy * 0.45, r: Math.max(1.0, ink * maxR) });
+  const NP = rows * cols;
+
+  const lum = new Float32Array(NP);
+  for (let i = 0; i < NP; i++) lum[i] = (0.299 * buf[i * 3] + 0.587 * buf[i * 3 + 1] + 0.114 * buf[i * 3 + 2]) / 2550 * 10;
+
+  // The photograph is a light subject on a BLACK studio backdrop. Inking "whatever is
+  // dark" therefore renders the backdrop solid and leaves the face as a blank hole —
+  // a negative. (The old grid stipple had exactly this problem; it was masked by a
+  // vignette + face-ellipse gamma that faded the worst of it.) So carve the backdrop
+  // off first and tone-map only the subject. A flat luminance threshold can't do it —
+  // the jacket's shadows are as black as the backdrop — so flood-fill inward from the
+  // border instead: only dark pixels CONNECTED to the frame edge are backdrop, while
+  // an equally dark shadow enclosed by the sitter stays part of him.
+  const bg = new Uint8Array(NP);
+  const stack = [];
+  for (let x = 0; x < cols; x++) { stack.push(x, (rows - 1) * cols + x); }
+  for (let y = 0; y < rows; y++) { stack.push(y * cols, y * cols + cols - 1); }
+  while (stack.length) {
+    const i = stack.pop();
+    if (bg[i] || lum[i] >= BG_L) continue;
+    bg[i] = 1;
+    const x = i % cols, y = (i / cols) | 0;
+    if (x > 0) stack.push(i - 1);
+    if (x < cols - 1) stack.push(i + 1);
+    if (y > 0) stack.push(i - cols);
+    if (y < rows - 1) stack.push(i + cols);
+  }
+
+  // subject tone → ink (0 paper .. 1 solid). Backdrop is paper by construction.
+  let ink = new Float32Array(NP);
+  for (let i = 0; i < NP; i++) {
+    if (bg[i]) continue;
+    const t = Math.min(1, Math.max(0, (TONE_HI - lum[i]) / (TONE_HI - TONE_LO)));
+    ink[i] = Math.pow(t, TONE_GAMMA);
+  }
+
+  // Soften the field (separable box blur) so the dot density ramps smoothly and the
+  // silhouette edge doesn't alias into a hard dotted cliff.
+  const blur = (src, rad) => {
+    const tmp = new Float32Array(NP), out = new Float32Array(NP), n = rad * 2 + 1;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      let s = 0; for (let k = -rad; k <= rad; k++) s += src[y * cols + Math.min(cols - 1, Math.max(0, x + k))];
+      tmp[y * cols + x] = s / n;
     }
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      let s = 0; for (let k = -rad; k <= rad; k++) s += tmp[Math.min(rows - 1, Math.max(0, y + k)) * cols + x];
+      out[y * cols + x] = s / n;
+    }
+    return out;
+  };
+  ink = blur(ink, 1);
+
+  // bilinear fetch of the ink field — keeps the density ramp continuous instead of
+  // stepping between source texels.
+  function inkAt(u, v) {
+    const fx = Math.min(cols - 1, Math.max(0, u * cols - 0.5));
+    const fy = Math.min(rows - 1, Math.max(0, v * rows - 0.5));
+    const x0 = fx | 0, y0 = fy | 0;
+    const x1 = Math.min(cols - 1, x0 + 1), y1 = Math.min(rows - 1, y0 + 1);
+    const tx = fx - x0, ty = fy - y0;
+    const a = ink[y0 * cols + x0] + (ink[y0 * cols + x1] - ink[y0 * cols + x0]) * tx;
+    const b = ink[y1 * cols + x0] + (ink[y1 * cols + x1] - ink[y1 * cols + x0]) * tx;
+    return a + (b - a) * ty;
+  }
+
+  const pds = new PoissonDiskSampling({
+    shape: [pw, ph],
+    minDistance: DOT_MIN_D,
+    maxDistance: DOT_MAX_D,
+    tries: 12,
+    distanceFunction: (p) => 1 - inkAt(p[0] / pw, p[1] / ph),
+    bias: 0
+  }, rnd);                                   // seeded PRNG → deterministic bake
+
+  const T = [];
+  for (const p of pds.fill()) {
+    const u = p[0] / pw, v = p[1] / ph;
+    const ink = inkAt(u, v);
+    if (ink < INK_MIN) continue;             // paper: the sample was only a spacer
+    T.push({ x: px + p[0], y: py + p[1], r: DOT_R_MIN + (DOT_R_MAX - DOT_R_MIN) * ink });
   }
   return T;
 }
@@ -325,4 +411,10 @@ async function main() {
   console.log(`  size: ${(out.length / 1024).toFixed(1)} KB (header ${headerBuf.length} B)`);
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+// Only bake when run directly, so render/preview-portrait.mjs can import the stipple
+// and rasterize it on its own (npm run preview:portrait) without re-running the sim.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
+
+export { buildTargets, W, H };
