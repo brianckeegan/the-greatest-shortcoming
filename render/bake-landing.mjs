@@ -162,21 +162,29 @@ function solve(applyWalls, gravity, radial, passes = 5) {
    (Note: the sibling library fast-2d-poisson-disk-sampling is faster but fixed
    radius only, so it can't express the density ramp this needs.)
 
-   The tone mapping itself — vignette, face-region gamma, warm/skin detection — is
-   carried over unchanged from the grid version; it's tuned for this photograph. ---- */
-const DOT_MIN_D = 2.9;    // spacing in the blackest areas  (reference px)
-const DOT_MAX_D = 10.5;   // spacing in the lightest kept areas
-const INK_MIN = 0.07;     // below this the pixel is paper — drop the dot
-const DOT_R_MIN = 0.9, DOT_R_MAX = 2.0;   // drawn dot radius ramps with ink
+   The tone the dots reproduce comes from the backdrop-carving + tone curve below,
+   not from the photograph's raw luminance — see the flood-fill note in buildTargets. ---- */
+// Dot resolution. Doubling the dot COUNT means scaling every length by 1/sqrt(2)
+// (count goes as 1/spacing^2, so halving spacing would quadruple it, not double it).
+// The radii scale by the same factor: coverage is (dots per area) x (pi r^2), so
+// packing twice as many dots at the old radius would render the portrait twice as
+// dark. Shrinking r in step keeps the tone curve exactly where it was tuned.
+const RES = Math.SQRT1_2;                 // 1/sqrt(2) → 2x the dots at the same tone
+const DOT_MIN_D = 2.9 * RES;   // spacing in the blackest areas  (reference px)
+const DOT_MAX_D = 10.5 * RES;  // spacing in the lightest kept areas
+const INK_MIN = 0.07;          // below this the pixel is paper — drop the dot
+const DOT_R_MIN = 0.9 * RES, DOT_R_MAX = 2.0 * RES;   // drawn dot radius ramps with ink
 const BG_L = 0.09;        // luminance below which a border-connected pixel is backdrop
 const TONE_HI = 0.95, TONE_LO = 0.06, TONE_GAMMA = 0.85;   // subject tone curve
 
 async function buildTargets() {
   const meta = await sharp(IMG).metadata();
   const aspect = meta.width / meta.height;
-  // Sample the photo finer than the tightest dot spacing so the density field is
-  // smooth (the grid version only ever needed 150 rows because it *was* the grid).
-  const rows = 465, cols = Math.round(rows * aspect);
+  // Sample the photo finer than the tightest dot spacing, so the density field is
+  // smooth and the dots have real detail to resolve rather than a blurred field
+  // resampled twice (the grid version only ever needed 150 rows because it *was*
+  // the grid). At this dot resolution that means the photo's native 930 rows.
+  const rows = Math.min(930, meta.height), cols = Math.round(rows * aspect);
   const buf = await sharp(IMG).resize(cols, rows, { fit: 'fill' }).removeAlpha().raw().toBuffer();
   const ph = H * 0.94, pw = ph * aspect, px = (W - pw) / 2, py = (H - ph) / 2;
   const NP = rows * cols;
