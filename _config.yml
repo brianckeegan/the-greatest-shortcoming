@@ -135,6 +135,7 @@ exclude:
   - package-lock.json
   - tailwind.config.js
   - render/          # offline background-animation pipeline (rendered locally, see render/README.md)
+  - art/             # generative art studies (Kotlin/gart, see art/gart/README.md)
 
 collections:
   chapters:

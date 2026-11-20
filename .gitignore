@@ -32,3 +32,10 @@ metadata/audit-report.md
 # Python — bytecode cache left by the bin/*.py harness scripts
 __pycache__/
 *.py[cod]
+
+# art/gart — vendored framework (fetched by setup.sh), Gradle/Kotlin build output, 2048px masters
+art/gart/vendor/
+art/gart/build/
+art/gart/.gradle/
+art/gart/.kotlin/
+art/gart/renders/
