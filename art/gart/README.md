@@ -15,19 +15,21 @@ mid-century palettes anchored on red / white / black.
 | `partition` | rects | countable (quadtree ×4, size halves per 130 px) | mirror, 8-way |
 | `ugunskrusts-field` | flowforce | felt (speed and weight grow with radius) | **rotation, 4-way: flagged deliberate echo** |
 
-### Echo fragments (rounds two and three, all flagged)
+### Echo fragments (rounds two to four, all flagged)
 
-Crops of a four-armed hooked figure (`tgs/echo/`), turned 45° and off-centre so the
-frame never holds a clean isolated emblem. The arms follow one of three growth laws
-(`Law` in `Fragments.kt`), and stroke widths, grids or colormaps scale geometrically.
+Built on a four-armed hooked figure (`tgs/echo/`), turned 45°. The arms follow
+historical growth laws (`Law` in `Fragments.kt`: exponential, logistic, hyperbolic,
+plus parabolic as a foil), and stroke widths, sizes or colormaps scale geometrically.
 
 | Piece | After gart | Growth law | Geometric scaling |
 |---|---|---|---|
-| `echo-a-swing-exponential` | lines, circledots/gentle | exponential bundle width | stroke ×1.02 per line |
-| `echo-c-halftone-logistic` | retro | logistic dot radius | grid pitch ×1.5 per radius doubling; colour per area doubling |
-| `echo-d-whirl-logistic` | retro | three logistic twists | sizes ×1.07–1.11; three stroke profiles |
+| `echo-a-swing-exponential` | lines, circledots/gentle | exponential bundle width | per-line weight ×2 per class at ½ odds; opacity ×0.62; colour odds |
+| `echo-c-bubbles-exponential` | bubbles (Bubbles2, BubbleStripe) | exponential bubble size, ×100+ | colour per radius doubling; nested holes |
 | `echo-f-flip-hyperbolic` | retro, bubbles/holes, cell/rugae | hyperbolic front + Ising agreement on C4 orbits | disc size ×2^−¼ per disagreeing neighbour; colour by log₂ age |
-| `echo-g-three-laws-flowforce` | flowforce/flowforce3 | all three, dealt by sector | per-trail turn grows by law |
+| `echo-g-four-laws-flowforce` | flowforce/flowforce3 | exp / hyperbolic / parabolic / logistic swirls | width ×2 per class at ½ odds; opacity ×0.6 |
+
+`echo-g` is the most literal: a complete white 45° cross. It is a study, not a site
+asset, unless cropped.
 
 `previews/` holds committed 1200 px JPEGs. The 2048 px masters in `renders/` are
 gitignored: every piece is seeded and deterministic, so they rebuild exactly.

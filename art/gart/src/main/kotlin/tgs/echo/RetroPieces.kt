@@ -24,88 +24,6 @@ private val umber = 0xFF5C4A3A.toInt()
 private val oxblood = 0xFF7A2618.toInt()
 
 /**
- * C · HALFTONE, LOGISTIC — after gart's retro halftone pieces. The dot grid itself is
- * geometric: every time the distance from the centre doubles, the grid pitch (and so
- * every dot) grows ×1.5, so the screen coarsens in visible octave rings. Along each
- * hooked arm, dot size follows a LOGISTIC curve — slow, then fast, then levelling at
- * the carrying capacity where neighbours touch. Colour steps each time a dot's AREA
- * doubles (1/16 → 1/8 → 1/4 → 1/2 → full), so the ramp marks doublings, not equal steps.
- */
-fun halftoneLogistic(c: Canvas, d: Dimension) {
-    val w = d.w.toFloat()
-    c.clear(paper)
-    val run = w * 0.30f; val bend = w * 0.18f; val tail = w * 1.2f
-    val arm = hookArm(run = run, bend = bend, tail = tail, n = 700)
-    val total = run + (PI / 2).toFloat() * bend + tail
-    val lRef = run + (PI / 2).toFloat() * bend + w * 0.40f
-    val arms = fourArms(arm)
-    val ramp = listOf(ink, umber, RetroColors.yellow01, RetroColors.orange01, red)
-    val r0 = w * 0.05f; val p0 = w * 0.0062f
-    c.fragment(d, rotDeg = 45f, zoom = 1.0f, fx = w * 0.24f, fy = w * 0.16f) {
-        for (L in 0..7) {
-            val rIn = if (L == 0) 0f else r0 * (1 shl (L - 1)); val rOut = r0 * (1 shl L)
-            val pitch = p0 * Math.pow(1.5, L.toDouble()).toFloat()
-            val m = ceil(rOut / pitch).toInt()
-            for (i in -m..m) for (j in -m..m) {
-                val x = i * pitch; val y = j * pitch
-                val rr = hypot(x, y)
-                if (rr < rIn || rr >= rOut) continue
-                val nr = nearest(arms, x, y)
-                val sg = min(nr.s * total / lRef, 1f)
-                val bandHalf = w * (0.03f + 0.09f * sg)
-                val inBand = (1f - nr.d / bandHalf).coerceIn(0f, 1f)
-                val grow = Law.LOGISTIC.f(sg, 7f)
-                val rel = 0.17f + 0.83f * (0.15f + 0.85f * grow) * smooth(inBand)
-                val area = rel * rel
-                val step = when { area < 1f / 16 -> 0; area < 1f / 8 -> 1; area < 1f / 4 -> 2; area < 0.5f -> 3; else -> 4 }
-                drawCircle(x, y, pitch * 0.53f * rel, fill(ramp[step]))
-            }
-        }
-    }
-    c.drawBorder(d, w * 0.035f, paper)
-}
-
-/**
- * D · WHIRL, LOGISTIC — after gart's retro/rectaround and rotor. Three overlapping seeds
- * of nested squares, each a geometric series (×1.07 to ×1.11 per square) around its own
- * slightly offset centre. Each seed's cumulative turn follows a LOGISTIC curve with its
- * own steepness and ceiling, so their S-shaped corner-arms drift in and out of phase.
- * Stroke widths differ by seed: proportional to size, growing ×1.12 per square, or
- * pulsing heavy every fourth square (a doubling rhythm).
- */
-fun whirlLogistic(c: Canvas, d: Dimension) {
-    val w = d.w.toFloat()
-    c.clear(ink)
-    class Seed(val cx: Float, val cy: Float, val ratio: Double, val maxTurn: Float, val k: Float,
-               val color: Int, val weight: (Int, Float) -> Float)
-    val seeds = listOf(
-        Seed(w * 0.020f, -w * 0.015f, 1.07, 150f, 5f, withAlpha(red, 0.9f))
-            { k, _ -> min(w * 0.0010f * Math.pow(1.06, k.toDouble()).toFloat(), w * 0.006f) },
-        Seed(-w * 0.018f, w * 0.020f, 1.11, 60f, 12f, withAlpha(RetroColors.yellow01, 0.85f))
-            { k, _ -> w * 0.0016f * (if (k % 4 == 0) 4f else 1f) },
-        Seed(0f, 0f, 1.09, 95f, 8f, withAlpha(paper, 0.92f))
-            { _, half -> half * 0.028f },
-    )
-    c.fragment(d, rotDeg = 45f, zoom = 1.25f, fx = w * 0.16f, fy = -w * 0.10f) {
-        for (s in seeds) {
-            var k = 0
-            val steps = (ln(1.6 * w / (w * 0.012)) / ln(s.ratio)).toInt()
-            while (k <= steps) {
-                val half = w * 0.012f * Math.pow(s.ratio, k.toDouble()).toFloat()
-                val turn = s.maxTurn * Law.LOGISTIC.f(k / steps.toFloat(), s.k)
-                save(); translate(s.cx, s.cy); rotate(turn)
-                drawRect(Rect.makeLTRB(-half, -half, half, half), stroke(s.color, s.weight(k, half).coerceAtLeast(1.2f)))
-                restore()
-                k++
-            }
-        }
-        save(); translate(w * 0.004f, -w * 0.004f); rotate(12f)
-        drawRect(Rect.makeLTRB(-w * 0.022f, -w * 0.022f, w * 0.022f, w * 0.022f), fill(red)); restore()
-    }
-    c.drawBorder(d, w * 0.035f, paper)
-}
-
-/**
  * F · FLIP, HYPERBOLIC — after gart's retro/flip, bubbles/holes and cell/rugae. An Ising
  * model on a disc board: each disc is a spin, it agrees with its neighbours, and an
  * outside field pulls discs to red as a front runs out along four hooked arms. The
@@ -177,4 +95,3 @@ fun flipHyperbolic(c: Canvas, d: Dimension) {
     c.drawBorder(d, w * 0.035f, paper)
 }
 
-private fun smooth(t: Float) = t * t * (3f - 2f * t)

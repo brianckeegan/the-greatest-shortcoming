@@ -25,9 +25,10 @@ import kotlin.math.sqrt
  *  - LOGISTIC: Verhulst (1838). P = K / (1 + e^(−r(t−t0))). Runs into a ceiling.
  *  - HYPERBOLIC: von Foerster, Mora & Amiot, "Doomsday: Friday, 13 November, A.D. 2026"
  *    (Science, 1960). P = C / (T − t). Infinite at a finite date.
+ *  - PARABOLIC: polynomial growth, P ∝ t². Accelerating, but tamely — the foil.
  */
 enum class Law {
-    EXPONENTIAL, LOGISTIC, HYPERBOLIC;
+    EXPONENTIAL, LOGISTIC, HYPERBOLIC, PARABOLIC;
 
     fun f(t: Float, k: Float = 4f): Float = when (this) {
         EXPONENTIAL -> ((exp(k * t) - 1f) / (exp(k) - 1f))
@@ -42,6 +43,7 @@ enum class Law {
             val T = 1f + 1f / k
             (1f / (T - t) - 1f / T) / (1f / (T - 1f) - 1f / T)
         }
+        PARABOLIC -> t * t
     }
 }
 

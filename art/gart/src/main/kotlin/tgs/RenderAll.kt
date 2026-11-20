@@ -6,10 +6,9 @@ import dev.oblac.gart.fx.downsample
 import dev.oblac.gart.fx.supersampled
 import org.jetbrains.skia.Canvas
 import tgs.echo.flipHyperbolic
-import tgs.echo.halftoneLogistic
+import tgs.echo.bubblesExponential
 import tgs.echo.lawsField
 import tgs.echo.swingExponential
-import tgs.echo.whirlLogistic
 import java.io.File
 
 /** A square master: a name, a draw function onto an S×S canvas, and a supersample factor. */
@@ -28,10 +27,9 @@ val pieces: List<Piece> = listOf(
     Piece("partition", draw = ::partition),
     // echo fragments — flagged series, see tgs/echo/Fragments.kt
     Piece("echo-a-swing-exponential", ss = 2, draw = ::swingExponential),
-    Piece("echo-c-halftone-logistic", ss = 2, draw = ::halftoneLogistic),
-    Piece("echo-d-whirl-logistic", ss = 2, draw = ::whirlLogistic),
+    Piece("echo-c-bubbles-exponential", ss = 2, draw = ::bubblesExponential),
     Piece("echo-f-flip-hyperbolic", ss = 2, draw = ::flipHyperbolic),
-    Piece("echo-g-three-laws-flowforce", draw = ::lawsField),
+    Piece("echo-g-four-laws-flowforce", draw = ::lawsField),
 )
 
 fun main(args: Array<String>) {
