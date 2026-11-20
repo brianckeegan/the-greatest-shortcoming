@@ -45,8 +45,9 @@ node cover/cover-mock.cjs renders/cover-a-swing.png renders/cover-a-swing-mock.p
 
 To try other framings, pass `-Pframe=ax,ay,zoom`. This puts the crossing at (ax·W, ay·H).
 
-`previews/` holds committed 1200 px JPEGs. The 2048 px masters in `renders/` are
-gitignored: every piece is seeded and deterministic, so they rebuild exactly.
+`previews/` holds only the cover's 800 px JPEGs, with and without type. Every other
+piece is rendered on demand: the masters in `renders/` are gitignored, and every piece
+is seeded and deterministic, so they rebuild exactly.
 
 ## Build
 
