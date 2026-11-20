@@ -26,5 +26,5 @@ tasks.register<JavaExec>("render") {
     mainClass = "tgs.RenderAllKt"
     workingDir = projectDir
     jvmArgs("-Djava.awt.headless=true")
-    args(providers.gradleProperty("piece").orElse("").get())
+    args(listOfNotNull(providers.gradleProperty("piece").orElse("").get(), providers.gradleProperty("frame").orNull))
 }

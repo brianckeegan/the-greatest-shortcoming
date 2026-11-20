@@ -28,6 +28,28 @@ private val red = RetroColors.red01
  */
 fun swingExponential(c: Canvas, d: Dimension) {
     val w = d.w.toFloat()
+    // the square master: figure point (0.16w, 0.20w) at the canvas centre
+    swingBundles(c, d, ax = 0.5f, ay = 0.5f, fx = w * 0.16f, fy = w * 0.20f, zoom = 1.0f)
+    c.drawBorder(d, w * 0.035f, paper)
+}
+
+/**
+ * COVER · SWING — A recomposed for a 6×9 in portrait cover, full bleed (no border). The
+ * crossing sits low and right, at (0.82W, 0.68H); one hook rises up the right edge, the
+ * other sweeps across the bottom, and the bundles fan off the left edge — leaving the
+ * dark field upper-left for the title, which the type mock (cover/) sets there.
+ */
+fun swingCover(c: Canvas, d: Dimension) =
+    swingBundles(c, d, ax = coverAx, ay = coverAy, fx = 0f, fy = 0f, zoom = coverZoom)
+
+var coverAx = 0.82f; var coverAy = 0.68f; var coverZoom = 1.1f
+
+/**
+ * The bundles themselves, at any canvas size: everything scales with the canvas WIDTH.
+ * Figure point ([fx],[fy]) lands at ([ax]·W, [ay]·H), magnified by [zoom], turned 45°.
+ */
+fun swingBundles(c: Canvas, d: Dimension, ax: Float, ay: Float, fx: Float, fy: Float, zoom: Float) {
+    val w = d.w.toFloat()
     c.clear(ink)
 
     val run = w * 0.26f; val bend = w * 0.15f; val tail = w * 1.6f      // tails run off the page
@@ -63,7 +85,9 @@ fun swingExponential(c: Canvas, d: Dimension) {
         strokes += Stroke(ai, i, weight, withAlpha(base, alpha), rng.nextFloat() * 6.283f, 5f + rng.nextFloat() * 4f)
     }
     strokes.sortByDescending { it.weight }            // heavy strokes underneath, hairlines on top
-    c.fragment(d, rotDeg = 45f, zoom = 1.0f, fx = w * 0.16f, fy = w * 0.20f) {
+    c.save()
+    c.translate(d.w * ax, d.h * ay); c.scale(zoom, zoom); c.rotate(45f); c.translate(-fx, -fy)
+    c.apply {
         for (st in strokes) {
             val a = arms[st.arm]
             val u = st.i / (lines - 1f) - 0.5f                        // −½ inside … +½ outside
@@ -84,5 +108,5 @@ fun swingExponential(c: Canvas, d: Dimension) {
             drawPath(path, stroke(st.color, st.weight))
         }
     }
-    c.drawBorder(d, w * 0.035f, paper)
+    c.restore()
 }

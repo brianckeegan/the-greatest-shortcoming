@@ -24,11 +24,26 @@ stroke widths, sizes or colormaps scale geometrically.
 
 | Piece | After gart | Growth law | Geometric scaling |
 |---|---|---|---|
-| `echo-a-swing-exponential` (finalist) | lines, circledots/gentle | exponential bundle width | per-line weight ×2 per class at ½ odds; opacity ×0.78; keylined |
+| `echo-a-swing-exponential` (**cover**) | lines, circledots/gentle | exponential bundle width | per-line weight ×2 per class at ½ odds; opacity ×0.78; keylined |
 | `echo-c-bubbles-exponential` | bubbles (Bubbles2, BubbleStripe) | exponential bubble size, small at the tips → ×100+ at the centre | colour per radius doubling; nested holes |
 | `echo-g-four-laws-flowforce` | flowforce/flowforce3 + bubble chamber | swirls and dotted tracks curving by exp / hyperbolic / parabolic / logistic laws | width ×2 per class at ½ odds; dot size ×1.6 |
 
 In `echo-g` the cross is never drawn: it is a soft-edged void that no mark enters.
+
+### Cover
+
+`cover-a-swing` recomposes echo A for a 6×9 in portrait cover: 1875 × 2775 px, which is
+300 dpi with a 0.125 in bleed on every side, full bleed and no border. The crossing sits
+low and right, and the title goes in the dark field upper-left. `cover/cover-mock.cjs`
+sets a type mock over it in the site's faces with Playwright:
+
+```bash
+./gradlew render -Ppiece=cover
+node cover/cover-mock.cjs renders/cover-a-swing.png renders/cover-a-swing-mock.png
+# set PW_CHROMIUM=/path/to/chromium if Playwright's own browser isn't installed
+```
+
+To try other framings, pass `-Pframe=ax,ay,zoom`. This puts the crossing at (ax·W, ay·H).
 
 `previews/` holds committed 1200 px JPEGs. The 2048 px masters in `renders/` are
 gitignored: every piece is seeded and deterministic, so they rebuild exactly.
