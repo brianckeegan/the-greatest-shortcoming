@@ -5,10 +5,9 @@ import dev.oblac.gart.Dimension
 import dev.oblac.gart.fx.downsample
 import dev.oblac.gart.fx.supersampled
 import org.jetbrains.skia.Canvas
-import tgs.echo.coilHyperbolic
 import tgs.echo.flipHyperbolic
 import tgs.echo.halftoneLogistic
-import tgs.echo.stripesExponential
+import tgs.echo.lawsField
 import tgs.echo.swingExponential
 import tgs.echo.whirlLogistic
 import java.io.File
@@ -29,11 +28,10 @@ val pieces: List<Piece> = listOf(
     Piece("partition", draw = ::partition),
     // echo fragments — flagged series, see tgs/echo/Fragments.kt
     Piece("echo-a-swing-exponential", ss = 2, draw = ::swingExponential),
-    Piece("echo-b-stripes-exponential", ss = 2, draw = ::stripesExponential),
     Piece("echo-c-halftone-logistic", ss = 2, draw = ::halftoneLogistic),
     Piece("echo-d-whirl-logistic", ss = 2, draw = ::whirlLogistic),
-    Piece("echo-e-coil-hyperbolic", ss = 2, draw = ::coilHyperbolic),
     Piece("echo-f-flip-hyperbolic", ss = 2, draw = ::flipHyperbolic),
+    Piece("echo-g-three-laws-flowforce", draw = ::lawsField),
 )
 
 fun main(args: Array<String>) {

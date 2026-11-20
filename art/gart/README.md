@@ -15,21 +15,19 @@ mid-century palettes anchored on red / white / black.
 | `partition` | rects | countable (quadtree ×4, size halves per 130 px) | mirror, 8-way |
 | `ugunskrusts-field` | flowforce | felt (speed and weight grow with radius) | **rotation, 4-way: flagged deliberate echo** |
 
-### Echo fragments (round two, all flagged)
+### Echo fragments (rounds two and three, all flagged)
 
-Crops of a four-armed hooked figure (`tgs/echo/`), turned 45°, magnified and
-off-centre so the frame never holds the whole emblem. Each figure's arms follow one of
-three growth laws (`Law` in `Fragments.kt`), and stroke widths or colormaps scale
-geometrically.
+Crops of a four-armed hooked figure (`tgs/echo/`), turned 45° and off-centre so the
+frame never holds a clean isolated emblem. The arms follow one of three growth laws
+(`Law` in `Fragments.kt`), and stroke widths, grids or colormaps scale geometrically.
 
-| Piece | After gart gallery | Growth law | Geometric scaling |
+| Piece | After gart | Growth law | Geometric scaling |
 |---|---|---|---|
-| `echo-a-swing-exponential` | lines | exponential band width | stripe weight ×1.22 |
-| `echo-b-stripes-exponential` | lines | exponential channel width | colormap bands 1,2,4…32 lines; stroke ×1.035 |
-| `echo-c-halftone-logistic` | retro | logistic dot radius | colour steps per dot-area doubling |
-| `echo-d-whirl-logistic` | retro | logistic cumulative twist | square size ×1.09; stroke ∝ size |
-| `echo-e-coil-hyperbolic` | retro | hyperbolic slip C/(T−k) | stroke ×1.004 per ring |
-| `echo-f-flip-hyperbolic` | retro | hyperbolic front arrival | flip timing ∝ distance |
+| `echo-a-swing-exponential` | lines, circledots/gentle | exponential bundle width | stroke ×1.02 per line |
+| `echo-c-halftone-logistic` | retro | logistic dot radius | grid pitch ×1.5 per radius doubling; colour per area doubling |
+| `echo-d-whirl-logistic` | retro | three logistic twists | sizes ×1.07–1.11; three stroke profiles |
+| `echo-f-flip-hyperbolic` | retro, bubbles/holes, cell/rugae | hyperbolic front + Ising agreement on C4 orbits | disc size ×2^−¼ per disagreeing neighbour; colour by log₂ age |
+| `echo-g-three-laws-flowforce` | flowforce/flowforce3 | all three, dealt by sector | per-trail turn grows by law |
 
 `previews/` holds committed 1200 px JPEGs. The 2048 px masters in `renders/` are
 gitignored: every piece is seeded and deterministic, so they rebuild exactly.
