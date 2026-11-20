@@ -15,6 +15,22 @@ mid-century palettes anchored on red / white / black.
 | `partition` | rects | countable (quadtree ×4, size halves per 130 px) | mirror, 8-way |
 | `ugunskrusts-field` | flowforce | felt (speed and weight grow with radius) | **rotation, 4-way: flagged deliberate echo** |
 
+### Echo fragments (round two, all flagged)
+
+Crops of a four-armed hooked figure (`tgs/echo/`), turned 45°, magnified and
+off-centre so the frame never holds the whole emblem. Each figure's arms follow one of
+three growth laws (`Law` in `Fragments.kt`), and stroke widths or colormaps scale
+geometrically.
+
+| Piece | After gart gallery | Growth law | Geometric scaling |
+|---|---|---|---|
+| `echo-a-swing-exponential` | lines | exponential band width | stripe weight ×1.22 |
+| `echo-b-stripes-exponential` | lines | exponential channel width | colormap bands 1,2,4…32 lines; stroke ×1.035 |
+| `echo-c-halftone-logistic` | retro | logistic dot radius | colour steps per dot-area doubling |
+| `echo-d-whirl-logistic` | retro | logistic cumulative twist | square size ×1.09; stroke ∝ size |
+| `echo-e-coil-hyperbolic` | retro | hyperbolic slip C/(T−k) | stroke ×1.004 per ring |
+| `echo-f-flip-hyperbolic` | retro | hyperbolic front arrival | flip timing ∝ distance |
+
 `previews/` holds committed 1200 px JPEGs. The 2048 px masters in `renders/` are
 gitignored: every piece is seeded and deterministic, so they rebuild exactly.
 
@@ -27,7 +43,7 @@ Needs JDK 21. gart isn't on Maven, so `setup.sh` clones it at a pinned commit in
 cd art/gart
 ./setup.sh                          # once: fetch gart @ 8cd8548
 ./gradlew render                    # all pieces → renders/*.png (headless)
-./gradlew render -Ppiece=colony     # just one
+./gradlew render -Ppiece=colony     # just one (prefix match: -Ppiece=echo renders the series)
 ```
 
 ## Symmetry rule
