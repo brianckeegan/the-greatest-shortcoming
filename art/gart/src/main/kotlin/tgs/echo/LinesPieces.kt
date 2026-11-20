@@ -36,21 +36,21 @@ fun swingExponential(c: Canvas, d: Dimension) {
     val lRef = run + (PI / 2).toFloat() * bend + w * 0.40f              // where growth is "done"
     val arms = fourArms(arm)
 
-    val lines = 120
-    val reds = setOf(17, 71, 96)
+    val lines = 64
+    val reds = setOf(9, 38, 52)
     val rng = Random(1798)                          // Malthus's Essay
     // every line draws its own weight, opacity and colour, all from geometric laws:
     //  - weight level L with P(L) = ½^(L+1): each heavier class half as common, twice as wide
-    //    (×32 from the hairlines to the rare heavy strokes), on top of a ×1.015 drift
+    //    (×16 from the hairlines to the rare heavy strokes), on top of a ×1.015 drift
     //    across the bundle;
-    //  - opacity 0.9 · 0.62^m, the same halving-odds draw: mostly bright, a few ghosts;
+    //  - opacity 0.95 · 0.78^m, the same halving-odds draw: mostly bright, a few ghosts;
     //  - colour: cream mostly, with mustard, amber, orange and teal at falling odds.
     fun geo(max: Int): Int { var l = 0; while (l < max && rng.nextFloat() < 0.5f) l++; return l }
     val accents = listOf(RetroColors.yellow01, RetroColors.amber01, RetroColors.orange01, RetroColors.teal01)
     class Stroke(val arm: Int, val i: Int, val weight: Float, val color: Int, val phase: Float, val freq: Float)
     val strokes = ArrayList<Stroke>()
     for (ai in 0 until 4) for (i in 0 until lines) {
-        val lvl = geo(5)
+        val lvl = geo(4)
         val m = geo(3)
         val pickAcc = geo(4)
         val base = when {
@@ -58,8 +58,8 @@ fun swingExponential(c: Canvas, d: Dimension) {
             pickAcc == 0 || pickAcc == 1 -> paper
             else -> accents[(pickAcc - 2 + rng.nextInt(2)).coerceAtMost(accents.size - 1)]
         }
-        val alpha = if (i in reds) 0.95f else 0.9f * Math.pow(0.62, m.toDouble()).toFloat()
-        val weight = w * 0.00045f * (1 shl lvl) * Math.pow(1.015, i.toDouble()).toFloat() * (if (i in reds) 1.6f else 1f)
+        val alpha = if (i in reds) 1f else 0.95f * Math.pow(0.78, m.toDouble()).toFloat()
+        val weight = w * 0.0007f * (1 shl lvl) * Math.pow(1.015, i.toDouble()).toFloat() * (if (i in reds) 1.6f else 1f)
         strokes += Stroke(ai, i, weight, withAlpha(base, alpha), rng.nextFloat() * 6.283f, 5f + rng.nextFloat() * 4f)
     }
     strokes.sortByDescending { it.weight }            // heavy strokes underneath, hairlines on top
@@ -73,12 +73,15 @@ fun swingExponential(c: Canvas, d: Dimension) {
                 val sg = 1.4f * (1f - exp(-along / lRef / 1.4f))   // ≈ along/lRef, easing to 1.4 (no kink)
                 val bw = w * (0.010f + 0.50f * Law.EXPONENTIAL.f(sg, 2.4f))  // bundle width
                 // gentle's sway: each line drifts a little, more as the bundle widens
-                val sway = sin(sg * st.freq + st.phase + st.arm) * bw * 0.035f
+                val sway = sin(sg * st.freq + st.phase + st.arm) * bw * 0.010f
                 val off = u * bw + sway
                 val px = a.x[k] - a.ty[k] * off; val py = a.y[k] + a.tx[k] * off
                 if (k == 0) pb.moveTo(px, py) else pb.lineTo(px, py)
             }
-            drawPath(pb.detach(), stroke(st.color, st.weight))
+            // a dark keyline under each stroke separates it from its neighbours
+            val path = pb.detach()
+            drawPath(path, stroke(withAlpha(ink, 0.85f), st.weight + w * 0.0016f))
+            drawPath(path, stroke(st.color, st.weight))
         }
     }
     c.drawBorder(d, w * 0.035f, paper)

@@ -64,9 +64,10 @@ private fun pack(
 
 /**
  * C · BUBBLES, EXPONENTIAL — after gart's bubbles gallery (Bubbles2, bubbub, BubbleStripe):
- * a relaxed, random circle packing in place of a halftone grid. Along each hooked arm
- * the largest bubble allowed grows EXPONENTIALLY, from 0.15% to 17% of the page — over
- * 100×, two orders of magnitude — and big bubbles carry a second, nested pack of
+ * a relaxed, random circle packing in place of a halftone grid. Read from the tips inward,
+ * the largest bubble allowed along each hooked arm grows EXPONENTIALLY, from 0.15% of
+ * the page at the tips to 17% at the centre, where they aggregate — over 100×, two
+ * orders of magnitude — and big bubbles carry a second, nested pack of
  * paper holes, a third order down. Off the arms the froth stays at the smallest size.
  * Colour steps once per doubling of radius (log₂ r), so the ramp counts the doublings.
  */
@@ -76,19 +77,19 @@ fun bubblesExponential(c: Canvas, d: Dimension) {
     val run = w * 0.30f; val bend = w * 0.18f; val tail = w * 1.2f
     val arm = hookArm(run = run, bend = bend, tail = tail, n = 700)
     val total = run + (PI / 2).toFloat() * bend + tail
-    val lRef = run + (PI / 2).toFloat() * bend + w * 0.34f
+    val lRef = run + (PI / 2).toFloat() * bend + w * 0.55f
     val arms = fourArms(arm)
 
     val rMin = w * 0.0015f; val rArm = w * 0.17f
     val ramp = listOf(ink, ink, 0xFF5C4A3A.toInt(), RetroColors.blue01, RetroColors.yellow01, RetroColors.orange01, red)
-    val fx = w * 0.30f; val fy = w * 0.28f; val half = w * 0.95f
+    val fx = w * 0.14f; val fy = w * 0.12f; val half = w * 0.95f
     val rng = Random(1838)
 
     // the field: tiny everywhere, exponentially larger along the arms
     fun target(x: Float, y: Float): Float {
         val nr = nearest(arms, x, y)
         val sg = min(nr.s * total / lRef, 1f)
-        val onArm = rMin * Math.pow((rArm / rMin).toDouble(), sg.toDouble()).toFloat()   // exponential in s
+        val onArm = rMin * Math.pow((rArm / rMin).toDouble(), (1f - sg).toDouble()).toFloat()   // exponential, largest at the centre
         val band = max(w * 0.025f, onArm * 1.15f)
         return if (nr.d < band) onArm else rMin * 1.6f
     }
@@ -103,7 +104,7 @@ fun bubblesExponential(c: Canvas, d: Dimension) {
             seed = all.toList(), target = ::target)
         all += got
     }
-    c.fragment(d, rotDeg = 45f, zoom = 0.78f, fx = fx, fy = fy) {
+    c.fragment(d, rotDeg = 45f, zoom = 0.85f, fx = fx, fy = fy) {
         for (b in all) {
             val oct = (ln(b.r / rMin) / ln(2f)).toInt().coerceIn(0, ramp.size - 1)
             drawCircle(b.x, b.y, b.r, fill(ramp[oct]))

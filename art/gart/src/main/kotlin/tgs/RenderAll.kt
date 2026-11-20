@@ -5,7 +5,6 @@ import dev.oblac.gart.Dimension
 import dev.oblac.gart.fx.downsample
 import dev.oblac.gart.fx.supersampled
 import org.jetbrains.skia.Canvas
-import tgs.echo.flipHyperbolic
 import tgs.echo.bubblesExponential
 import tgs.echo.lawsField
 import tgs.echo.swingExponential
@@ -28,7 +27,6 @@ val pieces: List<Piece> = listOf(
     // echo fragments — flagged series, see tgs/echo/Fragments.kt
     Piece("echo-a-swing-exponential", ss = 2, draw = ::swingExponential),
     Piece("echo-c-bubbles-exponential", ss = 2, draw = ::bubblesExponential),
-    Piece("echo-f-flip-hyperbolic", ss = 2, draw = ::flipHyperbolic),
     Piece("echo-g-four-laws-flowforce", draw = ::lawsField),
 )
 
